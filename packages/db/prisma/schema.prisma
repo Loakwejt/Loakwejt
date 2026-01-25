@@ -1,0 +1,479 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTH & USERS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  memberships   WorkspaceMember[]
+  createdPages  Page[]            @relation("PageCreator")
+  revisions     PageRevision[]
+  records       Record[]
+  assets        Asset[]
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// WORKSPACE & MEMBERSHIP
+// ============================================================================
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Billing
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  plan                 Plan      @default(FREE)
+  planExpiresAt        DateTime?
+
+  // Relations
+  members     WorkspaceMember[]
+  sites       Site[]
+  collections Collection[]
+  assets      Asset[]
+
+  @@index([slug])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role     @default(VIEWER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum Plan {
+  FREE
+  PRO
+  BUSINESS
+}
+
+// ============================================================================
+// SITES & PAGES
+// ============================================================================
+
+model Site {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  slug        String
+  description String?
+  faviconUrl  String?
+  
+  // Settings
+  settings    Json     @default("{}")
+  customDomain String?  @unique
+  
+  // Status
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pages       Page[]
+  collections Collection[]
+  assets      Asset[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+  @@index([slug])
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  siteId      String
+  name        String
+  slug        String
+  description String?
+  
+  // Builder tree (draft)
+  builderTree Json     @default("{}")
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
+  
+  // Status
+  isHomepage  Boolean  @default(false)
+  isDraft     Boolean  @default(true)
+  
+  // Publishing
+  publishedRevisionId String?
+  
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site              Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  createdBy         User           @relation("PageCreator", fields: [createdById], references: [id])
+  revisions         PageRevision[]
+  publishedRevision PageRevision?  @relation("PublishedRevision", fields: [publishedRevisionId], references: [id])
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([createdById])
+}
+
+model PageRevision {
+  id          String   @id @default(cuid())
+  pageId      String
+  
+  // Snapshot
+  builderTree Json
+  version     Int
+  
+  // Metadata
+  comment     String?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  // Relations
+  page        Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  publishedOn Page[] @relation("PublishedRevision")
+
+  @@index([pageId])
+  @@index([createdById])
+}
+
+// ============================================================================
+// CMS - COLLECTIONS & RECORDS
+// ============================================================================
+
+model Collection {
+  id          String   @id @default(cuid())
+  workspaceId String
+  siteId      String?
+  
+  name        String
+  slug        String
+  description String?
+  
+  // Schema definition
+  schema      Json     @default("[]")
+  
+  // Settings
+  isSystem    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  site        Site?     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  records     Record[]
+
+  @@unique([siteId, slug])
+  @@index([workspaceId])
+  @@index([siteId])
+}
+
+model Record {
+  id           String   @id @default(cuid())
+  collectionId String
+  
+  // Record data
+  data         Json     @default("{}")
+  slug         String?
+  
+  // Status
+  status       RecordStatus @default(DRAFT)
+  publishedAt  DateTime?
+  
+  createdById  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdBy    User       @relation(fields: [createdById], references: [id])
+
+  @@unique([collectionId, slug])
+  @@index([collectionId])
+  @@index([createdById])
+  @@index([status])
+}
+
+enum RecordStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ============================================================================
+// ASSETS
+// ============================================================================
+
+model Asset {
+  id          String   @id @default(cuid())
+  workspaceId String
+  siteId      String?
+  
+  name        String
+  fileName    String
+  mimeType    String
+  size        Int
+  url         String
+  
+  // Metadata
+  width       Int?
+  height      Int?
+  alt         String?
+  
+  uploadedById String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  site        Site?     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  uploadedBy  User      @relation(fields: [uploadedById], references: [id])
+
+  @@index([workspaceId])
+  @@index([siteId])
+  @@index([uploadedById])
+}
+
+// ============================================================================
+// SHOP - PRODUCTS & ORDERS (Plugin: Shop)
+// ============================================================================
+
+model Product {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String
+  slug        String
+  description String?  @db.Text
+  
+  // Pricing
+  price       Int      // in cents
+  currency    String   @default("USD")
+  
+  // Inventory
+  sku         String?
+  inventory   Int      @default(0)
+  
+  // Media
+  images      Json     @default("[]")
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orderItems  OrderItem[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  siteId      String
+  
+  // Customer
+  email       String
+  name        String?
+  
+  // Totals
+  subtotal    Int
+  tax         Int         @default(0)
+  shipping    Int         @default(0)
+  total       Int
+  currency    String      @default("USD")
+  
+  // Status
+  status      OrderStatus @default(PENDING)
+  
+  // Stripe
+  stripePaymentIntentId String?
+  
+  // Shipping
+  shippingAddress Json?
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  items       OrderItem[]
+
+  @@index([siteId])
+  @@index([email])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  
+  quantity  Int
+  price     Int    // price at time of order
+  
+  // Relations
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// ============================================================================
+// FORUM (Plugin: Forum)
+// ============================================================================
+
+model ForumCategory {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String
+  slug        String
+  description String?
+  order       Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  threads     ForumThread[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+model ForumThread {
+  id          String   @id @default(cuid())
+  categoryId  String
+  authorEmail String
+  
+  title       String
+  slug        String
+  
+  isPinned    Boolean  @default(false)
+  isLocked    Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  posts       ForumPost[]
+
+  @@index([categoryId])
+  @@index([authorEmail])
+}
+
+model ForumPost {
+  id          String   @id @default(cuid())
+  threadId    String
+  authorEmail String
+  
+  content     String   @db.Text
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  thread      ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([authorEmail])
+}
