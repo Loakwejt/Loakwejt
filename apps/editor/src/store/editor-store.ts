@@ -1,0 +1,458 @@
+import { create } from 'zustand';
+import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding } from '@builderly/core';
+import {
+  findNodeById,
+  updateNodeInTree,
+  removeNodeFromTree,
+  insertNodeAt,
+  cloneNode,
+  generateNodeId,
+} from '@builderly/core';
+
+// ============================================================================
+// COMMAND PATTERN FOR UNDO/REDO
+// ============================================================================
+
+interface Command {
+  execute: () => void;
+  undo: () => void;
+  description: string;
+}
+
+// ============================================================================
+// EDITOR STATE
+// ============================================================================
+
+export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
+
+interface EditorState {
+  // Page data
+  workspaceId: string | null;
+  siteId: string | null;
+  pageId: string | null;
+  pageName: string;
+  
+  // Builder tree
+  tree: BuilderTree;
+  
+  // Selection
+  selectedNodeId: string | null;
+  hoveredNodeId: string | null;
+  
+  // Viewport
+  breakpoint: Breakpoint;
+  zoom: number;
+  
+  // History
+  history: BuilderTree[];
+  historyIndex: number;
+  
+  // UI State
+  isPaletteOpen: boolean;
+  isInspectorOpen: boolean;
+  isPreviewMode: boolean;
+  isSaving: boolean;
+  isDirty: boolean;
+  lastSaved: Date | null;
+  
+  // Actions
+  setPageContext: (workspaceId: string, siteId: string, pageId: string) => void;
+  setTree: (tree: BuilderTree) => void;
+  setPageName: (name: string) => void;
+  
+  // Selection
+  selectNode: (nodeId: string | null) => void;
+  hoverNode: (nodeId: string | null) => void;
+  
+  // Node operations
+  addNode: (parentId: string, nodeType: string, index?: number) => void;
+  updateNode: (nodeId: string, updates: Partial<BuilderNode>) => void;
+  updateNodeProps: (nodeId: string, props: Record<string, unknown>) => void;
+  updateNodeStyle: (nodeId: string, style: BuilderStyle) => void;
+  updateNodeActions: (nodeId: string, actions: BuilderActionBinding[]) => void;
+  deleteNode: (nodeId: string) => void;
+  duplicateNode: (nodeId: string) => void;
+  moveNode: (nodeId: string, newParentId: string, newIndex: number) => void;
+  
+  // Viewport
+  setBreakpoint: (breakpoint: Breakpoint) => void;
+  setZoom: (zoom: number) => void;
+  
+  // UI
+  togglePalette: () => void;
+  toggleInspector: () => void;
+  setPreviewMode: (isPreview: boolean) => void;
+  
+  // History
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  
+  // Persistence
+  setSaving: (isSaving: boolean) => void;
+  setDirty: (isDirty: boolean) => void;
+  setLastSaved: (date: Date) => void;
+}
+
+// ============================================================================
+// DEFAULT TREE
+// ============================================================================
+
+const DEFAULT_TREE: BuilderTree = {
+  builderVersion: 1,
+  root: {
+    id: 'root',
+    type: 'Section',
+    props: {},
+    style: { base: { padding: 'lg' } },
+    actions: [],
+    children: [],
+  },
+};
+
+// ============================================================================
+// STORE IMPLEMENTATION
+// ============================================================================
+
+export const useEditorStore = create<EditorState>((set, get) => ({
+  // Initial state
+  workspaceId: null,
+  siteId: null,
+  pageId: null,
+  pageName: 'Untitled Page',
+  tree: DEFAULT_TREE,
+  selectedNodeId: null,
+  hoveredNodeId: null,
+  breakpoint: 'desktop',
+  zoom: 100,
+  history: [DEFAULT_TREE],
+  historyIndex: 0,
+  isPaletteOpen: true,
+  isInspectorOpen: true,
+  isPreviewMode: false,
+  isSaving: false,
+  isDirty: false,
+  lastSaved: null,
+
+  // Context
+  setPageContext: (workspaceId, siteId, pageId) => {
+    set({ workspaceId, siteId, pageId });
+  },
+
+  setTree: (tree) => {
+    set({
+      tree,
+      history: [tree],
+      historyIndex: 0,
+      isDirty: false,
+    });
+  },
+
+  setPageName: (name) => {
+    set({ pageName: name });
+  },
+
+  // Selection
+  selectNode: (nodeId) => {
+    set({ selectedNodeId: nodeId });
+  },
+
+  hoverNode: (nodeId) => {
+    set({ hoveredNodeId: nodeId });
+  },
+
+  // Node operations with history
+  addNode: (parentId, nodeType, index) => {
+    const { tree, history, historyIndex } = get();
+    const { componentRegistry } = require('@builderly/core');
+    
+    const definition = componentRegistry.get(nodeType);
+    if (!definition) {
+      console.error(`Unknown component type: ${nodeType}`);
+      return;
+    }
+
+    const newNode: BuilderNode = {
+      id: generateNodeId(),
+      type: nodeType,
+      props: { ...definition.defaultProps },
+      style: { base: {} },
+      actions: [],
+      children: [],
+    };
+
+    const parent = findNodeById(tree.root, parentId);
+    const insertIndex = index ?? (parent?.children.length ?? 0);
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: insertNodeAt(tree.root, parentId, newNode, insertIndex),
+    };
+
+    // Update history
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedNodeId: newNode.id,
+      isDirty: true,
+    });
+  },
+
+  updateNode: (nodeId, updates) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        ...updates,
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  updateNodeProps: (nodeId, props) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        props: { ...node.props, ...props },
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  updateNodeStyle: (nodeId, style) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        style,
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  updateNodeActions: (nodeId, actions) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        actions,
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  deleteNode: (nodeId) => {
+    const { tree, history, historyIndex, selectedNodeId } = get();
+
+    // Don't allow deleting root
+    if (nodeId === 'root') {
+      console.warn('Cannot delete root node');
+      return;
+    }
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: removeNodeFromTree(tree.root, nodeId),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedNodeId: selectedNodeId === nodeId ? null : selectedNodeId,
+      isDirty: true,
+    });
+  },
+
+  duplicateNode: (nodeId) => {
+    const { tree, history, historyIndex } = get();
+
+    const node = findNodeById(tree.root, nodeId);
+    if (!node || nodeId === 'root') return;
+
+    // Find parent and index
+    const findParentAndIndex = (
+      root: BuilderNode,
+      targetId: string
+    ): { parent: BuilderNode; index: number } | null => {
+      for (let i = 0; i < root.children.length; i++) {
+        if (root.children[i]?.id === targetId) {
+          return { parent: root, index: i };
+        }
+        const result = findParentAndIndex(root.children[i]!, targetId);
+        if (result) return result;
+      }
+      return null;
+    };
+
+    const result = findParentAndIndex(tree.root, nodeId);
+    if (!result) return;
+
+    const clonedNode = cloneNode(node, true);
+    const newTree: BuilderTree = {
+      ...tree,
+      root: insertNodeAt(tree.root, result.parent.id, clonedNode, result.index + 1),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedNodeId: clonedNode.id,
+      isDirty: true,
+    });
+  },
+
+  moveNode: (nodeId, newParentId, newIndex) => {
+    const { tree, history, historyIndex } = get();
+
+    const node = findNodeById(tree.root, nodeId);
+    if (!node || nodeId === 'root') return;
+
+    // Remove from old position
+    let newRoot = removeNodeFromTree(tree.root, nodeId);
+    // Insert at new position
+    newRoot = insertNodeAt(newRoot, newParentId, node, newIndex);
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: newRoot,
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  // Viewport
+  setBreakpoint: (breakpoint) => {
+    set({ breakpoint });
+  },
+
+  setZoom: (zoom) => {
+    set({ zoom: Math.max(25, Math.min(200, zoom)) });
+  },
+
+  // UI
+  togglePalette: () => {
+    set((state) => ({ isPaletteOpen: !state.isPaletteOpen }));
+  },
+
+  toggleInspector: () => {
+    set((state) => ({ isInspectorOpen: !state.isInspectorOpen }));
+  },
+
+  setPreviewMode: (isPreview) => {
+    set({ isPreviewMode: isPreview, selectedNodeId: null });
+  },
+
+  // History
+  undo: () => {
+    const { historyIndex, history } = get();
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      set({
+        tree: history[newIndex]!,
+        historyIndex: newIndex,
+        isDirty: true,
+      });
+    }
+  },
+
+  redo: () => {
+    const { historyIndex, history } = get();
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      set({
+        tree: history[newIndex]!,
+        historyIndex: newIndex,
+        isDirty: true,
+      });
+    }
+  },
+
+  canUndo: () => {
+    const { historyIndex } = get();
+    return historyIndex > 0;
+  },
+
+  canRedo: () => {
+    const { historyIndex, history } = get();
+    return historyIndex < history.length - 1;
+  },
+
+  // Persistence
+  setSaving: (isSaving) => {
+    set({ isSaving });
+  },
+
+  setDirty: (isDirty) => {
+    set({ isDirty });
+  },
+
+  setLastSaved: (date) => {
+    set({ lastSaved: date, isDirty: false });
+  },
+}));
