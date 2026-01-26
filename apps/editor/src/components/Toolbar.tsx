@@ -19,6 +19,7 @@ import {
   RotateCcw,
   ListTree,
   LayoutTemplate,
+  Settings,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
 import { TemplatePicker } from './TemplatePicker';
@@ -26,10 +27,12 @@ import { TemplatePicker } from './TemplatePicker';
 export function Toolbar() {
   const {
     pageName,
+    siteName,
     workspaceId,
     siteId,
     pageId,
     tree,
+    siteSettings,
     breakpoint,
     zoom,
     setBreakpoint,
@@ -37,10 +40,12 @@ export function Toolbar() {
     isPaletteOpen,
     isInspectorOpen,
     isLayerPanelOpen,
+    isSiteSettingsOpen,
     isPreviewMode,
     togglePalette,
     toggleInspector,
     toggleLayerPanel,
+    toggleSiteSettings,
     setPreviewMode,
     canUndo,
     canRedo,
@@ -67,7 +72,9 @@ export function Toolbar() {
     setSaving(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(
+      
+      // Save page
+      const pageResponse = await fetch(
         `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`,
         {
           method: 'PATCH',
@@ -77,8 +84,23 @@ export function Toolbar() {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to save');
+      if (!pageResponse.ok) {
+        throw new Error('Failed to save page');
+      }
+
+      // Save site settings
+      const settingsResponse = await fetch(
+        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/settings`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ settings: siteSettings }),
+        }
+      );
+
+      if (!settingsResponse.ok) {
+        throw new Error('Failed to save site settings');
       }
 
       setLastSaved(new Date());
@@ -251,6 +273,15 @@ export function Toolbar() {
           title="Toggle Inspector Panel"
         >
           <PanelRight className="h-4 w-4" />
+        </Button>
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        <Button
+          variant={isSiteSettingsOpen ? 'secondary' : 'ghost'}
+          size="icon"
+          onClick={toggleSiteSettings}
+          title="Website-Einstellungen"
+        >
+          <Settings className="h-4 w-4" />
         </Button>
       </div>
 

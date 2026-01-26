@@ -9,3 +9,6 @@ export * from './actions';
 
 // Collection/CMS schemas
 export * from './collection';
+
+// Site settings schemas
+export * from './site-settings';

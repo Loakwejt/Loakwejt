@@ -6,7 +6,9 @@ import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
 import { LayerPanel } from './components/LayerPanel';
 import { DndProvider } from './components/DndProvider';
+import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { useEditorStore } from './store/editor-store';
+import { mergeSiteSettings } from '@builderly/core';
 
 // Initialize component registry
 import '@builderly/core/registry';
@@ -20,6 +22,7 @@ function App() {
     setPageContext,
     setTree,
     setPageName,
+    setSiteData,
   } = useEditorStore();
 
   // Load page data from URL params
@@ -32,8 +35,9 @@ function App() {
     if (workspaceId && siteId && pageId) {
       setPageContext(workspaceId, siteId, pageId);
       loadPage(workspaceId, siteId, pageId);
+      loadSiteSettings(workspaceId, siteId);
     }
-  }, [setPageContext, setTree, setPageName]);
+  }, [setPageContext, setTree, setPageName, setSiteData]);
 
   const loadPage = async (workspaceId: string, siteId: string, pageId: string) => {
     try {
@@ -55,6 +59,26 @@ function App() {
       }
     } catch (error) {
       console.error('Error loading page:', error);
+    }
+  };
+
+  const loadSiteSettings = async (workspaceId: string, siteId: string) => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(
+        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/settings`,
+        { credentials: 'include' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to load site settings');
+      }
+
+      const site = await response.json();
+      const settings = mergeSiteSettings(site.settings || {});
+      setSiteData(site.name, settings);
+    } catch (error) {
+      console.error('Error loading site settings:', error);
     }
   };
 
@@ -149,6 +173,9 @@ function App() {
               </aside>
             )}
           </div>
+
+          {/* Site Settings Panel (Sheet/Drawer) */}
+          <SiteSettingsPanel />
         </div>
       </DndProvider>
     </TooltipProvider>

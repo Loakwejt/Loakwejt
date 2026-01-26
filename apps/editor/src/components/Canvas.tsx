@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useEditorStore, Breakpoint } from '../store/editor-store';
 import { CanvasNode } from './CanvasNode';
 import { useDndState } from './DndProvider';
 import { cn } from '@builderly/ui';
 import { Smartphone, Tablet, Monitor } from 'lucide-react';
+import { generateCssVariables } from '@builderly/core';
 
 // Device frames for responsive preview
 const DEVICE_CONFIG: Record<Breakpoint, { width: string; icon: React.ReactNode; label: string }> = {
@@ -13,10 +15,47 @@ const DEVICE_CONFIG: Record<Breakpoint, { width: string; icon: React.ReactNode; 
 };
 
 export function Canvas() {
-  const { tree, breakpoint, zoom, isPreviewMode, selectNode } = useEditorStore();
+  const { tree, breakpoint, zoom, isPreviewMode, selectNode, siteSettings } = useEditorStore();
   const { overId, activeId } = useDndState();
 
   const config = DEVICE_CONFIG[breakpoint];
+
+  // Generate CSS variables from site settings
+  const themeStyles = useMemo(() => {
+    const cssVars = generateCssVariables(siteSettings);
+    const { colors, typography, spacing } = siteSettings.theme;
+    
+    // Convert CSS variables to inline style object
+    return {
+      '--color-background': colors.background,
+      '--color-foreground': colors.foreground,
+      '--color-primary': colors.primary,
+      '--color-primary-foreground': colors.primaryForeground,
+      '--color-secondary': colors.secondary,
+      '--color-secondary-foreground': colors.secondaryForeground,
+      '--color-muted': colors.muted,
+      '--color-muted-foreground': colors.mutedForeground,
+      '--color-accent': colors.accent,
+      '--color-accent-foreground': colors.accentForeground,
+      '--color-card': colors.card,
+      '--color-card-foreground': colors.cardForeground,
+      '--color-border': colors.border,
+      '--color-destructive': colors.destructive,
+      '--color-success': colors.success,
+      '--color-warning': colors.warning,
+      '--font-family': typography.fontFamily,
+      '--font-family-heading': typography.headingFontFamily,
+      '--font-size-base': `${typography.baseFontSize}px`,
+      '--line-height-base': typography.baseLineHeight,
+      '--border-radius': spacing.borderRadius,
+      '--container-max-width': spacing.containerMaxWidth,
+      backgroundColor: colors.background,
+      color: colors.foreground,
+      fontFamily: typography.fontFamily,
+      fontSize: `${typography.baseFontSize}px`,
+      lineHeight: typography.baseLineHeight,
+    } as React.CSSProperties;
+  }, [siteSettings]);
 
   // Make canvas a drop target
   const { setNodeRef, isOver } = useDroppable({
@@ -78,13 +117,14 @@ export function Canvas() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-xl z-10" />
           )}
 
-          {/* Content area */}
+          {/* Content area with theme styles */}
           <div
             ref={setNodeRef}
             className={cn(
               'min-h-full',
               breakpoint === 'mobile' && 'pt-8'
             )}
+            style={themeStyles}
           >
             <CanvasNode node={tree.root} isRoot />
           </div>

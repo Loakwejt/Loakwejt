@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding } from '@builderly/core';
+import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding, SiteSettings } from '@builderly/core';
 import {
   findNodeById,
   updateNodeInTree,
@@ -8,6 +8,7 @@ import {
   cloneNode,
   generateNodeId,
   componentRegistry,
+  getDefaultSiteSettings,
 } from '@builderly/core';
 
 // ============================================================================
@@ -33,6 +34,10 @@ interface EditorState {
   pageId: string | null;
   pageName: string;
   
+  // Site data
+  siteName: string;
+  siteSettings: SiteSettings;
+  
   // Builder tree
   tree: BuilderTree;
   
@@ -52,6 +57,7 @@ interface EditorState {
   isPaletteOpen: boolean;
   isInspectorOpen: boolean;
   isLayerPanelOpen: boolean;
+  isSiteSettingsOpen: boolean;
   isPreviewMode: boolean;
   isSaving: boolean;
   isDirty: boolean;
@@ -61,6 +67,11 @@ interface EditorState {
   setPageContext: (workspaceId: string, siteId: string, pageId: string) => void;
   setTree: (tree: BuilderTree) => void;
   setPageName: (name: string) => void;
+  
+  // Site settings actions
+  setSiteData: (name: string, settings: SiteSettings) => void;
+  updateSiteSettings: (settings: Partial<SiteSettings>) => void;
+  toggleSiteSettings: () => void;
   
   // Selection
   selectNode: (nodeId: string | null) => void;
@@ -99,6 +110,37 @@ interface EditorState {
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+function deepMerge(target: Record<string, unknown>, source: Partial<Record<string, unknown>>): Record<string, unknown> {
+  const result = { ...target };
+  
+  for (const key of Object.keys(source)) {
+    const sourceValue = source[key];
+    const targetValue = result[key];
+    
+    if (
+      sourceValue &&
+      typeof sourceValue === 'object' &&
+      !Array.isArray(sourceValue) &&
+      targetValue &&
+      typeof targetValue === 'object' &&
+      !Array.isArray(targetValue)
+    ) {
+      result[key] = deepMerge(
+        targetValue as Record<string, unknown>,
+        sourceValue as Record<string, unknown>
+      );
+    } else if (sourceValue !== undefined) {
+      result[key] = sourceValue;
+    }
+  }
+  
+  return result;
+}
+
+// ============================================================================
 // DEFAULT TREE
 // ============================================================================
 
@@ -124,6 +166,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   siteId: null,
   pageId: null,
   pageName: 'Untitled Page',
+  siteName: 'Untitled Site',
+  siteSettings: getDefaultSiteSettings(),
   tree: DEFAULT_TREE,
   selectedNodeId: null,
   hoveredNodeId: null,
@@ -134,6 +178,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isPaletteOpen: true,
   isInspectorOpen: true,
   isLayerPanelOpen: false,
+  isSiteSettingsOpen: false,
   isPreviewMode: false,
   isSaving: false,
   isDirty: false,
@@ -155,6 +200,22 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setPageName: (name) => {
     set({ pageName: name });
+  },
+
+  // Site data
+  setSiteData: (name, settings) => {
+    set({ siteName: name, siteSettings: settings });
+  },
+
+  updateSiteSettings: (settings) => {
+    set((state) => ({
+      siteSettings: deepMerge(state.siteSettings, settings) as SiteSettings,
+      isDirty: true,
+    }));
+  },
+
+  toggleSiteSettings: () => {
+    set((state) => ({ isSiteSettingsOpen: !state.isSiteSettingsOpen }));
   },
 
   // Selection
