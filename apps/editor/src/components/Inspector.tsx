@@ -419,10 +419,18 @@ function StyleEditor({
   const base = style.base || {};
 
   const updateBase = (key: string, value: unknown) => {
+    // Convert "_none" back to undefined for clearing
+    const finalValue = value === '_none' ? undefined : value;
     onUpdate({
       ...style,
-      base: { ...base, [key]: value },
+      base: { ...base, [key]: finalValue },
     });
+  };
+
+  // Helper to convert undefined/empty values to "_none" for Select
+  const getValue = (val: unknown): string => {
+    if (val === undefined || val === null || val === '') return '_none';
+    return String(val);
   };
 
   return (
@@ -434,14 +442,14 @@ function StyleEditor({
           <div className="space-y-1">
             <Label className="text-xs">Padding</Label>
             <Select
-              value={(base.padding as string) || ''}
-              onValueChange={(v) => updateBase('padding', v || undefined)}
+              value={getValue(base.padding)}
+              onValueChange={(v) => updateBase('padding', v)}
             >
               <SelectTrigger className="h-8">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="_none">None</SelectItem>
                 <SelectItem value="xs">XS</SelectItem>
                 <SelectItem value="sm">SM</SelectItem>
                 <SelectItem value="md">MD</SelectItem>
@@ -453,14 +461,14 @@ function StyleEditor({
           <div className="space-y-1">
             <Label className="text-xs">Margin</Label>
             <Select
-              value={(base.margin as string) || ''}
-              onValueChange={(v) => updateBase('margin', v || undefined)}
+              value={getValue(base.margin)}
+              onValueChange={(v) => updateBase('margin', v)}
             >
               <SelectTrigger className="h-8">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="_none">None</SelectItem>
                 <SelectItem value="xs">XS</SelectItem>
                 <SelectItem value="sm">SM</SelectItem>
                 <SelectItem value="md">MD</SelectItem>
@@ -479,14 +487,14 @@ function StyleEditor({
           <div className="space-y-1">
             <Label className="text-xs">Alignment</Label>
             <Select
-              value={(base.textAlign as string) || ''}
-              onValueChange={(v) => updateBase('textAlign', v || undefined)}
+              value={getValue(base.textAlign)}
+              onValueChange={(v) => updateBase('textAlign', v)}
             >
               <SelectTrigger className="h-8">
                 <SelectValue placeholder="Default" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Default</SelectItem>
+                <SelectItem value="_none">Default</SelectItem>
                 <SelectItem value="left">Left</SelectItem>
                 <SelectItem value="center">Center</SelectItem>
                 <SelectItem value="right">Right</SelectItem>
@@ -503,14 +511,14 @@ function StyleEditor({
           <div className="space-y-1">
             <Label className="text-xs">Background</Label>
             <Select
-              value={(base.backgroundColor as string) || ''}
-              onValueChange={(v) => updateBase('backgroundColor', v || undefined)}
+              value={getValue(base.backgroundColor)}
+              onValueChange={(v) => updateBase('backgroundColor', v)}
             >
               <SelectTrigger className="h-8">
                 <SelectValue placeholder="None" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="_none">None</SelectItem>
                 <SelectItem value="background">Background</SelectItem>
                 <SelectItem value="primary">Primary</SelectItem>
                 <SelectItem value="secondary">Secondary</SelectItem>
@@ -522,14 +530,14 @@ function StyleEditor({
           <div className="space-y-1">
             <Label className="text-xs">Text Color</Label>
             <Select
-              value={(base.color as string) || ''}
-              onValueChange={(v) => updateBase('color', v || undefined)}
+              value={getValue(base.color)}
+              onValueChange={(v) => updateBase('color', v)}
             >
               <SelectTrigger className="h-8">
                 <SelectValue placeholder="Default" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Default</SelectItem>
+                <SelectItem value="_none">Default</SelectItem>
                 <SelectItem value="foreground">Foreground</SelectItem>
                 <SelectItem value="primary">Primary</SelectItem>
                 <SelectItem value="muted-foreground">Muted</SelectItem>
@@ -545,14 +553,14 @@ function StyleEditor({
         <div className="space-y-1">
           <Label className="text-xs">Radius</Label>
           <Select
-            value={(base.borderRadius as string) || ''}
-            onValueChange={(v) => updateBase('borderRadius', v || undefined)}
+            value={getValue(base.borderRadius)}
+            onValueChange={(v) => updateBase('borderRadius', v)}
           >
             <SelectTrigger className="h-8">
               <SelectValue placeholder="None" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="_none">None</SelectItem>
               <SelectItem value="sm">Small</SelectItem>
               <SelectItem value="md">Medium</SelectItem>
               <SelectItem value="lg">Large</SelectItem>
