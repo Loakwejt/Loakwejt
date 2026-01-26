@@ -7,6 +7,7 @@ export default defineConfig({
     'registry/index': 'src/registry/index.ts',
     'actions/index': 'src/actions/index.ts',
     'plugins/index': 'src/plugins/index.ts',
+    'templates/index': 'src/templates/index.ts',
   },
   format: ['cjs', 'esm'],
   dts: true,

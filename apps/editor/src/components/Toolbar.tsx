@@ -18,8 +18,10 @@ import {
   ZoomOut,
   RotateCcw,
   ListTree,
+  LayoutTemplate,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
+import { TemplatePicker } from './TemplatePicker';
 
 export function Toolbar() {
   const {
@@ -51,6 +53,7 @@ export function Toolbar() {
   } = useEditorStore();
 
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
 
   const breakpoints: { value: Breakpoint; icon: typeof Monitor; label: string }[] = [
     { value: 'desktop', icon: Monitor, label: 'Desktop' },
@@ -155,6 +158,19 @@ export function Toolbar() {
           <Redo2 className="h-4 w-4" />
         </Button>
       </div>
+
+      <Separator orientation="vertical" className="h-6" />
+
+      {/* Templates */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsTemplatePickerOpen(true)}
+        className="gap-2"
+      >
+        <LayoutTemplate className="h-4 w-4" />
+        Templates
+      </Button>
 
       <Separator orientation="vertical" className="h-6" />
 
@@ -276,6 +292,12 @@ export function Toolbar() {
         )}
         {isPublishing ? 'Publishing...' : 'Publish'}
       </Button>
+
+      {/* Template Picker Dialog */}
+      <TemplatePicker
+        open={isTemplatePickerOpen}
+        onOpenChange={setIsTemplatePickerOpen}
+      />
     </header>
   );
 }

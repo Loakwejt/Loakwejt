@@ -30,6 +30,11 @@
       "import": "./dist/plugins/index.mjs",
       "require": "./dist/plugins/index.js",
       "types": "./dist/plugins/index.d.ts"
+    },
+    "./templates": {
+      "import": "./dist/templates/index.mjs",
+      "require": "./dist/templates/index.js",
+      "types": "./dist/templates/index.d.ts"
     }
   },
   "scripts": {

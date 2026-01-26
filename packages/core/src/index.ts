@@ -9,3 +9,6 @@ export * from './actions';
 
 // Plugins
 export * from './plugins';
+
+// Templates
+export * from './templates';
