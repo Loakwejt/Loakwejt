@@ -193,8 +193,28 @@ export async function POST(
       },
     });
 
-    // TODO: Send notification emails if configured
-    // This would integrate with the email service
+    // Send notification emails if configured
+    if (form.notifyEmails.length > 0 && !isSpam) {
+      // Import dynamically to avoid circular dependencies
+      const { sendTemplateEmail } = await import('@/lib/email');
+      
+      // Format submission data for email
+      const submissionDataFormatted = Object.entries(sanitizedData)
+        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+        .join('\n');
+
+      await sendTemplateEmail(
+        'form-submission-notification',
+        form.notifyEmails,
+        {
+          formName: form.name,
+          siteName: 'Your Site', // Would come from site relation
+          submittedAt: new Date().toLocaleString(),
+          submissionData: submissionDataFormatted,
+          submissionUrl: `${process.env.NEXTAUTH_URL}/dashboard/workspaces/TODO/sites/${form.siteId}/forms/${form.id}/submissions/${submission.id}`,
+        }
+      ).catch(err => console.error('Failed to send notification email:', err));
+    }
 
     return NextResponse.json({
       success: true,
