@@ -300,11 +300,17 @@ model Asset {
   mimeType    String
   size        Int
   url         String
+  thumbnailUrl String?
+  
+  // Organization
+  folder      String?
+  tags        String[]
   
   // Metadata
   width       Int?
   height      Int?
   alt         String?
+  caption     String?
   
   uploadedById String
   createdAt    DateTime @default(now())
@@ -318,6 +324,7 @@ model Asset {
   @@index([workspaceId])
   @@index([siteId])
   @@index([uploadedById])
+  @@index([folder])
 }
 
 // ============================================================================

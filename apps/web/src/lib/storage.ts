@@ -77,15 +77,25 @@ export async function getSignedDownloadUrl(
 export function generateAssetKey(
   workspaceId: string,
   fileName: string,
-  siteId?: string
+  siteId?: string,
+  folder?: string
 ): string {
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 8);
   const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
   
+  let basePath = `workspaces/${workspaceId}`;
+  
   if (siteId) {
-    return `workspaces/${workspaceId}/sites/${siteId}/assets/${timestamp}-${randomSuffix}-${safeName}`;
+    basePath += `/sites/${siteId}`;
   }
   
-  return `workspaces/${workspaceId}/assets/${timestamp}-${randomSuffix}-${safeName}`;
+  basePath += '/assets';
+  
+  if (folder) {
+    const safeFolder = folder.replace(/[^a-zA-Z0-9-_/]/g, '_');
+    basePath += `/${safeFolder}`;
+  }
+  
+  return `${basePath}/${timestamp}-${randomSuffix}-${safeName}`;
 }
