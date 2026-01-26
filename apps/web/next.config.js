@@ -1,5 +1,8 @@
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Editor URL for CORS
+const editorUrl = process.env.NEXT_PUBLIC_EDITOR_URL || 'http://localhost:5173';
+
 // CSP is more permissive in development for HMR/eval
 const cspValue = isDev
   ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https: http: ws:; frame-ancestors 'none';"
@@ -23,6 +26,29 @@ const nextConfig = {
   // Security headers
   async headers() {
     return [
+      // CORS headers for API routes (allow editor access)
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: isDev ? editorUrl : (process.env.EDITOR_DOMAIN || editorUrl),
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+        ],
+      },
+      // General security headers
       {
         source: '/(.*)',
         headers: [

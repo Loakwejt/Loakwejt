@@ -7,6 +7,7 @@ import {
   insertNodeAt,
   cloneNode,
   generateNodeId,
+  componentRegistry,
 } from '@builderly/core';
 
 // ============================================================================
@@ -168,7 +169,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   // Node operations with history
   addNode: (parentId, nodeType, index) => {
     const { tree, history, historyIndex } = get();
-    const { componentRegistry } = require('@builderly/core');
     
     const definition = componentRegistry.get(nodeType);
     if (!definition) {
