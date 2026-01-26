@@ -14,6 +14,10 @@ import {
   Upload,
   Loader2,
   Check,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  ListTree,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
 
@@ -25,12 +29,16 @@ export function Toolbar() {
     pageId,
     tree,
     breakpoint,
+    zoom,
     setBreakpoint,
+    setZoom,
     isPaletteOpen,
     isInspectorOpen,
+    isLayerPanelOpen,
     isPreviewMode,
     togglePalette,
     toggleInspector,
+    toggleLayerPanel,
     setPreviewMode,
     canUndo,
     canRedo,
@@ -166,6 +174,39 @@ export function Toolbar() {
         ))}
       </div>
 
+      <Separator orientation="vertical" className="h-6" />
+
+      {/* Zoom controls */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setZoom(zoom - 10)}
+          disabled={zoom <= 25}
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <button
+          className="text-xs font-medium w-12 text-center hover:bg-accent rounded px-1 py-0.5"
+          onClick={() => setZoom(100)}
+          title="Reset Zoom"
+        >
+          {zoom}%
+        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setZoom(zoom + 10)}
+          disabled={zoom >= 200}
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Spacer */}
       <div className="flex-1" />
 
@@ -178,6 +219,14 @@ export function Toolbar() {
           title="Toggle Components Panel"
         >
           <PanelLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={isLayerPanelOpen ? 'secondary' : 'ghost'}
+          size="icon"
+          onClick={toggleLayerPanel}
+          title="Toggle Layers Panel"
+        >
+          <ListTree className="h-4 w-4" />
         </Button>
         <Button
           variant={isInspectorOpen ? 'secondary' : 'ghost'}

@@ -4,6 +4,8 @@ import { Toolbar } from './components/Toolbar';
 import { Palette } from './components/Palette';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
+import { LayerPanel } from './components/LayerPanel';
+import { DndProvider } from './components/DndProvider';
 import { useEditorStore } from './store/editor-store';
 
 // Initialize component registry
@@ -13,6 +15,7 @@ function App() {
   const {
     isPaletteOpen,
     isInspectorOpen,
+    isLayerPanelOpen,
     isPreviewMode,
     setPageContext,
     setTree,
@@ -61,10 +64,12 @@ function App() {
       // Check for meta/ctrl key
       const isMod = e.metaKey || e.ctrlKey;
 
+      // Undo
       if (isMod && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         useEditorStore.getState().undo();
       }
+      // Redo (Ctrl+Shift+Z or Ctrl+Y)
       if (isMod && e.key === 'z' && e.shiftKey) {
         e.preventDefault();
         useEditorStore.getState().redo();
@@ -73,6 +78,7 @@ function App() {
         e.preventDefault();
         useEditorStore.getState().redo();
       }
+      // Delete
       if (e.key === 'Delete' || e.key === 'Backspace') {
         const { selectedNodeId } = useEditorStore.getState();
         if (selectedNodeId && selectedNodeId !== 'root') {
@@ -84,6 +90,21 @@ function App() {
           }
         }
       }
+      // Duplicate (Ctrl+D)
+      if (isMod && e.key === 'd') {
+        e.preventDefault();
+        const { selectedNodeId } = useEditorStore.getState();
+        if (selectedNodeId && selectedNodeId !== 'root') {
+          useEditorStore.getState().duplicateNode(selectedNodeId);
+        }
+      }
+      // Save (Ctrl+S)
+      if (isMod && e.key === 's') {
+        e.preventDefault();
+        // Trigger save via toolbar
+        document.querySelector<HTMLButtonElement>('[data-save-button]')?.click();
+      }
+      // Escape to deselect
       if (e.key === 'Escape') {
         useEditorStore.getState().selectNode(null);
       }
@@ -95,32 +116,41 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="h-screen flex flex-col bg-muted/30">
-        {/* Toolbar */}
-        <Toolbar />
+      <DndProvider>
+        <div className="h-screen flex flex-col bg-muted/30">
+          {/* Toolbar */}
+          <Toolbar />
 
-        {/* Main editor area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left sidebar - Palette */}
-          {isPaletteOpen && !isPreviewMode && (
-            <aside className="w-64 border-r bg-background overflow-y-auto">
-              <Palette />
-            </aside>
-          )}
+          {/* Main editor area */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left sidebar - Palette */}
+            {isPaletteOpen && !isPreviewMode && (
+              <aside className="w-64 border-r bg-background overflow-y-auto flex-shrink-0">
+                <Palette />
+              </aside>
+            )}
 
-          {/* Center - Canvas */}
-          <main className="flex-1 overflow-auto bg-muted/50 p-4">
-            <Canvas />
-          </main>
+            {/* Layer Panel (optional, between palette and canvas) */}
+            {isLayerPanelOpen && !isPreviewMode && (
+              <aside className="w-56 border-r bg-background overflow-y-auto flex-shrink-0">
+                <LayerPanel />
+              </aside>
+            )}
 
-          {/* Right sidebar - Inspector */}
-          {isInspectorOpen && !isPreviewMode && (
-            <aside className="w-80 border-l bg-background overflow-y-auto">
-              <Inspector />
-            </aside>
-          )}
+            {/* Center - Canvas */}
+            <main className="flex-1 overflow-auto bg-muted/50 relative">
+              <Canvas />
+            </main>
+
+            {/* Right sidebar - Inspector */}
+            {isInspectorOpen && !isPreviewMode && (
+              <aside className="w-80 border-l bg-background overflow-y-auto flex-shrink-0">
+                <Inspector />
+              </aside>
+            )}
+          </div>
         </div>
-      </div>
+      </DndProvider>
     </TooltipProvider>
   );
 }

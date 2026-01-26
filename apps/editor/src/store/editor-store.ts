@@ -50,6 +50,7 @@ interface EditorState {
   // UI State
   isPaletteOpen: boolean;
   isInspectorOpen: boolean;
+  isLayerPanelOpen: boolean;
   isPreviewMode: boolean;
   isSaving: boolean;
   isDirty: boolean;
@@ -81,6 +82,7 @@ interface EditorState {
   // UI
   togglePalette: () => void;
   toggleInspector: () => void;
+  toggleLayerPanel: () => void;
   setPreviewMode: (isPreview: boolean) => void;
   
   // History
@@ -130,6 +132,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   historyIndex: 0,
   isPaletteOpen: true,
   isInspectorOpen: true,
+  isLayerPanelOpen: false,
   isPreviewMode: false,
   isSaving: false,
   isDirty: false,
@@ -402,6 +405,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   toggleInspector: () => {
     set((state) => ({ isInspectorOpen: !state.isInspectorOpen }));
+  },
+
+  toggleLayerPanel: () => {
+    set((state) => ({ isLayerPanelOpen: !state.isLayerPanelOpen }));
   },
 
   setPreviewMode: (isPreview) => {

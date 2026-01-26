@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import { Input, Separator } from '@builderly/ui';
-import { Search } from 'lucide-react';
+import { Search, GripVertical } from 'lucide-react';
 import { componentRegistry, type ComponentDefinition } from '@builderly/core';
 import { useEditorStore } from '../store/editor-store';
+import { cn } from '@builderly/ui';
+import type { DragData } from './DndProvider';
 
-// Icon mapping (simple approach)
+// Icon mapping
 const ICON_MAP: Record<string, string> = {
   layout: '📐',
   type: '📝',
@@ -33,11 +36,55 @@ const ICON_MAP: Record<string, string> = {
   shield: '🛡️',
 };
 
+interface DraggableComponentProps {
+  component: ComponentDefinition;
+  onAddComponent: (component: ComponentDefinition) => void;
+}
+
+function DraggableComponent({ component, onAddComponent }: DraggableComponentProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `palette-${component.type}`,
+    data: {
+      type: 'new-component',
+      componentType: component.type,
+    } as DragData,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  return (
+    <button
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={cn(
+        'flex flex-col items-center gap-1 p-3 rounded-lg border bg-card',
+        'hover:bg-accent hover:border-accent-foreground/20 transition-colors text-center',
+        'cursor-grab active:cursor-grabbing',
+        isDragging && 'opacity-50 ring-2 ring-primary'
+      )}
+      onClick={() => onAddComponent(component)}
+      title={component.description || `Add ${component.displayName}`}
+    >
+      <span className="text-lg">
+        {ICON_MAP[component.icon] || '📦'}
+      </span>
+      <span className="text-xs font-medium truncate w-full">
+        {component.displayName}
+      </span>
+    </button>
+  );
+}
+
 export function Palette() {
   const [search, setSearch] = useState('');
   const { selectedNodeId, addNode, tree } = useEditorStore();
 
-  const categories = componentRegistry.getCategories();
   const groupedComponents = componentRegistry.getGroupedByCategory();
 
   const filteredGroups = search
@@ -87,6 +134,11 @@ export function Palette() {
     <div className="p-4 space-y-4">
       <h2 className="font-semibold">Components</h2>
       
+      {/* Drag hint */}
+      <p className="text-xs text-muted-foreground">
+        Drag components to the canvas or click to add
+      </p>
+      
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -110,19 +162,11 @@ export function Palette() {
               </h3>
               <div className="grid grid-cols-2 gap-2">
                 {components.map((component) => (
-                  <button
+                  <DraggableComponent
                     key={component.type}
-                    className="flex flex-col items-center gap-1 p-3 rounded-lg border bg-card hover:bg-accent hover:border-accent-foreground/20 transition-colors text-center component-item"
-                    onClick={() => handleAddComponent(component)}
-                    title={component.description}
-                  >
-                    <span className="text-lg">
-                      {ICON_MAP[component.icon] || '📦'}
-                    </span>
-                    <span className="text-xs font-medium truncate w-full">
-                      {component.displayName}
-                    </span>
-                  </button>
+                    component={component}
+                    onAddComponent={handleAddComponent}
+                  />
                 ))}
               </div>
               <Separator className="mt-4" />
