@@ -157,6 +157,7 @@ model Site {
   pages       Page[]
   collections Collection[]
   assets      Asset[]
+  forms       Form[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId])
@@ -421,6 +422,83 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   REFUNDED
+}
+
+// ============================================================================
+// FORMS & SUBMISSIONS
+// ============================================================================
+
+model Form {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String
+  slug        String
+  description String?
+  
+  // Form schema (fields configuration)
+  schema      Json     @default("{}")
+  
+  // Settings
+  submitLabel     String   @default("Submit")
+  successMessage  String   @default("Thank you for your submission!")
+  redirectUrl     String?
+  
+  // Notifications
+  notifyEmails    String[] @default([])
+  enableRecaptcha Boolean  @default(false)
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  formId    String
+  
+  // Submission data
+  data      Json
+  
+  // Metadata
+  ipAddress String?
+  userAgent String?
+  referrer  String?
+  
+  // Status
+  status    SubmissionStatus @default(NEW)
+  readAt    DateTime?
+  
+  // Spam detection
+  isSpam    Boolean  @default(false)
+  spamScore Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum SubmissionStatus {
+  NEW
+  READ
+  REPLIED
+  SPAM
+  ARCHIVED
 }
 
 // ============================================================================
