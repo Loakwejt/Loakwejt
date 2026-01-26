@@ -31,8 +31,9 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setErrorMessage(result.error);
-      } else {
+        setErrorMessage('Invalid email or password');
+      } else if (result?.ok) {
+        router.refresh();
         router.push(callbackUrl);
       }
     } catch {

@@ -47,7 +47,8 @@ export default function RegisterPage() {
 
       if (result?.error) {
         setErrorMessage(result.error);
-      } else {
+      } else if (result?.ok) {
+        router.refresh();
         router.push(plan ? `/dashboard?plan=${plan}` : '/dashboard');
       }
     } catch {
