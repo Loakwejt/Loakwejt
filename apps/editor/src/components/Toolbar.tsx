@@ -276,12 +276,14 @@ export function Toolbar() {
         </Button>
         <Separator orientation="vertical" className="h-6 mx-1" />
         <Button
-          variant={isSiteSettingsOpen ? 'secondary' : 'ghost'}
-          size="icon"
+          variant={isSiteSettingsOpen ? 'default' : 'outline'}
+          size="sm"
           onClick={toggleSiteSettings}
           title="Website-Einstellungen"
+          className="gap-2"
         >
           <Settings className="h-4 w-4" />
+          <span className="hidden lg:inline">Einstellungen</span>
         </Button>
       </div>
 
