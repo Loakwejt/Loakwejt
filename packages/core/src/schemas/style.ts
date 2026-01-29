@@ -116,13 +116,14 @@ export const StylePropertiesSchema = z.object({
   overflow: OverflowToken.optional(),
   overflowX: OverflowToken.optional(),
   overflowY: OverflowToken.optional(),
+  zIndex: z.number().optional(),
   
   // Sizing
   width: z.string().optional(), // Allow percentage/auto
   height: z.string().optional(),
   minWidth: z.string().optional(),
   minHeight: z.string().optional(),
-  maxWidth: MaxWidthToken.optional(),
+  maxWidth: z.union([MaxWidthToken, z.string()]).optional(),
   maxHeight: z.string().optional(),
   
   // Spacing
@@ -134,13 +135,13 @@ export const StylePropertiesSchema = z.object({
   paddingBottom: SpacingToken.optional(),
   paddingLeft: SpacingToken.optional(),
   
-  margin: SpacingToken.optional(),
-  marginX: SpacingToken.optional(),
-  marginY: SpacingToken.optional(),
-  marginTop: SpacingToken.optional(),
-  marginRight: SpacingToken.optional(),
-  marginBottom: SpacingToken.optional(),
-  marginLeft: SpacingToken.optional(),
+  margin: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginX: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginY: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginTop: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginRight: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginBottom: z.union([SpacingToken, z.literal('auto')]).optional(),
+  marginLeft: z.union([SpacingToken, z.literal('auto')]).optional(),
   
   // Gap (for flex/grid)
   gap: SpacingToken.optional(),
@@ -161,10 +162,20 @@ export const StylePropertiesSchema = z.object({
   gridColumnSpan: z.number().min(1).max(12).optional(),
   gridRowSpan: z.number().min(1).max(12).optional(),
   
-  // Colors
+  // Theme Colors (using tokens)
   backgroundColor: ColorToken.optional(),
   color: ColorToken.optional(),
-  borderColor: ColorToken.optional(),
+  
+  // Custom Colors (hex/rgb values)
+  bgColor: z.string().optional(),
+  textColor: z.string().optional(),
+  borderColor: z.string().optional(),
+  
+  // Background Image
+  backgroundImage: z.string().optional(),
+  backgroundSize: z.enum(['cover', 'contain', 'auto']).optional(),
+  backgroundPosition: z.enum(['center', 'top', 'bottom', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right']).optional(),
+  backgroundRepeat: z.enum(['repeat', 'no-repeat', 'repeat-x', 'repeat-y']).optional(),
   
   // Typography
   fontSize: FontSizeToken.optional(),
@@ -181,7 +192,7 @@ export const StylePropertiesSchema = z.object({
   borderStyle: z.enum(['solid', 'dashed', 'dotted', 'none']).optional(),
   
   // Effects
-  shadow: ShadowToken.optional(),
+  shadow: z.union([ShadowToken, z.literal('inner')]).optional(),
   opacity: z.number().min(0).max(100).optional(),
   
   // Cursor

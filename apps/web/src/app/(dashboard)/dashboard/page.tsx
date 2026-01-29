@@ -39,9 +39,9 @@ export default async function DashboardPage() {
     orderBy: { createdAt: 'desc' },
   });
 
-  const workspaces = memberships.map((m) => ({
-    ...m.workspace,
-    role: m.role,
+  const workspaces = memberships.map((membership: typeof memberships[number]) => ({
+    ...membership.workspace,
+    role: membership.role,
   }));
 
   // If user has no workspaces, show onboarding

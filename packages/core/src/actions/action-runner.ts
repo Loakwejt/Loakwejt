@@ -1,4 +1,18 @@
-import type { BuilderAction, BuilderActionBinding } from '../schemas/actions';
+import type { 
+  BuilderAction, 
+  BuilderActionBinding 
+} from '../schemas/actions';
+import { z } from 'zod';
+import { 
+  NavigateActionSchema,
+  ScrollToActionSchema,
+  SetStateActionSchema,
+  ToggleStateActionSchema,
+  OpenModalActionSchema,
+  CloseModalActionSchema,
+  LoginActionSchema,
+  LogoutActionSchema,
+} from '../schemas/actions';
 
 // ============================================================================
 // ACTION CONTEXT - Data available during action execution
@@ -166,11 +180,21 @@ export class ActionRunner {
 // CLIENT-SIDE ACTION HANDLERS
 // ============================================================================
 
+// Type aliases for action schemas
+type NavigateAction = z.infer<typeof NavigateActionSchema>;
+type ScrollToAction = z.infer<typeof ScrollToActionSchema>;
+type SetStateAction = z.infer<typeof SetStateActionSchema>;
+type ToggleStateAction = z.infer<typeof ToggleStateActionSchema>;
+type OpenModalAction = z.infer<typeof OpenModalActionSchema>;
+type CloseModalAction = z.infer<typeof CloseModalActionSchema>;
+type LoginAction = z.infer<typeof LoginActionSchema>;
+type LogoutAction = z.infer<typeof LogoutActionSchema>;
+
 export function createClientActionRunner(): ActionRunner {
   const runner = new ActionRunner();
   
   // Navigate action
-  runner.registerHandler('navigate', async (action) => {
+  runner.registerHandler<NavigateAction>('navigate', async (action) => {
     const target = action.target || '_self';
     
     if (target === '_blank') {
@@ -183,7 +207,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Scroll to action
-  runner.registerHandler('scrollTo', async (action) => {
+  runner.registerHandler<ScrollToAction>('scrollTo', async (action) => {
     const element = document.getElementById(action.targetId);
     
     if (element) {
@@ -200,7 +224,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Set state action
-  runner.registerHandler('setState', async (action) => {
+  runner.registerHandler<SetStateAction>('setState', async (action) => {
     return {
       success: true,
       setState: { [action.key]: action.value },
@@ -208,7 +232,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Toggle state action
-  runner.registerHandler('toggleState', async (action, context) => {
+  runner.registerHandler<ToggleStateAction>('toggleState', async (action, context) => {
     const currentValue = context.state[action.key];
     return {
       success: true,
@@ -217,7 +241,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Open modal action
-  runner.registerHandler('openModal', async (action) => {
+  runner.registerHandler<OpenModalAction>('openModal', async (action) => {
     return {
       success: true,
       openModal: action.modalId,
@@ -225,7 +249,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Close modal action
-  runner.registerHandler('closeModal', async (action) => {
+  runner.registerHandler<CloseModalAction>('closeModal', async (action) => {
     return {
       success: true,
       closeModal: action.modalId || '__current__',
@@ -233,7 +257,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Login action (redirect to login page)
-  runner.registerHandler('login', async (action) => {
+  runner.registerHandler<LoginAction>('login', async (action) => {
     const redirectTo = action.redirectTo || window.location.pathname;
     return {
       success: true,
@@ -242,7 +266,7 @@ export function createClientActionRunner(): ActionRunner {
   });
   
   // Logout action
-  runner.registerHandler('logout', async (action) => {
+  runner.registerHandler<LogoutAction>('logout', async (action) => {
     return {
       success: true,
       redirect: `/api/auth/signout?redirect=${encodeURIComponent(action.redirectTo || '/')}`,

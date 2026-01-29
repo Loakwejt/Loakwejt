@@ -13,10 +13,20 @@ const SectionComponent: ComponentDefinition = {
   category: 'layout',
   canHaveChildren: true,
   defaultProps: {
-    fullWidth: false,
+    fullWidth: true,
+    minHeight: 'auto',
+    verticalAlign: 'start',
   },
   propsSchema: z.object({
-    fullWidth: z.boolean().default(false),
+    fullWidth: z.boolean().default(true),
+    minHeight: z.enum(['auto', 'screen', 'half', 'third']).default('auto'),
+    verticalAlign: z.enum(['start', 'center', 'end']).default('start'),
+    backgroundImage: z.string().optional(),
+    backgroundSize: z.enum(['cover', 'contain', 'auto']).default('cover'),
+    backgroundPosition: z.enum(['center', 'top', 'bottom', 'left', 'right']).default('center'),
+    backgroundRepeat: z.boolean().default(false),
+    backgroundOverlay: z.string().optional(),
+    backgroundOverlayOpacity: z.number().min(0).max(100).default(50),
   }),
   tags: ['layout', 'container', 'wrapper'],
 };
@@ -30,9 +40,12 @@ const ContainerComponent: ComponentDefinition = {
   canHaveChildren: true,
   defaultProps: {
     maxWidth: 'lg',
+    centered: true,
   },
   propsSchema: z.object({
-    maxWidth: z.enum(['sm', 'md', 'lg', 'xl', '2xl', 'full']).default('lg'),
+    maxWidth: z.enum(['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full']).default('lg'),
+    centered: z.boolean().default(true),
+    minHeight: z.enum(['auto', 'full', 'screen']).default('auto'),
   }),
   tags: ['layout', 'container', 'wrapper', 'center'],
 };
@@ -49,13 +62,15 @@ const StackComponent: ComponentDefinition = {
     gap: 'md',
     align: 'stretch',
     justify: 'start',
+    wrap: false,
   },
   propsSchema: z.object({
     direction: z.enum(['row', 'column', 'row-reverse', 'column-reverse']).default('column'),
-    gap: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']).default('md'),
+    gap: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']).default('md'),
     align: z.enum(['start', 'center', 'end', 'stretch', 'baseline']).default('stretch'),
     justify: z.enum(['start', 'center', 'end', 'between', 'around', 'evenly']).default('start'),
     wrap: z.boolean().default(false),
+    reverse: z.boolean().default(false),
   }),
   tags: ['layout', 'flex', 'stack', 'flexbox'],
 };
@@ -70,12 +85,16 @@ const GridComponent: ComponentDefinition = {
   defaultProps: {
     columns: 3,
     gap: 'md',
+    columnsMobile: 1,
+    columnsTablet: 2,
   },
   propsSchema: z.object({
     columns: z.number().min(1).max(12).default(3),
-    gap: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']).default('md'),
-    columnsMobile: z.number().min(1).max(12).optional(),
-    columnsTablet: z.number().min(1).max(12).optional(),
+    gap: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']).default('md'),
+    columnsMobile: z.number().min(1).max(12).default(1),
+    columnsTablet: z.number().min(1).max(12).default(2),
+    rowGap: z.enum(['none', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']).optional(),
+    alignItems: z.enum(['start', 'center', 'end', 'stretch']).default('stretch'),
   }),
   tags: ['layout', 'grid', 'columns', 'responsive'],
 };

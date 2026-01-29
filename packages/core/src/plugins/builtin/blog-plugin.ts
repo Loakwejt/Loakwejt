@@ -129,16 +129,16 @@ const postsCollection: CollectionDefinition = {
   name: 'Blog Posts',
   description: 'Blog posts for your website',
   schema: [
-    { name: 'title', type: 'text', required: true, validation: { min: 1, max: 200 } },
+    { name: 'title', type: 'text', required: true, unique: false, validation: { min: 1, max: 200 } },
     { name: 'slug', type: 'slug', required: true, unique: true },
-    { name: 'excerpt', type: 'text', required: false, validation: { max: 500 } },
-    { name: 'content', type: 'richtext', required: false },
-    { name: 'featuredImage', type: 'image', required: false },
-    { name: 'publishedAt', type: 'datetime', required: false },
-    { name: 'category', type: 'select', required: false, validation: { 
+    { name: 'excerpt', type: 'text', required: false, unique: false, validation: { max: 500 } },
+    { name: 'content', type: 'richtext', required: false, unique: false },
+    { name: 'featuredImage', type: 'image', required: false, unique: false },
+    { name: 'publishedAt', type: 'datetime', required: false, unique: false },
+    { name: 'category', type: 'select', required: false, unique: false, validation: { 
       options: ['General', 'News', 'Tutorial', 'Announcement'] 
     }},
-    { name: 'tags', type: 'multiselect', required: false, validation: {
+    { name: 'tags', type: 'multiselect', required: false, unique: false, validation: {
       options: ['featured', 'popular', 'new']
     }},
   ],
@@ -147,6 +147,7 @@ const postsCollection: CollectionDefinition = {
     slugField: 'slug',
     titleField: 'title',
     timestamps: true,
+    softDelete: false,
   },
 };
 
@@ -155,15 +156,17 @@ const categoriesCollection: CollectionDefinition = {
   name: 'Blog Categories',
   description: 'Categories for blog posts',
   schema: [
-    { name: 'name', type: 'text', required: true },
+    { name: 'name', type: 'text', required: true, unique: false },
     { name: 'slug', type: 'slug', required: true, unique: true },
-    { name: 'description', type: 'text', required: false },
-    { name: 'color', type: 'color', required: false },
+    { name: 'description', type: 'text', required: false, unique: false },
+    { name: 'color', type: 'color', required: false, unique: false },
   ],
   isSystem: false,
   settings: {
     slugField: 'slug',
     titleField: 'name',
+    timestamps: true,
+    softDelete: false,
   },
 };
 

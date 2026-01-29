@@ -120,7 +120,7 @@ function ThemeSettings({ settings, onUpdate }: SettingsProps) {
     });
   };
 
-  const updateTypography = (key: string, value: string | number) => {
+  const updateTypography = (key: string, value: string | number | string[]) => {
     onUpdate({
       theme: {
         ...settings.theme,

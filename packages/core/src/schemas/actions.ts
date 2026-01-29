@@ -108,6 +108,32 @@ export const ToggleStateActionSchema = z.object({
   key: z.string(),
 });
 
+// Navigate to internal page
+export const NavigatePageActionSchema = z.object({
+  type: z.literal('navigatePage'),
+  pageSlug: z.string(),
+});
+
+// Toggle CSS class on element
+export const ToggleClassActionSchema = z.object({
+  type: z.literal('toggleClass'),
+  targetId: z.string().optional(), // Element ID to target, or self
+  className: z.string(),
+});
+
+// Set a runtime variable
+export const SetVariableActionSchema = z.object({
+  type: z.literal('setVariable'),
+  name: z.string(),
+  value: z.unknown(),
+});
+
+// Custom code execution (sanitized)
+export const CustomCodeActionSchema = z.object({
+  type: z.literal('customCode'),
+  code: z.string(), // Simple expression, sandboxed
+});
+
 // Custom/webhook action (safe - server-side only)
 export const WebhookActionSchema = z.object({
   type: z.literal('webhook'),
@@ -122,6 +148,7 @@ export const WebhookActionSchema = z.object({
 
 export const BuilderActionSchema = z.discriminatedUnion('type', [
   NavigateActionSchema,
+  NavigatePageActionSchema,
   OpenModalActionSchema,
   CloseModalActionSchema,
   SubmitFormActionSchema,
@@ -137,6 +164,9 @@ export const BuilderActionSchema = z.discriminatedUnion('type', [
   ScrollToActionSchema,
   SetStateActionSchema,
   ToggleStateActionSchema,
+  ToggleClassActionSchema,
+  SetVariableActionSchema,
+  CustomCodeActionSchema,
   WebhookActionSchema,
 ]);
 
@@ -147,6 +177,7 @@ export type BuilderAction = z.infer<typeof BuilderActionSchema>;
 // ============================================================================
 
 export const ActionEventType = z.enum([
+  // Standard DOM events (camelCase)
   'onClick',
   'onDoubleClick',
   'onSubmit',
@@ -155,6 +186,13 @@ export const ActionEventType = z.enum([
   'onFocus',
   'onBlur',
   'onChange',
+  // Simplified event names (for better UX in editor)
+  'click',
+  'mouseenter',
+  'mouseleave',
+  'focus',
+  'blur',
+  'submit',
 ]);
 
 export type ActionEventType = z.infer<typeof ActionEventType>;
@@ -311,4 +349,28 @@ actionRegistry.register({
   description: 'Scroll to an element',
   icon: 'arrow-down',
   schema: ScrollToActionSchema,
+});
+
+actionRegistry.register({
+  type: 'navigatePage',
+  displayName: 'Navigate to Page',
+  description: 'Navigate to an internal page',
+  icon: 'file',
+  schema: NavigatePageActionSchema,
+});
+
+actionRegistry.register({
+  type: 'toggleClass',
+  displayName: 'Toggle Class',
+  description: 'Toggle a CSS class on an element',
+  icon: 'toggle-left',
+  schema: ToggleClassActionSchema,
+});
+
+actionRegistry.register({
+  type: 'setVariable',
+  displayName: 'Set Variable',
+  description: 'Set a runtime variable value',
+  icon: 'variable',
+  schema: SetVariableActionSchema,
 });

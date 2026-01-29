@@ -97,7 +97,7 @@ export function Canvas() {
         {/* Device frame */}
         <div
           className={cn(
-            'relative bg-background shadow-2xl overflow-hidden transition-all duration-300',
+            'relative shadow-2xl overflow-hidden transition-all duration-300',
             breakpoint === 'mobile' && 'rounded-[2rem] border-[8px] border-gray-800',
             breakpoint === 'tablet' && 'rounded-xl border-[6px] border-gray-700',
             breakpoint === 'desktop' && 'rounded-lg',
@@ -109,7 +109,8 @@ export function Canvas() {
             maxWidth: '100%',
             transform: `scale(${zoom / 100})`,
             transformOrigin: 'top center',
-            minHeight: breakpoint === 'mobile' ? '667px' : breakpoint === 'tablet' ? '1024px' : 'auto',
+            minHeight: breakpoint === 'mobile' ? '667px' : breakpoint === 'tablet' ? '1024px' : '600px',
+            backgroundColor: siteSettings.theme.colors.background,
           }}
         >
           {/* Notch for mobile */}
@@ -121,7 +122,7 @@ export function Canvas() {
           <div
             ref={setNodeRef}
             className={cn(
-              'min-h-full',
+              'min-h-full h-full',
               breakpoint === 'mobile' && 'pt-8'
             )}
             style={themeStyles}

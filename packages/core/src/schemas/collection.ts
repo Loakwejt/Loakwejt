@@ -34,8 +34,8 @@ export const CollectionFieldSchema = z.object({
   type: CollectionFieldType,
   displayName: z.string().optional(),
   description: z.string().optional(),
-  required: z.boolean().default(false),
-  unique: z.boolean().default(false),
+  required: z.boolean().optional(),
+  unique: z.boolean().optional(),
   defaultValue: z.unknown().optional(),
   
   // Validation rules
@@ -49,8 +49,8 @@ export const CollectionFieldSchema = z.object({
   // Relation config
   relation: z.object({
     collection: z.string(),
-    displayField: z.string().default('id'),
-    multiple: z.boolean().default(false),
+    displayField: z.string().optional(),
+    multiple: z.boolean().optional(),
   }).optional(),
 });
 
@@ -73,14 +73,14 @@ export const CollectionDefinitionSchema = z.object({
   name: z.string().min(1).max(128),
   description: z.string().optional(),
   schema: CollectionSchemaDefinition,
-  isSystem: z.boolean().default(false),
+  isSystem: z.boolean().optional(),
   
   // Settings
   settings: z.object({
     slugField: z.string().optional(), // Field to use for record slugs
     titleField: z.string().optional(), // Field to use as record title
-    timestamps: z.boolean().default(true),
-    softDelete: z.boolean().default(false),
+    timestamps: z.boolean().optional(),
+    softDelete: z.boolean().optional(),
   }).optional(),
 });
 
