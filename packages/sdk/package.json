@@ -20,7 +20,6 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@builderly/core": "workspace:*",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -76,12 +76,12 @@ export class ApiClient {
 
     if (response.status === 401) {
       this.onUnauthorized?.();
-      throw new ApiError('Unauthorized', 401);
+      throw new ApiClientError('Unauthorized', 401);
     }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new ApiError(error.message || 'API Error', response.status, error);
+      throw new ApiClientError(error.message || 'API Error', response.status, error);
     }
 
     if (response.status === 204) {
@@ -333,7 +333,7 @@ export class ApiClient {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-        throw new ApiError(error.message, response.status, error);
+        throw new ApiClientError(error.message, response.status, error);
       }
 
       return response.json() as Promise<Asset>;
@@ -394,17 +394,17 @@ export class ApiClient {
 }
 
 // ============================================================================
-// API ERROR CLASS
+// API CLIENT ERROR CLASS
 // ============================================================================
 
-export class ApiError extends Error {
+export class ApiClientError extends Error {
   constructor(
     message: string,
     public statusCode: number,
     public details?: Record<string, unknown>
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = 'ApiClientError';
   }
 }
 
