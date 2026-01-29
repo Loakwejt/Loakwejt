@@ -1162,8 +1162,91 @@ function BackgroundSettingsComponent({ settings, onUpdate }: SettingsProps) {
               />
             </div>
           </div>
-          <div className="text-xs text-muted-foreground">
-            Farben können über CSS Custom Properties definiert werden
+          
+          {/* Gradient Colors Editor */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">Verlaufs-Farben</Label>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 text-xs"
+                onClick={() => {
+                  const colors = [...(bg.gradient.colors || [])];
+                  colors.push({ color: '#888888', position: 50 });
+                  updateGradient('colors', colors);
+                }}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Farbe
+              </Button>
+            </div>
+            
+            {/* Gradient Preview */}
+            <div 
+              className="h-8 rounded border"
+              style={{
+                background: bg.gradient.type === 'linear'
+                  ? `linear-gradient(${bg.gradient.angle}deg, ${(bg.gradient.colors || []).map(c => `${c.color} ${c.position}%`).join(', ')})`
+                  : bg.gradient.type === 'radial'
+                  ? `radial-gradient(circle, ${(bg.gradient.colors || []).map(c => `${c.color} ${c.position}%`).join(', ')})`
+                  : `conic-gradient(from ${bg.gradient.angle}deg, ${(bg.gradient.colors || []).map(c => `${c.color} ${c.position}%`).join(', ')})`
+              }}
+            />
+            
+            {/* Color Stops */}
+            <div className="space-y-2">
+              {(bg.gradient.colors || []).map((colorStop, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 bg-muted/30 rounded">
+                  <input
+                    type="color"
+                    value={colorStop.color}
+                    onChange={(e) => {
+                      const colors = [...(bg.gradient.colors || [])];
+                      colors[index] = { ...colorStop, color: e.target.value };
+                      updateGradient('colors', colors);
+                    }}
+                    className="h-6 w-6 rounded border cursor-pointer flex-shrink-0"
+                  />
+                  <Input
+                    value={colorStop.color}
+                    onChange={(e) => {
+                      const colors = [...(bg.gradient.colors || [])];
+                      colors[index] = { ...colorStop, color: e.target.value };
+                      updateGradient('colors', colors);
+                    }}
+                    className="flex-1 font-mono text-xs h-7"
+                    placeholder="#000000"
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={colorStop.position}
+                    onChange={(e) => {
+                      const colors = [...(bg.gradient.colors || [])];
+                      colors[index] = { ...colorStop, position: parseInt(e.target.value) || 0 };
+                      updateGradient('colors', colors);
+                    }}
+                    className="w-16 text-xs h-7"
+                  />
+                  <span className="text-xs text-muted-foreground">%</span>
+                  {(bg.gradient.colors || []).length > 2 && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 w-6 p-0 text-destructive"
+                      onClick={() => {
+                        const colors = [...(bg.gradient.colors || [])].filter((_, i) => i !== index);
+                        updateGradient('colors', colors);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
