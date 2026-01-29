@@ -39,10 +39,16 @@ export default async function DashboardPage() {
     orderBy: { createdAt: 'desc' },
   });
 
-  const workspaces = memberships.map((membership: typeof memberships[number]) => ({
-    ...membership.workspace,
-    role: membership.role,
-  }));
+  type MembershipWithWorkspace = Awaited<ReturnType<typeof prisma.workspaceMember.findMany>>[number];
+  type WorkspaceWithRole = MembershipWithWorkspace['workspace'] & { role: MembershipWithWorkspace['role'] };
+  
+  const workspaces: WorkspaceWithRole[] = [];
+  for (const membership of memberships) {
+    workspaces.push({
+      ...membership.workspace,
+      role: membership.role,
+    });
+  }
 
   // If user has no workspaces, show onboarding
   if (workspaces.length === 0) {
@@ -111,7 +117,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {workspace.sites.map((site) => (
+                {workspace.sites.map((site: typeof workspace.sites[number]) => (
                   <Card key={site.id}>
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
