@@ -143,7 +143,7 @@ export default async function SiteDetailPage({ params }: Props) {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {site.pages.map((page) => (
+              {site.pages.map((page: typeof site.pages[number]) => (
                 <Card key={page.id}>
                   <CardHeader className="py-4">
                     <div className="flex items-center justify-between">

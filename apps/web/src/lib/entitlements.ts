@@ -11,7 +11,8 @@ export async function getWorkspaceEntitlements(workspaceId: string): Promise<Ent
     throw new Error('Workspace not found');
   }
 
-  return PLAN_ENTITLEMENTS[workspace.plan] || PLAN_ENTITLEMENTS.FREE;
+  // workspace.plan is always a valid Plan enum value, so the lookup is guaranteed to succeed
+  return (PLAN_ENTITLEMENTS[workspace.plan] ?? PLAN_ENTITLEMENTS.FREE) as Entitlements;
 }
 
 export async function checkEntitlement(

@@ -47,7 +47,7 @@ export async function checkWorkspacePermission(
   const membership = await getWorkspaceMembership(workspaceId, userId);
   if (!membership) return false;
 
-  const userLevel = ROLE_LEVELS[membership.role];
+  const userLevel = ROLE_LEVELS[membership.role as Role];
   const required = PERMISSION_REQUIRED_LEVEL[requiredLevel];
 
   return userLevel >= required;
@@ -67,14 +67,14 @@ export async function requireWorkspacePermission(
     throw new Error('Forbidden: Not a member of this workspace');
   }
 
-  const userLevel = ROLE_LEVELS[membership.role];
+  const userLevel = ROLE_LEVELS[membership.role as Role];
   const required = PERMISSION_REQUIRED_LEVEL[requiredLevel];
 
   if (userLevel < required) {
     throw new Error(`Forbidden: Requires ${requiredLevel} permission`);
   }
 
-  return { userId: user.id, role: membership.role };
+  return { userId: user.id, role: membership.role as Role };
 }
 
 export async function getUserWorkspaces(userId: string) {
@@ -88,7 +88,7 @@ export async function getUserWorkspaces(userId: string) {
     },
   });
 
-  return memberships.map((m) => ({
+  return memberships.map((m: typeof memberships[number]) => ({
     ...m.workspace,
     role: m.role,
   }));

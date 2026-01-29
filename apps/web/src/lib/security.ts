@@ -120,7 +120,10 @@ export function generateSecureToken(length = 32): string {
   
   let result = '';
   for (let i = 0; i < length; i++) {
-    result += chars[array[i] % chars.length];
+    const byte = array[i];
+    if (byte !== undefined) {
+      result += chars[byte % chars.length];
+    }
   }
   return result;
 }

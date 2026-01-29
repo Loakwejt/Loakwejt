@@ -67,7 +67,7 @@ export async function POST(
 
     // Check file size based on category
     const category = getFileCategory(file.type);
-    const maxSize = MAX_SIZES[category] || MAX_SIZES.document;
+    const maxSize = MAX_SIZES[category] ?? MAX_SIZES.document ?? 20 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: `File too large. Max size for ${category}: ${maxSize / (1024 * 1024)}MB` },
@@ -81,8 +81,8 @@ export async function POST(
       return NextResponse.json({ error: canUpload.reason }, { status: 403 });
     }
 
-    // Convert file to buffer
-    let buffer = Buffer.from(await file.arrayBuffer());
+    // Convert file to buffer - use ArrayBufferLike to allow sharp buffer reassignment
+    let buffer: Buffer<ArrayBufferLike> = Buffer.from(await file.arrayBuffer()) as Buffer<ArrayBufferLike>;
     let width: number | null = null;
     let height: number | null = null;
     let thumbnailUrl: string | null = null;
@@ -98,7 +98,7 @@ export async function POST(
           generateThumbnail: true,
         });
 
-        buffer = processed.buffer;
+        buffer = processed.buffer as Buffer<ArrayBufferLike>;
         width = processed.metadata.width;
         height = processed.metadata.height;
 

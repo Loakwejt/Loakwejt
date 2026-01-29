@@ -121,7 +121,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {workspace.sites.map((site) => (
+              {workspace.sites.map((site: typeof workspace.sites[number]) => (
                 <div
                   key={site.id}
                   className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"

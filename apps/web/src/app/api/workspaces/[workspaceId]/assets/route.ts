@@ -96,7 +96,7 @@ export async function GET(
         total,
         totalPages: Math.ceil(total / limit),
       },
-      folders: folders.map(f => f.folder).filter(Boolean),
+      folders: folders.map((f: { folder: string | null }) => f.folder).filter(Boolean),
     });
   } catch (error) {
     if (error instanceof Error && error.message.includes('Forbidden')) {

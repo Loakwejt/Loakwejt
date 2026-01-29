@@ -50,7 +50,7 @@ export async function GET(
 
     return NextResponse.json({
       ...form,
-      stats: stats.reduce((acc, s) => {
+      stats: stats.reduce((acc: Record<string, number>, s: { status: string; _count: { id: number } }) => {
         acc[s.status.toLowerCase()] = s._count.id;
         return acc;
       }, {} as Record<string, number>),

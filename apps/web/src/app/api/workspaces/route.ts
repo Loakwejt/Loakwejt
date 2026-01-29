@@ -21,7 +21,7 @@ export async function GET() {
       },
     });
 
-    const workspaces = memberships.map((m) => ({
+    const workspaces = memberships.map((m: typeof memberships[number]) => ({
       ...m.workspace,
       role: m.role,
     }));

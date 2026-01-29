@@ -40,7 +40,7 @@ export async function POST(
       select: { id: true },
     });
 
-    const foundIds = new Set(records.map(r => r.id));
+    const foundIds = new Set(records.map((r: { id: string }) => r.id));
     const missingIds = recordIds.filter(id => !foundIds.has(id));
 
     if (missingIds.length > 0) {

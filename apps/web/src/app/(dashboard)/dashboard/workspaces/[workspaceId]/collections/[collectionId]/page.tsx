@@ -64,7 +64,7 @@ interface FieldDef {
   required?: boolean;
 }
 
-interface Record {
+interface CollectionRecord {
   id: string;
   data: Record<string, unknown>;
   slug: string | null;
@@ -89,7 +89,7 @@ export default function CollectionDetailPage() {
   const collectionId = params.collectionId as string;
 
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [records, setRecords] = useState<Record[]>([]);
+  const [records, setRecords] = useState<CollectionRecord[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>({ total: 0, page: 1, pageSize: 20, hasMore: false });
   const [loading, setLoading] = useState(true);
   const [loadingRecords, setLoadingRecords] = useState(true);
@@ -100,7 +100,7 @@ export default function CollectionDetailPage() {
   
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<Record | null>(null);
+  const [editingRecord, setEditingRecord] = useState<CollectionRecord | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
 
   const fetchCollection = useCallback(async () => {
@@ -309,7 +309,7 @@ export default function CollectionDetailPage() {
     setSelectedRecords(newSelected);
   };
 
-  const getDisplayValue = (record: Record, fieldName: string): string => {
+  const getDisplayValue = (record: CollectionRecord, fieldName: string): string => {
     const value = record.data[fieldName];
     if (value === null || value === undefined) return '-';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
@@ -328,7 +328,7 @@ export default function CollectionDetailPage() {
     }
   };
 
-  const openEditDialog = (record: Record) => {
+  const openEditDialog = (record: CollectionRecord) => {
     setEditingRecord(record);
     setFormData(record.data);
   };
