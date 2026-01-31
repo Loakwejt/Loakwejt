@@ -4,6 +4,7 @@ import React from 'react';
 import type { BuilderNode, BuilderTree, BuilderStyle } from '@builderly/core';
 import { componentRegistry } from '@builderly/core';
 import { cn } from '@builderly/ui';
+import { RuntimeAnimationWrapper } from './animation-wrapper';
 
 // ============================================================================
 // STYLE MAPPING - Convert tokens to Tailwind classes
@@ -449,7 +450,18 @@ function NodeRenderer({ node, context }: NodeRendererProps) {
 
   // If we have a registered renderer, use it
   if (renderer) {
-    return <>{renderer(node, children, context)}</>;
+    const content = renderer(node, children, context);
+    
+    // Wrap with animation if present
+    if (node.animation && node.animation.type !== 'none') {
+      return (
+        <RuntimeAnimationWrapper animation={node.animation}>
+          {content}
+        </RuntimeAnimationWrapper>
+      );
+    }
+    
+    return <>{content}</>;
   }
 
   // Unknown component type - render a placeholder in dev, nothing in prod

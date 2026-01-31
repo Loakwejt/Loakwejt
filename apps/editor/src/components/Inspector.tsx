@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
 import { componentRegistry, findNodeById } from '@builderly/core';
-import type { BuilderStyle, BuilderActionBinding } from '@builderly/core';
+import type { BuilderStyle, BuilderActionBinding, BuilderAnimation } from '@builderly/core';
+import { ANIMATION_PRESETS, defaultAnimation } from '@builderly/core';
+import type { AnimationType, AnimationTrigger, AnimationEasing } from '@builderly/core';
 import {
   Input,
   Label,
@@ -24,7 +26,7 @@ import {
   CollapsibleTrigger,
   cn,
 } from '@builderly/ui';
-import { Trash2, Copy, ChevronDown, Plus, X, Image, FolderOpen } from 'lucide-react';
+import { Trash2, Copy, ChevronDown, Plus, X, Image, FolderOpen, Sparkles } from 'lucide-react';
 import { AssetPicker } from './AssetPicker';
 
 export function Inspector() {
@@ -34,6 +36,7 @@ export function Inspector() {
     updateNodeProps,
     updateNodeStyle,
     updateNodeActions,
+    updateNodeAnimation,
     deleteNode,
     duplicateNode,
   } = useEditorStore();
@@ -92,9 +95,13 @@ export function Inspector() {
 
       {/* Tabs */}
       <Tabs defaultValue="props" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="props">Props</TabsTrigger>
           <TabsTrigger value="style">Style</TabsTrigger>
+          <TabsTrigger value="animate" className="flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            <span className="hidden sm:inline">Animate</span>
+          </TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
         </TabsList>
 
@@ -110,6 +117,13 @@ export function Inspector() {
           <StyleEditor
             style={node.style}
             onUpdate={(style) => updateNodeStyle(selectedNodeId, style)}
+          />
+        </TabsContent>
+
+        <TabsContent value="animate" className="space-y-4 mt-4">
+          <AnimationEditor
+            animation={node.animation}
+            onUpdate={(animation) => updateNodeAnimation(selectedNodeId, animation)}
           />
         </TabsContent>
 
@@ -2012,6 +2026,273 @@ function createDefaultAction(type: ActionType): BuilderActionBinding['action'] {
       return { type: 'navigate', to: '#' };
   }
 }
+
+// ============================================================================
+// ANIMATION EDITOR
+// ============================================================================
+
+function AnimationEditor({
+  animation,
+  onUpdate,
+}: {
+  animation?: BuilderAnimation;
+  onUpdate: (animation: BuilderAnimation | undefined) => void;
+}) {
+  const currentAnimation = animation || defaultAnimation;
+  const isEnabled = animation?.type !== 'none' && animation?.type !== undefined;
+
+  const handlePresetSelect = (presetId: string) => {
+    const preset = ANIMATION_PRESETS.find((p) => p.id === presetId);
+    if (preset) {
+      onUpdate({
+        ...defaultAnimation,
+        ...preset.animation,
+      });
+    }
+  };
+
+  const handleChange = (field: keyof BuilderAnimation, value: unknown) => {
+    onUpdate({
+      ...currentAnimation,
+      [field]: value,
+    });
+  };
+
+  const handleDisable = () => {
+    onUpdate(undefined);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Quick Presets */}
+      <CollapsibleSection
+        title="Schnellauswahl"
+        icon={<Sparkles className="h-4 w-4" />}
+        color="text-purple-400"
+        defaultOpen
+      >
+        <div className="grid grid-cols-2 gap-2">
+          {ANIMATION_PRESETS.slice(0, 6).map((preset) => (
+            <Button
+              key={preset.id}
+              variant={currentAnimation.type === preset.animation.type && 
+                       currentAnimation.trigger === (preset.animation.trigger || 'onScroll') 
+                       ? 'default' : 'outline'}
+              size="sm"
+              className="justify-start text-xs h-auto py-2"
+              onClick={() => handlePresetSelect(preset.id)}
+            >
+              <div className="text-left">
+                <div className="font-medium">{preset.name}</div>
+                <div className="text-muted-foreground text-[10px]">{preset.description}</div>
+              </div>
+            </Button>
+          ))}
+        </div>
+        
+        {ANIMATION_PRESETS.length > 6 && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-full text-xs">
+                <ChevronDown className="h-3 w-3 mr-1" />
+                Mehr anzeigen
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {ANIMATION_PRESETS.slice(6).map((preset) => (
+                  <Button
+                    key={preset.id}
+                    variant={currentAnimation.type === preset.animation.type && 
+                             currentAnimation.trigger === (preset.animation.trigger || 'onScroll') 
+                             ? 'default' : 'outline'}
+                    size="sm"
+                    className="justify-start text-xs h-auto py-2"
+                    onClick={() => handlePresetSelect(preset.id)}
+                  >
+                    <div className="text-left">
+                      <div className="font-medium">{preset.name}</div>
+                      <div className="text-muted-foreground text-[10px]">{preset.description}</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </CollapsibleSection>
+
+      {/* Custom Settings */}
+      {isEnabled && (
+        <CollapsibleSection
+          title="Benutzerdefiniert"
+          icon="⚙️"
+          color="text-blue-400"
+          defaultOpen={false}
+        >
+          <div className="space-y-4">
+            {/* Animation Type */}
+            <div className="space-y-2">
+              <Label className="text-xs">Animation</Label>
+              <Select
+                value={currentAnimation.type}
+                onValueChange={(val) => handleChange('type', val as AnimationType)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Keine</SelectItem>
+                  <SelectItem value="fadeIn">Einblenden</SelectItem>
+                  <SelectItem value="fadeInUp">Einblenden (von unten)</SelectItem>
+                  <SelectItem value="fadeInDown">Einblenden (von oben)</SelectItem>
+                  <SelectItem value="fadeInLeft">Einblenden (von links)</SelectItem>
+                  <SelectItem value="fadeInRight">Einblenden (von rechts)</SelectItem>
+                  <SelectItem value="slideInUp">Hochschieben</SelectItem>
+                  <SelectItem value="slideInDown">Runterschieben</SelectItem>
+                  <SelectItem value="slideInLeft">Von links schieben</SelectItem>
+                  <SelectItem value="slideInRight">Von rechts schieben</SelectItem>
+                  <SelectItem value="scaleIn">Vergrößern</SelectItem>
+                  <SelectItem value="scaleInUp">Vergrößern (von unten)</SelectItem>
+                  <SelectItem value="pulse">Pulsieren</SelectItem>
+                  <SelectItem value="bounce">Springen</SelectItem>
+                  <SelectItem value="shake">Schütteln</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Trigger */}
+            <div className="space-y-2">
+              <Label className="text-xs">Auslöser</Label>
+              <Select
+                value={currentAnimation.trigger}
+                onValueChange={(val) => handleChange('trigger', val as AnimationTrigger)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="onScroll">Beim Scrollen (sichtbar)</SelectItem>
+                  <SelectItem value="onLoad">Beim Laden</SelectItem>
+                  <SelectItem value="onHover">Bei Hover</SelectItem>
+                  <SelectItem value="onClick">Bei Klick</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Duration */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs">Dauer</Label>
+                <span className="text-xs text-muted-foreground">{currentAnimation.duration}ms</span>
+              </div>
+              <Slider
+                value={[currentAnimation.duration]}
+                min={100}
+                max={2000}
+                step={50}
+                onValueChange={([val]) => handleChange('duration', val)}
+              />
+            </div>
+
+            {/* Delay */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs">Verzögerung</Label>
+                <span className="text-xs text-muted-foreground">{currentAnimation.delay}ms</span>
+              </div>
+              <Slider
+                value={[currentAnimation.delay]}
+                min={0}
+                max={2000}
+                step={50}
+                onValueChange={([val]) => handleChange('delay', val)}
+              />
+            </div>
+
+            {/* Easing */}
+            <div className="space-y-2">
+              <Label className="text-xs">Easing</Label>
+              <Select
+                value={currentAnimation.easing}
+                onValueChange={(val) => handleChange('easing', val as AnimationEasing)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="linear">Linear</SelectItem>
+                  <SelectItem value="ease">Ease</SelectItem>
+                  <SelectItem value="ease-in">Ease In</SelectItem>
+                  <SelectItem value="ease-out">Ease Out</SelectItem>
+                  <SelectItem value="ease-in-out">Ease In-Out</SelectItem>
+                  <SelectItem value="ease-in-back">Ease In (Back)</SelectItem>
+                  <SelectItem value="ease-out-back">Ease Out (Back)</SelectItem>
+                  <SelectItem value="ease-in-out-back">Ease In-Out (Back)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Scroll offset (only for scroll trigger) */}
+            {currentAnimation.trigger === 'onScroll' && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label className="text-xs">Scroll-Offset</Label>
+                  <span className="text-xs text-muted-foreground">{currentAnimation.scrollOffset}%</span>
+                </div>
+                <Slider
+                  value={[currentAnimation.scrollOffset ?? 20]}
+                  min={0}
+                  max={50}
+                  step={5}
+                  onValueChange={([val]) => handleChange('scrollOffset', val)}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Wie weit das Element im Viewport sein muss, bevor die Animation startet.
+                </p>
+              </div>
+            )}
+
+            {/* Repeat option for scroll */}
+            {currentAnimation.trigger === 'onScroll' && (
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Wiederholen beim Zurückscrollen</Label>
+                <Switch
+                  checked={currentAnimation.repeat ?? false}
+                  onCheckedChange={(checked) => handleChange('repeat', checked)}
+                />
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Remove Animation Button */}
+      {isEnabled && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full text-destructive hover:text-destructive"
+          onClick={handleDisable}
+        >
+          <X className="h-3 w-3 mr-1" />
+          Animation entfernen
+        </Button>
+      )}
+
+      {/* Preview hint */}
+      {isEnabled && (
+        <p className="text-[10px] text-muted-foreground text-center">
+          💡 Tipp: Wechseln Sie in den Vorschaumodus, um die Animation zu testen.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// ACTIONS EDITOR
+// ============================================================================
 
 function ActionsEditor({
   actions,

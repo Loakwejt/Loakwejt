@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding, SiteSettings } from '@builderly/core';
+import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding, SiteSettings, BuilderAnimation } from '@builderly/core';
 import {
   findNodeById,
   updateNodeInTree,
@@ -84,6 +84,7 @@ interface EditorState {
   updateNodeProps: (nodeId: string, props: Record<string, unknown>) => void;
   updateNodeStyle: (nodeId: string, style: BuilderStyle) => void;
   updateNodeActions: (nodeId: string, actions: BuilderActionBinding[]) => void;
+  updateNodeAnimation: (nodeId: string, animation: BuilderAnimation | undefined) => void;
   deleteNode: (nodeId: string) => void;
   duplicateNode: (nodeId: string) => void;
   moveNode: (nodeId: string, newParentId: string, newIndex: number) => void;
@@ -355,6 +356,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: updateNodeInTree(tree.root, nodeId, (node) => ({
         ...node,
         actions,
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
+  updateNodeAnimation: (nodeId, animation) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        animation,
       })),
     };
 

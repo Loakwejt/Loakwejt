@@ -6,6 +6,7 @@ import { useEditorStore } from '../store/editor-store';
 import { useDndState } from './DndProvider';
 import { cn } from '@builderly/ui';
 import type { DragData } from './DndProvider';
+import { AnimatedWrapper } from './AnimatedWrapper';
 
 interface CanvasNodeProps {
   node: BuilderNode;
@@ -81,7 +82,15 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
   const content = renderComponent(node, children, definition, isPreviewMode);
 
   if (isPreviewMode) {
-    return <>{content}</>;
+    // Wrap in AnimatedWrapper for preview mode
+    return (
+      <AnimatedWrapper 
+        animation={node.animation} 
+        isPreviewMode={true}
+      >
+        {content}
+      </AnimatedWrapper>
+    );
   }
 
   // Determine if this is an inline/non-full-width element
