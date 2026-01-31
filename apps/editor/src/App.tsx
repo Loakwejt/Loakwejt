@@ -4,7 +4,8 @@ import { Toolbar } from './components/Toolbar';
 import { Palette } from './components/Palette';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
-import { LayerPanel } from './components/LayerPanel';
+import { SidebarLayerPanel } from './components/SidebarLayerPanel';
+import { PagesPanel } from './components/PagesPanel';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { useEditorStore } from './store/editor-store';
@@ -31,12 +32,32 @@ function App() {
     const workspaceId = params.get('workspaceId');
     const siteId = params.get('siteId');
     const pageId = params.get('pageId');
+    const templateId = params.get('templateId');
+
+    // Template-Import per templateId (Port 5173, z.B. aus Admin-Panel)
+    if (templateId) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      fetch(`${apiUrl}/api/templates?templateId=${templateId}`)
+        .then(res => res.json())
+        .then(data => {
+          // Finde das Template (DB-Id oder db-Id)
+          const tpl = (data.data || []).find((t: any) => t.id === templateId || t.id === `db-${templateId}`);
+          if (tpl && tpl.tree) {
+            setTree(tpl.tree);
+            setPageName(tpl.name || 'Template');
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Laden des Templates:', err);
+        });
+      return; // Wenn Template, laden wir keine Seite
+    }
 
     if (workspaceId && siteId && pageId) {
       setPageContext(workspaceId, siteId, pageId);
       loadPage(workspaceId, siteId, pageId);
-      loadSiteSettings(workspaceId, siteId);
     }
+
   }, [setPageContext, setTree, setPageName, setSiteData]);
 
   const loadPage = async (workspaceId: string, siteId: string, pageId: string) => {
@@ -59,26 +80,6 @@ function App() {
       }
     } catch (error) {
       console.error('Error loading page:', error);
-    }
-  };
-
-  const loadSiteSettings = async (workspaceId: string, siteId: string) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/settings`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to load site settings');
-      }
-
-      const site = await response.json();
-      const settings = mergeSiteSettings(site.settings || {});
-      setSiteData(site.name, settings);
-    } catch (error) {
-      console.error('Error loading site settings:', error);
     }
   };
 
@@ -147,17 +148,19 @@ function App() {
 
           {/* Main editor area */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Left sidebar - Palette */}
-            {isPaletteOpen && !isPreviewMode && (
-              <aside className="w-64 border-r bg-background overflow-y-auto flex-shrink-0">
-                <Palette />
-              </aside>
-            )}
-
-            {/* Layer Panel (optional, between palette and canvas) */}
-            {isLayerPanelOpen && !isPreviewMode && (
-              <aside className="w-56 border-r bg-background overflow-y-auto flex-shrink-0">
-                <LayerPanel />
+            {/* Left sidebar - Pages Panel + Palette */}
+            {!isPreviewMode && (
+              <aside className="w-64 border-r bg-background flex flex-col flex-shrink-0 overflow-hidden">
+                {/* Pages Panel */}
+                <div className="h-48 border-b overflow-auto flex-shrink-0">
+                  <PagesPanel />
+                </div>
+                {/* Component Palette - scrollable */}
+                {isPaletteOpen && (
+                  <div className="flex-1 overflow-auto">
+                    <Palette />
+                  </div>
+                )}
               </aside>
             )}
 
@@ -166,10 +169,17 @@ function App() {
               <Canvas />
             </main>
 
-            {/* Right sidebar - Inspector */}
+            {/* Right sidebar - Inspector + Layers */}
             {isInspectorOpen && !isPreviewMode && (
-              <aside className="w-80 border-l bg-background overflow-y-auto flex-shrink-0">
-                <Inspector />
+              <aside className="w-80 border-l bg-background flex flex-col flex-shrink-0 overflow-hidden">
+                {/* Inspector - top section */}
+                <div className="flex-1 overflow-auto">
+                  <Inspector />
+                </div>
+                {/* Layer Panel - bottom section */}
+                <div className="h-64 flex-shrink-0">
+                  <SidebarLayerPanel />
+                </div>
               </aside>
             )}
           </div>

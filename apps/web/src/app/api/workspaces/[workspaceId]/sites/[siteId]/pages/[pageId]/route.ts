@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { UpdatePageSchema } from '@builderly/sdk';
+import { ZodError } from 'zod';
 
 // GET /api/workspaces/[workspaceId]/sites/[siteId]/pages/[pageId]
 export async function GET(
@@ -83,11 +84,15 @@ export async function PATCH(
 
     return NextResponse.json(page);
   } catch (error) {
+    if (error instanceof ZodError) {
+      console.error('Validation error updating page:', error.errors);
+      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
+    }
     if (error instanceof Error && error.message.includes('Forbidden')) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     console.error('Error updating page:', error);
-    return NextResponse.json({ error: 'Failed to update page' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update page', details: String(error) }, { status: 500 });
   }
 }
 

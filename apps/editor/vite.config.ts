@@ -8,13 +8,29 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+    dedupe: ['react', 'react-dom', 'zustand'],
+  },
+  optimizeDeps: {
+    include: [
+      '@builderly/ui',
+      '@builderly/core',
+      'zustand',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+    ],
   },
   server: {
     port: 5173,
     cors: true,
+    hmr: {
+      overlay: true,
+    },
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
   },
 });

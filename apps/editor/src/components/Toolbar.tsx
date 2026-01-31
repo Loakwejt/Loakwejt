@@ -85,7 +85,9 @@ export function Toolbar() {
       );
 
       if (!pageResponse.ok) {
-        throw new Error('Failed to save page');
+        const errorData = await pageResponse.json().catch(() => ({}));
+        console.error('Page save failed:', pageResponse.status, errorData);
+        throw new Error(errorData.details || errorData.error || `Failed to save page (${pageResponse.status})`);
       }
 
       // Save site settings
@@ -100,13 +102,15 @@ export function Toolbar() {
       );
 
       if (!settingsResponse.ok) {
-        throw new Error('Failed to save site settings');
+        const errorData = await settingsResponse.json().catch(() => ({}));
+        console.error('Settings save failed:', settingsResponse.status, errorData);
+        throw new Error(errorData.error || `Failed to save site settings (${settingsResponse.status})`);
       }
 
       setLastSaved(new Date());
     } catch (error) {
       console.error('Save error:', error);
-      alert('Failed to save changes');
+      alert(error instanceof Error ? error.message : 'Failed to save changes');
     } finally {
       setSaving(false);
     }
@@ -145,108 +149,124 @@ export function Toolbar() {
   };
 
   return (
-    <header className="h-14 border-b bg-background flex items-center px-4 gap-4">
-      {/* Logo & Page name */}
-      <div className="flex items-center gap-3">
-        <Layers className="h-6 w-6 text-primary" />
-        <span className="font-semibold">{pageName}</span>
-        {isDirty && (
-          <Badge variant="secondary" className="text-xs">
-            Unsaved
-          </Badge>
-        )}
-      </div>
-
-      <Separator orientation="vertical" className="h-6" />
-
-      {/* Undo/Redo */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={undo}
-          disabled={!canUndo()}
-          title="Undo (Ctrl+Z)"
-        >
-          <Undo2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={redo}
-          disabled={!canRedo()}
-          title="Redo (Ctrl+Shift+Z)"
-        >
-          <Redo2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <Separator orientation="vertical" className="h-6" />
-
-      {/* Templates */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsTemplatePickerOpen(true)}
-        className="gap-2"
-      >
-        <LayoutTemplate className="h-4 w-4" />
-        Templates
-      </Button>
-
-      <Separator orientation="vertical" className="h-6" />
-
-      {/* Breakpoint switcher */}
-      <div className="flex items-center gap-1 bg-muted rounded-md p-1">
-        {breakpoints.map(({ value, icon: Icon, label }) => (
+    <>
+      {/* Preview Mode: Header is shown in Canvas, just show exit button */}
+      {isPreviewMode ? (
+        <div className="fixed top-4 right-4 z-[100]">
           <Button
-            key={value}
-            variant={breakpoint === value ? 'secondary' : 'ghost'}
-            size="icon"
-            className="h-7 w-7"
-            onClick={() => setBreakpoint(value)}
-            title={label}
+            variant="secondary"
+            size="sm"
+            onClick={() => setPreviewMode(false)}
+            className="shadow-lg"
           >
-            <Icon className="h-4 w-4" />
+            <Eye className="mr-2 h-4 w-4" />
+            Exit Preview
           </Button>
-        ))}
-      </div>
+        </div>
+      ) : (
+        /* Editor Mode: Show editor toolbar */
+        <header className="h-14 border-b bg-background flex items-center px-4 gap-4">
+          {/* Logo & Page name */}
+          <div className="flex items-center gap-3">
+            <Layers className="h-6 w-6 text-primary" />
+            <span className="font-semibold">{pageName}</span>
+            {isDirty && (
+              <Badge variant="secondary" className="text-xs">
+                Unsaved
+              </Badge>
+            )}
+          </div>
 
-      <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-6" />
 
-      {/* Zoom controls */}
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setZoom(zoom - 10)}
-          disabled={zoom <= 25}
-          title="Zoom Out"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <button
-          className="text-xs font-medium w-12 text-center hover:bg-accent rounded px-1 py-0.5"
-          onClick={() => setZoom(100)}
-          title="Reset Zoom"
-        >
-          {zoom}%
-        </button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setZoom(zoom + 10)}
-          disabled={zoom >= 200}
-          title="Zoom In"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-      </div>
+          {/* Undo/Redo */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={undo}
+              disabled={!canUndo()}
+              title="Undo (Ctrl+Z)"
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={redo}
+              disabled={!canRedo()}
+              title="Redo (Ctrl+Shift+Z)"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+          <Separator orientation="vertical" className="h-6" />
+
+          {/* Templates */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsTemplatePickerOpen(true)}
+            className="gap-2"
+          >
+            <LayoutTemplate className="h-4 w-4" />
+            Templates
+          </Button>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          {/* Breakpoint switcher */}
+          <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+            {breakpoints.map(({ value, icon: Icon, label }) => (
+              <Button
+                key={value}
+                variant={breakpoint === value ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setBreakpoint(value)}
+                title={label}
+              >
+                <Icon className="h-4 w-4" />
+              </Button>
+            ))}
+          </div>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setZoom(zoom - 10)}
+              disabled={zoom <= 25}
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <button
+              className="text-xs font-medium w-12 text-center hover:bg-accent rounded px-1 py-0.5"
+              onClick={() => setZoom(100)}
+              title="Reset Zoom"
+            >
+              {zoom}%
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setZoom(zoom + 10)}
+              disabled={zoom >= 200}
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
 
       {/* Panel toggles */}
       <div className="flex items-center gap-1">
@@ -331,6 +351,16 @@ export function Toolbar() {
         open={isTemplatePickerOpen}
         onOpenChange={setIsTemplatePickerOpen}
       />
-    </header>
+        </header>
+      )}
+
+      {/* Template Picker Dialog (available in both modes) */}
+      {isPreviewMode && (
+        <TemplatePicker
+          open={isTemplatePickerOpen}
+          onOpenChange={setIsTemplatePickerOpen}
+        />
+      )}
+    </>
   );
 }

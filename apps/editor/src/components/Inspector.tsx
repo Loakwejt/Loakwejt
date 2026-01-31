@@ -22,6 +22,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
+  cn,
 } from '@builderly/ui';
 import { Trash2, Copy, ChevronDown, Plus, X, Image } from 'lucide-react';
 
@@ -141,7 +142,7 @@ function PropsEditor({
     case 'Section':
       return (
         <div className="space-y-4">
-          <CollapsibleSection title="Layout" defaultOpen>
+          <CollapsibleSection title="Layout" icon="📏" color="text-blue-400" defaultOpen>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label>Full Width</Label>
@@ -186,7 +187,7 @@ function PropsEditor({
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection title="Background Image">
+          <CollapsibleSection title="Background Image" icon="🖼️" color="text-purple-400">
             <div className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Image URL</Label>
@@ -818,7 +819,7 @@ function StyleEditor({
   return (
     <div className="space-y-4">
       {/* Size & Dimensions */}
-      <CollapsibleSection title="Size & Dimensions" defaultOpen>
+      <CollapsibleSection title="Size & Dimensions" icon="📐" color="text-blue-400" defaultOpen>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
@@ -883,136 +884,249 @@ function StyleEditor({
         </div>
       </CollapsibleSection>
 
-      {/* Spacing */}
-      <CollapsibleSection title="Spacing" defaultOpen>
+      {/* Layout & Position */}
+      <CollapsibleSection title="Layout & Position" icon="📍" color="text-green-400" defaultOpen>
         <div className="space-y-3">
           <div className="space-y-1">
-            <Label className="text-xs">Padding (All Sides)</Label>
+            <Label className="text-xs">Display</Label>
             <Select
-              value={getValue(base.padding)}
-              onValueChange={(v) => updateBase('padding', v)}
+              value={getValue(base.display)}
+              onValueChange={(v) => updateBase('display', v)}
             >
               <SelectTrigger className="h-8">
-                <SelectValue placeholder="None" />
+                <SelectValue placeholder="Default" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="_none">None</SelectItem>
-                <SelectItem value="xs">XS (4px)</SelectItem>
-                <SelectItem value="sm">SM (8px)</SelectItem>
-                <SelectItem value="md">MD (16px)</SelectItem>
-                <SelectItem value="lg">LG (24px)</SelectItem>
-                <SelectItem value="xl">XL (32px)</SelectItem>
-                <SelectItem value="2xl">2XL (48px)</SelectItem>
-                <SelectItem value="3xl">3XL (64px)</SelectItem>
+                <SelectItem value="_none">Default</SelectItem>
+                <SelectItem value="block">Block</SelectItem>
+                <SelectItem value="inline-block">Inline Block</SelectItem>
+                <SelectItem value="flex">Flex</SelectItem>
+                <SelectItem value="inline-flex">Inline Flex</SelectItem>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="hidden">Hidden</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Padding X</Label>
-              <Select
-                value={getValue(base.paddingX)}
-                onValueChange={(v) => updateBase('paddingX', v)}
-              >
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">None</SelectItem>
-                  <SelectItem value="xs">XS</SelectItem>
-                  <SelectItem value="sm">SM</SelectItem>
-                  <SelectItem value="md">MD</SelectItem>
-                  <SelectItem value="lg">LG</SelectItem>
-                  <SelectItem value="xl">XL</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Padding Y</Label>
-              <Select
-                value={getValue(base.paddingY)}
-                onValueChange={(v) => updateBase('paddingY', v)}
-              >
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">None</SelectItem>
-                  <SelectItem value="xs">XS</SelectItem>
-                  <SelectItem value="sm">SM</SelectItem>
-                  <SelectItem value="md">MD</SelectItem>
-                  <SelectItem value="lg">LG</SelectItem>
-                  <SelectItem value="xl">XL</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <Separator />
+          
           <div className="space-y-1">
-            <Label className="text-xs">Margin (All Sides)</Label>
+            <Label className="text-xs">Align Self (in Flex/Grid parent)</Label>
             <Select
-              value={getValue(base.margin)}
-              onValueChange={(v) => updateBase('margin', v)}
+              value={getValue(base.alignSelf)}
+              onValueChange={(v) => updateBase('alignSelf', v)}
             >
               <SelectTrigger className="h-8">
-                <SelectValue placeholder="None" />
+                <SelectValue placeholder="Auto" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="_none">None</SelectItem>
-                <SelectItem value="auto">Auto</SelectItem>
-                <SelectItem value="xs">XS (4px)</SelectItem>
-                <SelectItem value="sm">SM (8px)</SelectItem>
-                <SelectItem value="md">MD (16px)</SelectItem>
-                <SelectItem value="lg">LG (24px)</SelectItem>
-                <SelectItem value="xl">XL (32px)</SelectItem>
+                <SelectItem value="_none">Auto</SelectItem>
+                <SelectItem value="start">Start</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="end">End</SelectItem>
+                <SelectItem value="stretch">Stretch</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs">Margin X</Label>
-              <Select
-                value={getValue(base.marginX)}
-                onValueChange={(v) => updateBase('marginX', v)}
-              >
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">None</SelectItem>
-                  <SelectItem value="auto">Auto</SelectItem>
-                  <SelectItem value="xs">XS</SelectItem>
-                  <SelectItem value="sm">SM</SelectItem>
-                  <SelectItem value="md">MD</SelectItem>
-                  <SelectItem value="lg">LG</SelectItem>
-                </SelectContent>
-              </Select>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Justify Self (in Grid parent)</Label>
+            <Select
+              value={getValue(base.justifySelf)}
+              onValueChange={(v) => updateBase('justifySelf', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Auto" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Auto</SelectItem>
+                <SelectItem value="start">Start</SelectItem>
+                <SelectItem value="center">Center</SelectItem>
+                <SelectItem value="end">End</SelectItem>
+                <SelectItem value="stretch">Stretch</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Flex Grow</Label>
+            <Select
+              value={getValue(base.flexGrow)}
+              onValueChange={(v) => updateBase('flexGrow', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="0" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">0 (Don't grow)</SelectItem>
+                <SelectItem value="1">1 (Grow)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label className="text-xs">Flex Shrink</Label>
+            <Select
+              value={getValue(base.flexShrink)}
+              onValueChange={(v) => updateBase('flexShrink', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="1" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">0 (Don't shrink)</SelectItem>
+                <SelectItem value="_none">1 (Shrink)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      {/* Spacing - Visual Box Model */}
+      <CollapsibleSection title="Spacing" icon="↔️" color="text-orange-400" defaultOpen>
+        <div className="space-y-4">
+          {/* Visual Box Model */}
+          <div className="relative bg-orange-500/20 border-2 border-dashed border-orange-400 rounded p-1">
+            {/* Margin label */}
+            <div className="absolute -top-2.5 left-2 bg-background px-1 text-[10px] text-orange-400 font-medium">MARGIN</div>
+            
+            {/* Margin Top */}
+            <div className="flex justify-center mb-1">
+              <SpacingInput
+                value={base.marginTop as string}
+                onChange={(v) => updateBase('marginTop', v)}
+                placeholder="0"
+                className="bg-orange-500/30 border-orange-400"
+              />
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Margin Y</Label>
-              <Select
-                value={getValue(base.marginY)}
-                onValueChange={(v) => updateBase('marginY', v)}
-              >
-                <SelectTrigger className="h-8">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">None</SelectItem>
-                  <SelectItem value="auto">Auto</SelectItem>
-                  <SelectItem value="xs">XS</SelectItem>
-                  <SelectItem value="sm">SM</SelectItem>
-                  <SelectItem value="md">MD</SelectItem>
-                  <SelectItem value="lg">LG</SelectItem>
-                </SelectContent>
-              </Select>
+            
+            <div className="flex items-center gap-1">
+              {/* Margin Left */}
+              <SpacingInput
+                value={base.marginLeft as string}
+                onChange={(v) => updateBase('marginLeft', v)}
+                placeholder="0"
+                className="bg-orange-500/30 border-orange-400"
+              />
+              
+              {/* Padding Box */}
+              <div className="flex-1 relative bg-green-500/20 border-2 border-dashed border-green-400 rounded p-1">
+                {/* Padding label */}
+                <div className="absolute -top-2.5 left-2 bg-background px-1 text-[10px] text-green-400 font-medium">PADDING</div>
+                
+                {/* Padding Top */}
+                <div className="flex justify-center mb-1">
+                  <SpacingInput
+                    value={base.paddingTop as string}
+                    onChange={(v) => updateBase('paddingTop', v)}
+                    placeholder="0"
+                    className="bg-green-500/30 border-green-400"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  {/* Padding Left */}
+                  <SpacingInput
+                    value={base.paddingLeft as string}
+                    onChange={(v) => updateBase('paddingLeft', v)}
+                    placeholder="0"
+                    className="bg-green-500/30 border-green-400"
+                  />
+                  
+                  {/* Content Box */}
+                  <div className="flex-1 bg-blue-500/30 border border-blue-400 rounded h-8 flex items-center justify-center">
+                    <span className="text-[10px] text-blue-300">Content</span>
+                  </div>
+                  
+                  {/* Padding Right */}
+                  <SpacingInput
+                    value={base.paddingRight as string}
+                    onChange={(v) => updateBase('paddingRight', v)}
+                    placeholder="0"
+                    className="bg-green-500/30 border-green-400"
+                  />
+                </div>
+                
+                {/* Padding Bottom */}
+                <div className="flex justify-center mt-1">
+                  <SpacingInput
+                    value={base.paddingBottom as string}
+                    onChange={(v) => updateBase('paddingBottom', v)}
+                    placeholder="0"
+                    className="bg-green-500/30 border-green-400"
+                  />
+                </div>
+              </div>
+              
+              {/* Margin Right */}
+              <SpacingInput
+                value={base.marginRight as string}
+                onChange={(v) => updateBase('marginRight', v)}
+                placeholder="0"
+                className="bg-orange-500/30 border-orange-400"
+              />
+            </div>
+            
+            {/* Margin Bottom */}
+            <div className="flex justify-center mt-1">
+              <SpacingInput
+                value={base.marginBottom as string}
+                onChange={(v) => updateBase('marginBottom', v)}
+                placeholder="0"
+                className="bg-orange-500/30 border-orange-400"
+              />
+            </div>
+          </div>
+          
+          {/* Quick Presets */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Quick Padding</Label>
+            <div className="flex gap-1 flex-wrap">
+              {['none', 'xs', 'sm', 'md', 'lg', 'xl'].map((size) => (
+                <Button
+                  key={size}
+                  variant={base.padding === size || (size === 'none' && !base.padding) ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    updateBase('padding', size === 'none' ? undefined : size);
+                    updateBase('paddingTop', undefined);
+                    updateBase('paddingBottom', undefined);
+                    updateBase('paddingLeft', undefined);
+                    updateBase('paddingRight', undefined);
+                  }}
+                >
+                  {size}
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Quick Margin</Label>
+            <div className="flex gap-1 flex-wrap">
+              {['none', 'auto', 'xs', 'sm', 'md', 'lg'].map((size) => (
+                <Button
+                  key={size}
+                  variant={base.margin === size || (size === 'none' && !base.margin) ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    updateBase('margin', size === 'none' ? undefined : size);
+                    updateBase('marginTop', undefined);
+                    updateBase('marginBottom', undefined);
+                    updateBase('marginLeft', undefined);
+                    updateBase('marginRight', undefined);
+                  }}
+                >
+                  {size}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
       </CollapsibleSection>
 
       {/* Background */}
-      <CollapsibleSection title="Background">
+      <CollapsibleSection title="Background" icon="🎨" color="text-purple-400">
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Background Color</Label>
@@ -1103,7 +1217,7 @@ function StyleEditor({
       </CollapsibleSection>
 
       {/* Typography */}
-      <CollapsibleSection title="Typography">
+      <CollapsibleSection title="Typography" icon="✏️" color="text-pink-400">
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Text Color</Label>
@@ -1207,7 +1321,7 @@ function StyleEditor({
       </CollapsibleSection>
 
       {/* Border */}
-      <CollapsibleSection title="Border">
+      <CollapsibleSection title="Border" icon="🔲" color="text-cyan-400">
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Border Width</Label>
@@ -1285,7 +1399,7 @@ function StyleEditor({
       </CollapsibleSection>
 
       {/* Shadow & Effects */}
-      <CollapsibleSection title="Shadow & Effects">
+      <CollapsibleSection title="Shadow & Effects" icon="💫" color="text-yellow-400">
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Box Shadow</Label>
@@ -1306,6 +1420,15 @@ function StyleEditor({
                 <SelectItem value="inner">Inner</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Custom Box Shadow</Label>
+            <Input
+              value={(base.boxShadow as string) || ''}
+              onChange={(e) => updateBase('boxShadow', e.target.value)}
+              placeholder="0 10px 40px rgba(0,0,0,0.3)"
+              className="h-8"
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Opacity (%)</Label>
@@ -1339,8 +1462,256 @@ function StyleEditor({
         </div>
       </CollapsibleSection>
 
+      {/* Advanced Effects */}
+      <CollapsibleSection title="Advanced Effects" icon="✨" color="text-indigo-400">
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Gradient Background</Label>
+            <Input
+              value={(base.gradient as string) || ''}
+              onChange={(e) => updateBase('gradient', e.target.value)}
+              placeholder="linear-gradient(135deg, #ff6b6b, #4ecdc4)"
+              className="h-8"
+            />
+            <p className="text-[10px] text-muted-foreground">CSS gradient value (linear-gradient, radial-gradient)</p>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Backdrop Blur (Glassmorphism)</Label>
+            <Select
+              value={getValue(base.backdropBlur)}
+              onValueChange={(v) => updateBase('backdropBlur', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                <SelectItem value="sm">Small (4px)</SelectItem>
+                <SelectItem value="md">Medium (8px)</SelectItem>
+                <SelectItem value="lg">Large (12px)</SelectItem>
+                <SelectItem value="xl">XL (16px)</SelectItem>
+                <SelectItem value="2xl">2XL (24px)</SelectItem>
+                <SelectItem value="3xl">3XL (40px)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Element Blur</Label>
+            <Select
+              value={getValue(base.blur)}
+              onValueChange={(v) => updateBase('blur', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                <SelectItem value="sm">Small (4px)</SelectItem>
+                <SelectItem value="md">Medium (8px)</SelectItem>
+                <SelectItem value="lg">Large (12px)</SelectItem>
+                <SelectItem value="xl">XL (16px)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Transform</Label>
+            <Input
+              value={(base.transform as string) || ''}
+              onChange={(e) => updateBase('transform', e.target.value)}
+              placeholder="translateY(-10px) scale(1.05)"
+              className="h-8"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Transition</Label>
+            <Select
+              value={getValue(base.transition)}
+              onValueChange={(v) => updateBase('transition', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                <SelectItem value="all">All (smooth)</SelectItem>
+                <SelectItem value="colors">Colors</SelectItem>
+                <SelectItem value="transform">Transform</SelectItem>
+                <SelectItem value="opacity">Opacity</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Aspect Ratio</Label>
+            <Input
+              value={(base.aspectRatio as string) || ''}
+              onChange={(e) => updateBase('aspectRatio', e.target.value)}
+              placeholder="16/9 or 1/1"
+              className="h-8"
+            />
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      {/* Hover & Interactions */}
+      <CollapsibleSection title="Hover & Interactions" icon="🖱️" color="text-rose-400">
+        <div className="space-y-3">
+          <div className="p-2 bg-rose-500/10 border border-rose-500/20 rounded-md mb-3">
+            <p className="text-[10px] text-rose-300">
+              Diese Styles werden angewendet, wenn der Nutzer über das Element hovert.
+            </p>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Background
+            </Label>
+            <Input
+              value={(base.hoverBackgroundColor as string) || ''}
+              onChange={(e) => updateBase('hoverBackgroundColor', e.target.value)}
+              placeholder="#ff6b6b or rgba(...)"
+              className="h-8"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Text Color
+            </Label>
+            <Input
+              value={(base.hoverTextColor as string) || ''}
+              onChange={(e) => updateBase('hoverTextColor', e.target.value)}
+              placeholder="#ffffff"
+              className="h-8"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Border Color
+            </Label>
+            <Input
+              value={(base.hoverBorderColor as string) || ''}
+              onChange={(e) => updateBase('hoverBorderColor', e.target.value)}
+              placeholder="#ffffff"
+              className="h-8"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Scale
+            </Label>
+            <Select
+              value={getValue(base.hoverScale)}
+              onValueChange={(v) => updateBase('hoverScale', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                <SelectItem value="95">Shrink (95%)</SelectItem>
+                <SelectItem value="100">Normal (100%)</SelectItem>
+                <SelectItem value="102">Slight (102%)</SelectItem>
+                <SelectItem value="105">Medium (105%)</SelectItem>
+                <SelectItem value="110">Large (110%)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Shadow
+            </Label>
+            <Select
+              value={getValue(base.hoverShadow)}
+              onValueChange={(v) => updateBase('hoverShadow', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="None" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">None</SelectItem>
+                <SelectItem value="sm">Small</SelectItem>
+                <SelectItem value="md">Medium</SelectItem>
+                <SelectItem value="lg">Large</SelectItem>
+                <SelectItem value="xl">Extra Large</SelectItem>
+                <SelectItem value="glow">Glow Effect</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Hover Opacity (%)
+            </Label>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={(base.hoverOpacity as number) || ''}
+              onChange={(e) => updateBase('hoverOpacity', e.target.value ? parseInt(e.target.value) : undefined)}
+              placeholder="100"
+              className="h-8"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+              Transition Duration
+            </Label>
+            <Select
+              value={getValue(base.transitionDuration)}
+              onValueChange={(v) => updateBase('transitionDuration', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Default (150ms)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Default (150ms)</SelectItem>
+                <SelectItem value="75">Fast (75ms)</SelectItem>
+                <SelectItem value="150">Normal (150ms)</SelectItem>
+                <SelectItem value="300">Slow (300ms)</SelectItem>
+                <SelectItem value="500">Very Slow (500ms)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+              Cursor
+            </Label>
+            <Select
+              value={getValue(base.cursor)}
+              onValueChange={(v) => updateBase('cursor', v)}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Default" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">Default</SelectItem>
+                <SelectItem value="pointer">Pointer (Hand)</SelectItem>
+                <SelectItem value="move">Move</SelectItem>
+                <SelectItem value="text">Text</SelectItem>
+                <SelectItem value="not-allowed">Not Allowed</SelectItem>
+                <SelectItem value="grab">Grab</SelectItem>
+                <SelectItem value="zoom-in">Zoom In</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CollapsibleSection>
+
       {/* Position & Display */}
-      <CollapsibleSection title="Position & Display">
+      <CollapsibleSection title="Position & Display" icon="📋" color="text-teal-400">
         <div className="space-y-3">
           <div className="space-y-1">
             <Label className="text-xs">Display</Label>
@@ -1390,6 +1761,44 @@ function StyleEditor({
               className="h-8"
             />
           </div>
+        </div>
+      </CollapsibleSection>
+
+      {/* Applied Styles - Shows all currently set values */}
+      <CollapsibleSection title="Applied Styles" icon="✅" color="text-emerald-400">
+        <div className="space-y-2">
+          <p className="text-[10px] text-muted-foreground mb-2">
+            Currently applied style properties:
+          </p>
+          {Object.entries(base).filter(([_, v]) => v !== undefined && v !== '' && v !== null).length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">No custom styles applied</p>
+          ) : (
+            <div className="space-y-1">
+              {Object.entries(base)
+                .filter(([_, v]) => v !== undefined && v !== '' && v !== null)
+                .map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between bg-muted/50 rounded px-2 py-1 group"
+                  >
+                    <span className="text-xs font-mono">{key}</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[100px]" title={String(value)}>
+                        {String(value)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                        onClick={() => updateBase(key, undefined)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       </CollapsibleSection>
     </div>
@@ -1660,26 +2069,115 @@ function ActionsEditor({
 // HELPER COMPONENTS
 // ============================================================================
 
+// Visual spacing input for box model
+function SpacingInput({
+  value,
+  onChange,
+  placeholder = '0',
+  className = '',
+}: {
+  value: string | undefined;
+  onChange: (value: string | undefined) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const spacingOptions = ['0', 'xs', 'sm', 'md', 'lg', 'xl', '2xl', 'auto'];
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const displayValue = value || '-';
+  
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'w-10 h-6 text-[10px] font-medium rounded border flex items-center justify-center hover:opacity-80 transition-opacity',
+          className
+        )}
+      >
+        {displayValue}
+      </button>
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-1 bg-popover border rounded-md shadow-lg p-1 min-w-[60px]">
+            {spacingOptions.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt === '0' ? undefined : opt);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  'w-full px-2 py-1 text-xs rounded hover:bg-accent text-left',
+                  (value === opt || (!value && opt === '0')) && 'bg-accent'
+                )}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function CollapsibleSection({
   title,
   children,
   defaultOpen = false,
+  icon,
+  color,
+  bgColor,
 }: {
   title: string;
   children: React.ReactNode;
   defaultOpen?: boolean;
+  icon?: React.ReactNode;
+  color?: string;
+  bgColor?: string;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
+  // Map color names to soft background colors
+  const bgColorMap: Record<string, string> = {
+    'text-blue-400': 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/20',
+    'text-green-400': 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20',
+    'text-orange-400': 'bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/20',
+    'text-purple-400': 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20',
+    'text-pink-400': 'bg-pink-500/10 hover:bg-pink-500/20 border-pink-500/20',
+    'text-cyan-400': 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20',
+    'text-yellow-400': 'bg-yellow-500/10 hover:bg-yellow-500/20 border-yellow-500/20',
+    'text-indigo-400': 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/20',
+    'text-teal-400': 'bg-teal-500/10 hover:bg-teal-500/20 border-teal-500/20',
+    'text-emerald-400': 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20',
+    'text-rose-400': 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20',
+  };
+
+  const sectionBg = bgColor || (color ? bgColorMap[color] : 'bg-muted/30 hover:bg-muted/50 border-border/50');
+
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-medium hover:text-primary transition-colors">
-        {title}
+    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mb-2">
+      <CollapsibleTrigger className={`flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-lg border transition-all duration-200 group ${sectionBg}`}>
+        <div className="flex items-center gap-2">
+          {icon && (
+            <span className={`text-sm ${color || 'text-muted-foreground'} group-hover:scale-110 transition-transform`}>
+              {icon}
+            </span>
+          )}
+          <span>{title}</span>
+        </div>
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
+      <CollapsibleContent className="pt-3 pb-1 px-1">{children}</CollapsibleContent>
     </Collapsible>
   );
 }

@@ -562,3 +562,58 @@ model ForumPost {
   @@index([threadId])
   @@index([authorEmail])
 }
+
+// ============================================================================
+// TEMPLATES
+// ============================================================================
+
+model Template {
+  id          String   @id @default(cuid())
+  
+  // Basic info
+  name        String
+  slug        String   @unique
+  description String?
+  thumbnail   String?
+  
+  // Template data
+  category    TemplateCategory @default(FULL_PAGE)
+  style       String?          // minimal, modern, classic, etc.
+  websiteType String?          // business, landing, portfolio, etc.
+  tags        String[]         // Array of tags
+  
+  // The actual template content (BuilderTree JSON)
+  tree        Json
+  
+  // Settings
+  isPro       Boolean  @default(false)
+  isPublished Boolean  @default(true)
+  isSystem    Boolean  @default(false) // Built-in templates can't be deleted
+  
+  // Metadata
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+}
+
+enum TemplateCategory {
+  HERO
+  FEATURES
+  PRICING
+  TESTIMONIALS
+  CTA
+  CONTACT
+  TEAM
+  FAQ
+  FOOTER
+  HEADER
+  GALLERY
+  STATS
+  BLOG
+  ECOMMERCE
+  CONTENT
+  FULL_PAGE
+}

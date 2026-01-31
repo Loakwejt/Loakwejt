@@ -74,3 +74,69 @@
 .selected-node {
   @apply ring-2 ring-primary ring-offset-2;
 }
+
+/* Hover effect classes using CSS custom properties */
+.hover-bg-custom {
+  transition: background-color 0.15s ease;
+}
+.hover-bg-custom:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.hover-color-custom {
+  transition: color 0.15s ease;
+}
+.hover-color-custom:hover {
+  color: var(--hover-color) !important;
+}
+
+.hover-border-custom {
+  transition: border-color 0.15s ease;
+}
+.hover-border-custom:hover {
+  border-color: var(--hover-border) !important;
+}
+
+.hover-scale-custom {
+  transition: transform 0.15s ease;
+}
+.hover-scale-custom:hover {
+  transform: scale(var(--hover-scale)) !important;
+}
+
+.hover-shadow-custom {
+  transition: box-shadow 0.15s ease;
+}
+.hover-shadow-custom:hover {
+  box-shadow: var(--hover-shadow) !important;
+}
+
+.hover-opacity-custom {
+  transition: opacity 0.15s ease;
+}
+.hover-opacity-custom:hover {
+  opacity: var(--hover-opacity) !important;
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+/* Hide scrollbar for carousel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

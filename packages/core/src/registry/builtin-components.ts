@@ -569,6 +569,541 @@ const PaginationComponent: ComponentDefinition = {
 };
 
 // ============================================================================
+// ADDITIONAL UI COMPONENTS
+// ============================================================================
+
+const AvatarComponent: ComponentDefinition = {
+  type: 'Avatar',
+  displayName: 'Avatar',
+  description: 'User avatar image',
+  icon: 'smile',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    src: '',
+    fallback: 'AB',
+    size: 'md',
+  },
+  propsSchema: z.object({
+    src: z.string().optional(),
+    fallback: z.string().default('AB'),
+    size: z.enum(['xs', 'sm', 'md', 'lg', 'xl']).default('md'),
+  }),
+  tags: ['avatar', 'user', 'profile', 'image'],
+};
+
+const VideoComponent: ComponentDefinition = {
+  type: 'Video',
+  displayName: 'Video',
+  description: 'Embed video (YouTube, Vimeo, or direct)',
+  icon: 'play',
+  category: 'media',
+  canHaveChildren: false,
+  defaultProps: {
+    src: '',
+    aspectRatio: '16/9',
+    autoplay: false,
+    controls: true,
+  },
+  propsSchema: z.object({
+    src: z.string().default(''),
+    aspectRatio: z.string().default('16/9'),
+    autoplay: z.boolean().default(false),
+    controls: z.boolean().default(true),
+    loop: z.boolean().default(false),
+    muted: z.boolean().default(false),
+  }),
+  tags: ['video', 'media', 'youtube', 'vimeo', 'embed'],
+};
+
+const MapComponent: ComponentDefinition = {
+  type: 'Map',
+  displayName: 'Map',
+  description: 'Embedded Google Maps',
+  icon: 'map-pin',
+  category: 'media',
+  canHaveChildren: false,
+  defaultProps: {
+    address: 'Berlin, Germany',
+    zoom: 14,
+    height: '300px',
+  },
+  propsSchema: z.object({
+    address: z.string().default('Berlin, Germany'),
+    zoom: z.number().min(1).max(20).default(14),
+    height: z.string().default('300px'),
+  }),
+  tags: ['map', 'google', 'location', 'embed'],
+};
+
+const SocialLinksComponent: ComponentDefinition = {
+  type: 'SocialLinks',
+  displayName: 'Social Links',
+  description: 'Social media icon links',
+  icon: 'share',
+  category: 'navigation',
+  canHaveChildren: false,
+  defaultProps: {
+    facebook: '',
+    instagram: '',
+    twitter: '',
+    linkedin: '',
+    youtube: '',
+  },
+  propsSchema: z.object({
+    facebook: z.string().optional(),
+    instagram: z.string().optional(),
+    twitter: z.string().optional(),
+    linkedin: z.string().optional(),
+    youtube: z.string().optional(),
+    tiktok: z.string().optional(),
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+  }),
+  tags: ['social', 'links', 'facebook', 'instagram', 'icons'],
+};
+
+const AccordionComponent: ComponentDefinition = {
+  type: 'Accordion',
+  displayName: 'Accordion',
+  description: 'Collapsible FAQ sections',
+  icon: 'chevron-down',
+  category: 'layout',
+  canHaveChildren: true,
+  defaultProps: {
+    type: 'single',
+    collapsible: true,
+  },
+  propsSchema: z.object({
+    type: z.enum(['single', 'multiple']).default('single'),
+    collapsible: z.boolean().default(true),
+  }),
+  tags: ['accordion', 'faq', 'collapsible', 'expand'],
+};
+
+const AccordionItemComponent: ComponentDefinition = {
+  type: 'AccordionItem',
+  displayName: 'Accordion Item',
+  description: 'Single accordion item',
+  icon: 'chevron-down',
+  category: 'layout',
+  canHaveChildren: true,
+  allowedParentTypes: ['Accordion'],
+  defaultProps: {
+    title: 'Accordion Title',
+    value: 'item-1',
+  },
+  propsSchema: z.object({
+    title: z.string().default('Accordion Title'),
+    value: z.string().default('item-1'),
+  }),
+  tags: ['accordion', 'item', 'faq'],
+};
+
+const TabsComponent: ComponentDefinition = {
+  type: 'Tabs',
+  displayName: 'Tabs',
+  description: 'Tabbed content container',
+  icon: 'folder',
+  category: 'layout',
+  canHaveChildren: true,
+  defaultProps: {
+    defaultValue: 'tab-1',
+  },
+  propsSchema: z.object({
+    defaultValue: z.string().default('tab-1'),
+  }),
+  tags: ['tabs', 'navigation', 'content'],
+};
+
+const TabComponent: ComponentDefinition = {
+  type: 'Tab',
+  displayName: 'Tab',
+  description: 'Single tab content',
+  icon: 'file',
+  category: 'layout',
+  canHaveChildren: true,
+  allowedParentTypes: ['Tabs'],
+  defaultProps: {
+    label: 'Tab',
+    value: 'tab-1',
+  },
+  propsSchema: z.object({
+    label: z.string().default('Tab'),
+    value: z.string().default('tab-1'),
+  }),
+  tags: ['tab', 'panel', 'content'],
+};
+
+const CarouselComponent: ComponentDefinition = {
+  type: 'Carousel',
+  displayName: 'Carousel',
+  description: 'Image/content slider',
+  icon: 'chevrons-left-right',
+  category: 'layout',
+  canHaveChildren: true,
+  defaultProps: {
+    autoplay: false,
+    interval: 5000,
+    showArrows: true,
+    showDots: true,
+  },
+  propsSchema: z.object({
+    autoplay: z.boolean().default(false),
+    interval: z.number().default(5000),
+    showArrows: z.boolean().default(true),
+    showDots: z.boolean().default(true),
+  }),
+  tags: ['carousel', 'slider', 'gallery', 'images'],
+};
+
+const ProgressComponent: ComponentDefinition = {
+  type: 'Progress',
+  displayName: 'Progress Bar',
+  description: 'Progress indicator',
+  icon: 'loader',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    value: 60,
+    max: 100,
+    showLabel: false,
+  },
+  propsSchema: z.object({
+    value: z.number().default(60),
+    max: z.number().default(100),
+    showLabel: z.boolean().default(false),
+  }),
+  tags: ['progress', 'bar', 'loading', 'indicator'],
+};
+
+const RatingComponent: ComponentDefinition = {
+  type: 'Rating',
+  displayName: 'Rating',
+  description: 'Star rating display',
+  icon: 'star',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    value: 4,
+    max: 5,
+    size: 'md',
+  },
+  propsSchema: z.object({
+    value: z.number().min(0).max(5).default(4),
+    max: z.number().default(5),
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+    color: z.string().optional(),
+  }),
+  tags: ['rating', 'stars', 'review', 'score'],
+};
+
+const CounterComponent: ComponentDefinition = {
+  type: 'Counter',
+  displayName: 'Counter',
+  description: 'Animated number counter',
+  icon: 'hash',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    value: 1000,
+    prefix: '',
+    suffix: '+',
+    duration: 2000,
+  },
+  propsSchema: z.object({
+    value: z.number().default(1000),
+    prefix: z.string().default(''),
+    suffix: z.string().default('+'),
+    duration: z.number().default(2000),
+  }),
+  tags: ['counter', 'number', 'stats', 'animated'],
+};
+
+const QuoteComponent: ComponentDefinition = {
+  type: 'Quote',
+  displayName: 'Quote',
+  description: 'Blockquote with author',
+  icon: 'quote',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    text: 'This is an inspiring quote.',
+    author: 'Author Name',
+    role: 'CEO, Company',
+  },
+  propsSchema: z.object({
+    text: z.string().default('This is an inspiring quote.'),
+    author: z.string().optional(),
+    role: z.string().optional(),
+  }),
+  tags: ['quote', 'blockquote', 'testimonial', 'citation'],
+};
+
+const PricingCardComponent: ComponentDefinition = {
+  type: 'PricingCard',
+  displayName: 'Pricing Card',
+  description: 'Pricing plan card',
+  icon: 'credit-card',
+  category: 'content',
+  canHaveChildren: true,
+  defaultProps: {
+    title: 'Pro Plan',
+    price: '29',
+    currency: '€',
+    period: '/Monat',
+    featured: false,
+  },
+  propsSchema: z.object({
+    title: z.string().default('Pro Plan'),
+    price: z.string().default('29'),
+    currency: z.string().default('€'),
+    period: z.string().default('/Monat'),
+    featured: z.boolean().default(false),
+    description: z.string().optional(),
+  }),
+  tags: ['pricing', 'card', 'plan', 'subscription'],
+};
+
+const FeatureCardComponent: ComponentDefinition = {
+  type: 'FeatureCard',
+  displayName: 'Feature Card',
+  description: 'Feature highlight with icon',
+  icon: 'star',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    icon: '⚡',
+    title: 'Feature Title',
+    description: 'Feature description goes here.',
+  },
+  propsSchema: z.object({
+    icon: z.string().default('⚡'),
+    title: z.string().default('Feature Title'),
+    description: z.string().default('Feature description goes here.'),
+  }),
+  tags: ['feature', 'card', 'highlight', 'icon'],
+};
+
+const TestimonialCardComponent: ComponentDefinition = {
+  type: 'TestimonialCard',
+  displayName: 'Testimonial',
+  description: 'Customer testimonial card',
+  icon: 'message-circle',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    quote: 'Great service! Highly recommended.',
+    author: 'Max Mustermann',
+    role: 'CEO, Firma GmbH',
+    avatar: '',
+    rating: 5,
+  },
+  propsSchema: z.object({
+    quote: z.string().default('Great service!'),
+    author: z.string().default('Max Mustermann'),
+    role: z.string().optional(),
+    avatar: z.string().optional(),
+    rating: z.number().min(0).max(5).default(5),
+  }),
+  tags: ['testimonial', 'review', 'quote', 'customer'],
+};
+
+const TeamMemberComponent: ComponentDefinition = {
+  type: 'TeamMember',
+  displayName: 'Team Member',
+  description: 'Team member profile card',
+  icon: 'user',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    name: 'Max Mustermann',
+    role: 'CEO & Gründer',
+    image: 'https://placehold.co/200x200',
+    bio: '',
+  },
+  propsSchema: z.object({
+    name: z.string().default('Max Mustermann'),
+    role: z.string().default('CEO & Gründer'),
+    image: z.string().default('https://placehold.co/200x200'),
+    bio: z.string().optional(),
+    linkedin: z.string().optional(),
+    twitter: z.string().optional(),
+  }),
+  tags: ['team', 'member', 'profile', 'about'],
+};
+
+const LogoCloudComponent: ComponentDefinition = {
+  type: 'LogoCloud',
+  displayName: 'Logo Cloud',
+  description: 'Display partner/client logos',
+  icon: 'grid',
+  category: 'content',
+  canHaveChildren: true,
+  defaultProps: {
+    columns: 5,
+    grayscale: true,
+  },
+  propsSchema: z.object({
+    columns: z.number().min(2).max(8).default(5),
+    grayscale: z.boolean().default(true),
+  }),
+  tags: ['logos', 'partners', 'clients', 'brands'],
+};
+
+const CTAComponent: ComponentDefinition = {
+  type: 'CTA',
+  displayName: 'CTA Block',
+  description: 'Call-to-action section',
+  icon: 'megaphone',
+  category: 'layout',
+  canHaveChildren: true,
+  defaultProps: {
+    variant: 'centered',
+  },
+  propsSchema: z.object({
+    variant: z.enum(['centered', 'split', 'banner']).default('centered'),
+  }),
+  tags: ['cta', 'call-to-action', 'marketing', 'conversion'],
+};
+
+const BreadcrumbComponent: ComponentDefinition = {
+  type: 'Breadcrumb',
+  displayName: 'Breadcrumb',
+  description: 'Navigation breadcrumb trail',
+  icon: 'chevron-right',
+  category: 'navigation',
+  canHaveChildren: false,
+  defaultProps: {
+    separator: '/',
+  },
+  propsSchema: z.object({
+    separator: z.string().default('/'),
+    items: z.array(z.object({
+      label: z.string(),
+      href: z.string().optional(),
+    })).default([]),
+  }),
+  tags: ['breadcrumb', 'navigation', 'path'],
+};
+
+const TableComponent: ComponentDefinition = {
+  type: 'Table',
+  displayName: 'Table',
+  description: 'Data table with rows and columns',
+  icon: 'table',
+  category: 'data',
+  canHaveChildren: true,
+  defaultProps: {
+    striped: true,
+    hoverable: true,
+  },
+  propsSchema: z.object({
+    striped: z.boolean().default(true),
+    hoverable: z.boolean().default(true),
+    bordered: z.boolean().default(false),
+  }),
+  tags: ['table', 'data', 'grid', 'rows'],
+};
+
+const CodeBlockComponent: ComponentDefinition = {
+  type: 'CodeBlock',
+  displayName: 'Code Block',
+  description: 'Syntax highlighted code',
+  icon: 'code',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    code: 'console.log("Hello World");',
+    language: 'javascript',
+  },
+  propsSchema: z.object({
+    code: z.string().default('console.log("Hello World");'),
+    language: z.string().default('javascript'),
+    showLineNumbers: z.boolean().default(true),
+  }),
+  tags: ['code', 'syntax', 'developer', 'programming'],
+};
+
+const TimelineComponent: ComponentDefinition = {
+  type: 'Timeline',
+  displayName: 'Timeline',
+  description: 'Vertical timeline for history/steps',
+  icon: 'git-branch',
+  category: 'layout',
+  canHaveChildren: true,
+  defaultProps: {
+    variant: 'left',
+  },
+  propsSchema: z.object({
+    variant: z.enum(['left', 'right', 'alternating']).default('left'),
+  }),
+  tags: ['timeline', 'history', 'steps', 'process'],
+};
+
+const TimelineItemComponent: ComponentDefinition = {
+  type: 'TimelineItem',
+  displayName: 'Timeline Item',
+  description: 'Single timeline entry',
+  icon: 'circle',
+  category: 'layout',
+  canHaveChildren: true,
+  allowedParentTypes: ['Timeline'],
+  defaultProps: {
+    date: '2024',
+    title: 'Timeline Event',
+  },
+  propsSchema: z.object({
+    date: z.string().default('2024'),
+    title: z.string().default('Timeline Event'),
+    icon: z.string().optional(),
+  }),
+  tags: ['timeline', 'item', 'event'],
+};
+
+const CountdownComponent: ComponentDefinition = {
+  type: 'Countdown',
+  displayName: 'Countdown',
+  description: 'Countdown timer to date',
+  icon: 'clock',
+  category: 'content',
+  canHaveChildren: false,
+  defaultProps: {
+    targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    showDays: true,
+    showHours: true,
+    showMinutes: true,
+    showSeconds: true,
+  },
+  propsSchema: z.object({
+    targetDate: z.string(),
+    showDays: z.boolean().default(true),
+    showHours: z.boolean().default(true),
+    showMinutes: z.boolean().default(true),
+    showSeconds: z.boolean().default(true),
+  }),
+  tags: ['countdown', 'timer', 'launch', 'event'],
+};
+
+const MarqueeComponent: ComponentDefinition = {
+  type: 'Marquee',
+  displayName: 'Marquee',
+  description: 'Scrolling text/content ticker',
+  icon: 'arrow-right',
+  category: 'content',
+  canHaveChildren: true,
+  defaultProps: {
+    speed: 50,
+    pauseOnHover: true,
+  },
+  propsSchema: z.object({
+    speed: z.number().default(50),
+    pauseOnHover: z.boolean().default(true),
+    direction: z.enum(['left', 'right']).default('left'),
+  }),
+  tags: ['marquee', 'ticker', 'scroll', 'animation'],
+};
+
+// ============================================================================
 // GATE COMPONENTS
 // ============================================================================
 
@@ -601,18 +1136,39 @@ export function registerBuiltinComponents(): void {
   componentRegistry.register(GridComponent);
   componentRegistry.register(DividerComponent);
   componentRegistry.register(SpacerComponent);
+  componentRegistry.register(AccordionComponent);
+  componentRegistry.register(AccordionItemComponent);
+  componentRegistry.register(TabsComponent);
+  componentRegistry.register(TabComponent);
+  componentRegistry.register(CarouselComponent);
+  componentRegistry.register(TimelineComponent);
+  componentRegistry.register(TimelineItemComponent);
+  componentRegistry.register(CTAComponent);
   
   // Content
   componentRegistry.register(TextComponent);
   componentRegistry.register(HeadingComponent);
   componentRegistry.register(ImageComponent);
   componentRegistry.register(IconComponent);
+  componentRegistry.register(AvatarComponent);
+  componentRegistry.register(ProgressComponent);
+  componentRegistry.register(RatingComponent);
+  componentRegistry.register(CounterComponent);
+  componentRegistry.register(QuoteComponent);
+  componentRegistry.register(CodeBlockComponent);
+  componentRegistry.register(CountdownComponent);
+  componentRegistry.register(MarqueeComponent);
   
   // UI
   componentRegistry.register(ButtonComponent);
   componentRegistry.register(CardComponent);
   componentRegistry.register(BadgeComponent);
   componentRegistry.register(AlertComponent);
+  componentRegistry.register(PricingCardComponent);
+  componentRegistry.register(FeatureCardComponent);
+  componentRegistry.register(TestimonialCardComponent);
+  componentRegistry.register(TeamMemberComponent);
+  componentRegistry.register(LogoCloudComponent);
   
   // Forms
   componentRegistry.register(FormComponent);
@@ -626,11 +1182,18 @@ export function registerBuiltinComponents(): void {
   componentRegistry.register(NavbarComponent);
   componentRegistry.register(FooterComponent);
   componentRegistry.register(LinkComponent);
+  componentRegistry.register(SocialLinksComponent);
+  componentRegistry.register(BreadcrumbComponent);
+  
+  // Media
+  componentRegistry.register(VideoComponent);
+  componentRegistry.register(MapComponent);
   
   // Data
   componentRegistry.register(CollectionListComponent);
   componentRegistry.register(RecordFieldTextComponent);
   componentRegistry.register(PaginationComponent);
+  componentRegistry.register(TableComponent);
   
   // Gates
   componentRegistry.register(AuthGateComponent);

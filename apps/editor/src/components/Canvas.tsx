@@ -171,18 +171,17 @@ export function Canvas() {
       {/* Canvas container */}
       <div
         className={cn(
-          'flex-1 flex justify-center overflow-auto p-4',
-          !isPreviewMode && 'bg-[repeating-linear-gradient(45deg,#f5f5f5_0,#f5f5f5_1px,transparent_0,transparent_50%)] bg-[length:10px_10px]'
+          'flex-1 flex justify-center overflow-auto',
+          !isPreviewMode && 'p-4 bg-[repeating-linear-gradient(45deg,#f5f5f5_0,#f5f5f5_1px,transparent_0,transparent_50%)] bg-[length:10px_10px]'
         )}
         onClick={handleCanvasClick}
       >
         {/* Device frame */}
         <div
           className={cn(
-            'relative shadow-2xl overflow-hidden transition-all duration-300 flex flex-col',
+            'relative shadow-2xl overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col',
             breakpoint === 'mobile' && 'rounded-[2rem] border-[8px] border-gray-800',
             breakpoint === 'tablet' && 'rounded-xl border-[6px] border-gray-700',
-            breakpoint === 'desktop' && 'rounded-lg',
             isPreviewMode ? '' : 'ring-1 ring-border',
             isOver && activeId && 'ring-2 ring-primary'
           )}
@@ -213,46 +212,23 @@ export function Canvas() {
             />
           )}
 
-          {/* Topbar */}
+          {/* Topbar - only from settings if enabled */}
           {siteSettings.header?.topbar?.enabled && (
             <TopbarPreview settings={siteSettings} />
           )}
 
-          {/* Header */}
-          {siteSettings.header?.enabled && (
-            <HeaderPreview settings={siteSettings} breakpoint={breakpoint} />
-          )}
+          {/* Header is now managed as a node in the builder tree, not from settings */}
 
           {/* Content area with theme styles */}
           <div
             ref={setNodeRef}
-            className={cn(
-              'flex-1 relative z-10',
-              breakpoint === 'mobile' && !siteSettings.header?.enabled && 'pt-8'
-            )}
+            className="flex-1 relative z-10"
             style={themeStyles}
           >
             <CanvasNode node={tree.root} isRoot />
           </div>
 
-          {/* Footer */}
-          {siteSettings.footer?.enabled && (
-            <FooterPreview settings={siteSettings} />
-          )}
-
-          {/* Back to top button */}
-          {siteSettings.footer?.bottomBar?.showBackToTop && (
-            <button
-              className="fixed bottom-20 right-4 z-50 p-2 rounded-full shadow-lg transition-all hover:scale-110"
-              style={{
-                backgroundColor: siteSettings.theme.colors.primary,
-                color: siteSettings.theme.colors.primaryForeground,
-              }}
-              title="Nach oben"
-            >
-              <ChevronUp className="h-5 w-5" />
-            </button>
-          )}
+          {/* Footer is now managed as a node in the builder tree, not from settings */}
 
           {/* Home indicator for mobile */}
           {breakpoint === 'mobile' && !isPreviewMode && (

@@ -66,6 +66,7 @@ interface EditorState {
   // Actions
   setPageContext: (workspaceId: string, siteId: string, pageId: string) => void;
   setTree: (tree: BuilderTree) => void;
+  replaceTree: (tree: BuilderTree) => void;
   setPageName: (name: string) => void;
   
   // Site settings actions
@@ -195,6 +196,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       history: [tree],
       historyIndex: 0,
       isDirty: false,
+    });
+  },
+
+  replaceTree: (tree) => {
+    const { history, historyIndex } = get();
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(tree);
+    
+    set({
+      tree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
     });
   },
 
