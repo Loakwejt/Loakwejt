@@ -53,6 +53,56 @@ export const UserSchema = z.object({
 export type User = z.infer<typeof UserSchema>;
 
 // ============================================================================
+// SESSION CONTEXT TYPES
+// ============================================================================
+
+export const SessionSiteContextSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  customDomain: z.string().nullable(),
+  pageCount: z.number(),
+  isPublished: z.boolean(),
+});
+
+export type SessionSiteContext = z.infer<typeof SessionSiteContextSchema>;
+
+export const SessionWorkspaceContextSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  role: z.enum(['OWNER', 'ADMIN', 'EDITOR', 'VIEWER']),
+  plan: z.enum(['FREE', 'PRO', 'BUSINESS']),
+  siteCount: z.number(),
+  memberCount: z.number(),
+  sites: z.array(SessionSiteContextSchema),
+});
+
+export type SessionWorkspaceContext = z.infer<typeof SessionWorkspaceContextSchema>;
+
+export const SessionContextSchema = z.object({
+  workspaces: z.array(SessionWorkspaceContextSchema),
+  totalWorkspaces: z.number(),
+  totalSites: z.number(),
+});
+
+export type SessionContext = z.infer<typeof SessionContextSchema>;
+
+export const SessionWithContextSchema = z.object({
+  user: UserSchema,
+  context: SessionContextSchema,
+});
+
+export type SessionWithContext = z.infer<typeof SessionWithContextSchema>;
+
+export const SessionResponseSchema = z.object({
+  session: SessionWithContextSchema.nullable(),
+});
+
+export type SessionResponse = z.infer<typeof SessionResponseSchema>;
+
+
+// ============================================================================
 // WORKSPACE TYPES
 // ============================================================================
 

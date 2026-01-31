@@ -220,7 +220,7 @@ Three built-in plugins:
 
 ### Auth
 - `POST /api/auth/register` - Register new user
-- `GET /api/auth/session` - Get current session
+- `GET /api/auth/session` - Get current session with workspace/site context
 
 ### Workspaces
 - `GET /api/workspaces` - List workspaces
@@ -250,6 +250,54 @@ Three built-in plugins:
 - `GET /api/runtime/sites/:slug` - Get published site
 - `GET /api/runtime/sites/:slug/pages` - Get homepage
 - `GET /api/runtime/sites/:slug/pages/:page` - Get page by slug
+
+### Session Context
+
+The `/api/auth/session` endpoint returns an enhanced session object that includes contextual information about the user's workspace and site structure:
+
+```json
+{
+  "session": {
+    "user": {
+      "id": "user123",
+      "email": "demo@builderly.dev",
+      "name": "Demo User",
+      "image": null
+    },
+    "context": {
+      "workspaces": [
+        {
+          "id": "workspace123",
+          "name": "My Workspace",
+          "slug": "my-workspace",
+          "role": "OWNER",
+          "plan": "FREE",
+          "siteCount": 2,
+          "memberCount": 1,
+          "sites": [
+            {
+              "id": "site123",
+              "name": "My Website",
+              "slug": "my-website",
+              "customDomain": null,
+              "pageCount": 5,
+              "isPublished": true
+            }
+          ]
+        }
+      ],
+      "totalWorkspaces": 1,
+      "totalSites": 2
+    }
+  }
+}
+```
+
+This session context allows you to:
+- Understand the complete structure of the user's sites and pages
+- Check the user's role in each workspace (OWNER, ADMIN, EDITOR, VIEWER)
+- See workspace plans and limits
+- Navigate the hierarchy: User → Workspaces → Sites → Pages
 
 ## Billing (Stripe)
 

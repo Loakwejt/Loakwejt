@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@builderly/db';
+import type { SessionResponse } from '@builderly/sdk';
 
 /**
  * GET /api/auth/session
@@ -9,8 +10,13 @@ import { prisma } from '@builderly/db';
  * Returns the current session with extended context including:
  * - User information
  * - Workspace memberships and roles
- * - Site information
- * - Page structure overview
+ * - Site information (with page counts)
+ * - Total workspace and site counts
+ * 
+ * This endpoint provides comprehensive context about the user's page structure,
+ * allowing clients to understand the full hierarchy: User → Workspaces → Sites → Pages
+ * 
+ * @returns {SessionResponse} Session object with context or null if not authenticated
  */
 export async function GET(request: NextRequest) {
   try {
