@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
+import { getServerSession } from 'next-auth';
 import { prisma } from '@builderly/db';
+import { authOptions } from '@/lib/auth';
 import { SafeRenderer } from '@/components/runtime/safe-renderer';
 import type { BuilderTree } from '@builderly/core';
 import { Layers } from 'lucide-react';
@@ -37,6 +39,8 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SiteHomePage({ params }: Props) {
+  const session = await getServerSession(authOptions);
+  
   const site = await prisma.site.findFirst({
     where: {
       slug: params.siteSlug,
@@ -80,6 +84,7 @@ export default async function SiteHomePage({ params }: Props) {
         context={{
           siteId: site.id,
           pageId: page.id,
+          user: session?.user ?? null,
         }}
       />
       

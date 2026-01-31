@@ -108,6 +108,11 @@ interface RenderContext {
   siteId?: string;
   pageId?: string;
   currentRecord?: Record<string, unknown>;
+  user?: {
+    id: string;
+    email?: string | null;
+    name?: string | null;
+  } | null;
 }
 
 type ComponentRenderer = (
@@ -391,9 +396,17 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
   },
 
   // Gates
-  AuthGate: (node, children) => {
-    // In runtime, we'd check auth state. For now, just render children
-    // TODO: Implement proper auth checking
+  AuthGate: (node, children, context) => {
+    const showWhen = (node.props.showWhen as string) || 'authenticated';
+    const isAuthenticated = !!context.user;
+    
+    // Check if we should show content based on auth state
+    const shouldShow = showWhen === 'authenticated' ? isAuthenticated : !isAuthenticated;
+    
+    if (!shouldShow) {
+      return null;
+    }
+    
     return <>{children}</>;
   },
 
