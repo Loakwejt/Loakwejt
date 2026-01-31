@@ -22,6 +22,7 @@ import {
   Settings,
   Keyboard,
   Component,
+  History,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
 import { TemplatePicker } from './TemplatePicker';
@@ -297,6 +298,16 @@ export function Toolbar() {
           title="Globale Symbole"
         >
           <Component className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('toggle-history-panel'));
+          }}
+          title="Versionsverlauf"
+        >
+          <History className="h-4 w-4" />
         </Button>
         <Button
           variant={isInspectorOpen ? 'secondary' : 'ghost'}

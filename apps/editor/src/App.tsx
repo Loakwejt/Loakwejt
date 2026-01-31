@@ -10,6 +10,7 @@ import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
 import { SymbolsPanel } from './components/SymbolsPanel';
+import { HistoryPanel } from './components/HistoryPanel';
 import { useEditorStore } from './store/editor-store';
 import { mergeSiteSettings } from '@builderly/core';
 
@@ -18,6 +19,7 @@ import '@builderly/core/registry';
 
 function App() {
   const [isSymbolsPanelOpen, setIsSymbolsPanelOpen] = useState(false);
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   
   const {
     isPaletteOpen,
@@ -153,6 +155,16 @@ function App() {
     return () => window.removeEventListener('toggle-symbols-panel', handleToggleSymbols);
   }, []);
 
+  // Listen for history panel toggle event
+  useEffect(() => {
+    const handleToggleHistory = () => {
+      setIsHistoryPanelOpen(prev => !prev);
+    };
+    
+    window.addEventListener('toggle-history-panel', handleToggleHistory);
+    return () => window.removeEventListener('toggle-history-panel', handleToggleHistory);
+  }, []);
+
   return (
     <TooltipProvider>
       <DndProvider>
@@ -208,6 +220,12 @@ function App() {
           <SymbolsPanel 
             isOpen={isSymbolsPanelOpen} 
             onClose={() => setIsSymbolsPanelOpen(false)} 
+          />
+          
+          {/* History Panel */}
+          <HistoryPanel 
+            isOpen={isHistoryPanelOpen} 
+            onClose={() => setIsHistoryPanelOpen(false)} 
           />
         </div>
       </DndProvider>
