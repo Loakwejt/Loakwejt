@@ -24,7 +24,8 @@ import {
   CollapsibleTrigger,
   cn,
 } from '@builderly/ui';
-import { Trash2, Copy, ChevronDown, Plus, X, Image } from 'lucide-react';
+import { Trash2, Copy, ChevronDown, Plus, X, Image, FolderOpen } from 'lucide-react';
+import { AssetPicker } from './AssetPicker';
 
 export function Inspector() {
   const {
@@ -137,6 +138,26 @@ function PropsEditor({
   onUpdate: (props: Record<string, unknown>) => void;
 }) {
   const props = node.props;
+  const { workspaceId, siteId } = useEditorStore();
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+  const [assetPickerTarget, setAssetPickerTarget] = useState<string | null>(null);
+
+  const openAssetPicker = (target: string) => {
+    setAssetPickerTarget(target);
+    setAssetPickerOpen(true);
+  };
+
+  const handleAssetSelect = (asset: { url: string; alt?: string }) => {
+    if (assetPickerTarget === 'src') {
+      onUpdate({ src: asset.url, alt: asset.alt || props.alt || '' });
+    } else if (assetPickerTarget === 'image') {
+      onUpdate({ image: asset.url });
+    } else if (assetPickerTarget === 'backgroundImage') {
+      onUpdate({ backgroundImage: asset.url });
+    }
+    setAssetPickerOpen(false);
+    setAssetPickerTarget(null);
+  };
 
   switch (node.type) {
     case 'Section':
@@ -188,14 +209,48 @@ function PropsEditor({
           </CollapsibleSection>
 
           <CollapsibleSection title="Background Image" icon="🖼️" color="text-purple-400">
+            {/* Asset Picker for Section Background */}
+            {workspaceId && (
+              <AssetPicker
+                open={assetPickerOpen && assetPickerTarget === 'backgroundImage'}
+                onOpenChange={setAssetPickerOpen}
+                onSelect={handleAssetSelect}
+                workspaceId={workspaceId}
+                siteId={siteId || undefined}
+                accept="image"
+              />
+            )}
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs">Image URL</Label>
-                <Input
-                  value={(props.backgroundImage as string) || ''}
-                  onChange={(e) => onUpdate({ backgroundImage: e.target.value })}
-                  placeholder="https://..."
-                />
+                <Label className="text-xs">Hintergrundbild</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={(props.backgroundImage as string) || ''}
+                    onChange={(e) => onUpdate({ backgroundImage: e.target.value })}
+                    placeholder="https://..."
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => openAssetPicker('backgroundImage')}
+                    title="Aus Mediathek wählen"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                  </Button>
+                </div>
+                {/* Background Preview */}
+                {props.backgroundImage && (
+                  <div className="relative w-full h-16 bg-muted rounded-md overflow-hidden mt-2">
+                    <img
+                      src={props.backgroundImage as string}
+                      alt="Background Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Size</Label>
@@ -601,20 +656,54 @@ function PropsEditor({
     case 'Image':
       return (
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Image URL</Label>
-            <Input
-              value={(props.src as string) || ''}
-              onChange={(e) => onUpdate({ src: e.target.value })}
-              placeholder="https://..."
+          {/* Asset Picker Dialog */}
+          {workspaceId && (
+            <AssetPicker
+              open={assetPickerOpen}
+              onOpenChange={setAssetPickerOpen}
+              onSelect={handleAssetSelect}
+              workspaceId={workspaceId}
+              siteId={siteId || undefined}
+              accept="image"
             />
+          )}
+          
+          <div className="space-y-2">
+            <Label>Bild</Label>
+            <div className="flex gap-2">
+              <Input
+                value={(props.src as string) || ''}
+                onChange={(e) => onUpdate({ src: e.target.value })}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => openAssetPicker('src')}
+                title="Aus Mediathek wählen"
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </div>
+            {/* Image Preview */}
+            {props.src && (
+              <div className="relative w-full h-24 bg-muted rounded-md overflow-hidden">
+                <img
+                  src={props.src as string}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label>Alt Text</Label>
             <Input
               value={(props.alt as string) || ''}
               onChange={(e) => onUpdate({ alt: e.target.value })}
-              placeholder="Image description..."
+              placeholder="Bildbeschreibung für Barrierefreiheit..."
             />
           </div>
           <div className="space-y-2">
@@ -636,7 +725,7 @@ function PropsEditor({
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <Label className="text-xs">Width</Label>
+              <Label className="text-xs">Breite</Label>
               <Input
                 value={(props.width as string) || ''}
                 onChange={(e) => onUpdate({ width: e.target.value })}
@@ -644,7 +733,7 @@ function PropsEditor({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Height</Label>
+              <Label className="text-xs">Höhe</Label>
               <Input
                 value={(props.height as string) || ''}
                 onChange={(e) => onUpdate({ height: e.target.value })}
@@ -658,15 +747,26 @@ function PropsEditor({
     case 'Card':
       return (
         <div className="space-y-4">
+          {/* Asset Picker for Card Image */}
+          {workspaceId && (
+            <AssetPicker
+              open={assetPickerOpen && assetPickerTarget === 'image'}
+              onOpenChange={setAssetPickerOpen}
+              onSelect={handleAssetSelect}
+              workspaceId={workspaceId}
+              siteId={siteId || undefined}
+              accept="image"
+            />
+          )}
           <div className="space-y-2">
-            <Label>Title</Label>
+            <Label>Titel</Label>
             <Input
               value={(props.title as string) || ''}
               onChange={(e) => onUpdate({ title: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>Beschreibung</Label>
             <Textarea
               value={(props.description as string) || ''}
               onChange={(e) => onUpdate({ description: e.target.value })}
@@ -674,12 +774,33 @@ function PropsEditor({
             />
           </div>
           <div className="space-y-2">
-            <Label>Image URL</Label>
-            <Input
-              value={(props.image as string) || ''}
-              onChange={(e) => onUpdate({ image: e.target.value })}
-              placeholder="https://..."
-            />
+            <Label>Bild</Label>
+            <div className="flex gap-2">
+              <Input
+                value={(props.image as string) || ''}
+                onChange={(e) => onUpdate({ image: e.target.value })}
+                placeholder="https://..."
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => openAssetPicker('image')}
+                title="Aus Mediathek wählen"
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </div>
+            {props.image && (
+              <div className="relative w-full h-20 bg-muted rounded-md overflow-hidden">
+                <img
+                  src={props.image as string}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
         </div>
       );
@@ -802,6 +923,8 @@ function StyleEditor({
   onUpdate: (style: BuilderStyle) => void;
 }) {
   const base = style.base || {};
+  const { workspaceId, siteId } = useEditorStore();
+  const [bgAssetPickerOpen, setBgAssetPickerOpen] = useState(false);
 
   const updateBase = (key: string, value: unknown) => {
     const finalValue = value === '_none' || value === '' ? undefined : value;
@@ -814,6 +937,11 @@ function StyleEditor({
   const getValue = (val: unknown): string => {
     if (val === undefined || val === null || val === '') return '_none';
     return String(val);
+  };
+
+  const handleBgAssetSelect = (asset: { url: string }) => {
+    updateBase('backgroundImage', asset.url);
+    setBgAssetPickerOpen(false);
   };
 
   return (
@@ -1167,13 +1295,45 @@ function StyleEditor({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Background Image URL</Label>
-            <Input
-              value={(base.backgroundImage as string) || ''}
-              onChange={(e) => updateBase('backgroundImage', e.target.value)}
-              placeholder="https://..."
-              className="h-8"
-            />
+            <Label className="text-xs">Hintergrundbild</Label>
+            {/* Asset Picker for Style Background */}
+            {workspaceId && (
+              <AssetPicker
+                open={bgAssetPickerOpen}
+                onOpenChange={setBgAssetPickerOpen}
+                onSelect={handleBgAssetSelect}
+                workspaceId={workspaceId}
+                siteId={siteId || undefined}
+                accept="image"
+              />
+            )}
+            <div className="flex gap-2">
+              <Input
+                value={(base.backgroundImage as string) || ''}
+                onChange={(e) => updateBase('backgroundImage', e.target.value)}
+                placeholder="https://..."
+                className="h-8 flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setBgAssetPickerOpen(true)}
+                title="Aus Mediathek wählen"
+              >
+                <FolderOpen className="h-4 w-4" />
+              </Button>
+            </div>
+            {base.backgroundImage && (
+              <div className="relative w-full h-16 bg-muted rounded-md overflow-hidden mt-2">
+                <img
+                  src={base.backgroundImage as string}
+                  alt="Background Preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
           </div>
           {base.backgroundImage && (
             <>
