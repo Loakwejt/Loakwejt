@@ -8,6 +8,7 @@ import { SidebarLayerPanel } from './components/SidebarLayerPanel';
 import { PagesPanel } from './components/PagesPanel';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
+import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
 import { useEditorStore } from './store/editor-store';
 import { mergeSiteSettings } from '@builderly/core';
 
@@ -186,6 +187,9 @@ function App() {
 
           {/* Site Settings Panel (Sheet/Drawer) */}
           <SiteSettingsPanel />
+          
+          {/* Keyboard Shortcuts Dialog */}
+          <KeyboardShortcutsDialog />
         </div>
       </DndProvider>
     </TooltipProvider>

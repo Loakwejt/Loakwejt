@@ -20,6 +20,7 @@ import {
   ListTree,
   LayoutTemplate,
   Settings,
+  Keyboard,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
 import { TemplatePicker } from './TemplatePicker';
@@ -295,6 +296,17 @@ export function Toolbar() {
           <PanelRight className="h-4 w-4" />
         </Button>
         <Separator orientation="vertical" className="h-6 mx-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            // Dispatch custom event to open keyboard shortcuts
+            window.dispatchEvent(new CustomEvent('open-keyboard-shortcuts'));
+          }}
+          title="Tastenkürzel (? drücken)"
+        >
+          <Keyboard className="h-4 w-4" />
+        </Button>
         <Button
           variant={isSiteSettingsOpen ? 'default' : 'outline'}
           size="sm"
