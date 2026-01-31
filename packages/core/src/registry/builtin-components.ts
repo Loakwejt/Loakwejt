@@ -1125,6 +1125,29 @@ const AuthGateComponent: ComponentDefinition = {
 };
 
 // ============================================================================
+// SYMBOL INSTANCE - For Global Symbols
+// ============================================================================
+
+const SymbolInstanceComponent: ComponentDefinition = {
+  type: 'SymbolInstance',
+  displayName: 'Symbol',
+  description: 'An instance of a reusable global symbol',
+  icon: 'component',
+  category: 'advanced',
+  canHaveChildren: false, // Children come from the symbol definition
+  defaultProps: {
+    symbolId: '',
+    isDetached: false,
+  },
+  propsSchema: z.object({
+    symbolId: z.string().min(1, 'Symbol ID is required'),
+    isDetached: z.boolean().default(false),
+    overrides: z.record(z.unknown()).optional(),
+  }),
+  tags: ['symbol', 'component', 'reusable', 'instance'],
+};
+
+// ============================================================================
 // REGISTER ALL BUILT-IN COMPONENTS
 // ============================================================================
 
@@ -1197,6 +1220,9 @@ export function registerBuiltinComponents(): void {
   
   // Gates
   componentRegistry.register(AuthGateComponent);
+  
+  // Symbols
+  componentRegistry.register(SymbolInstanceComponent);
 }
 
 // Initialize on import

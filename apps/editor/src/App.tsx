@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TooltipProvider } from '@builderly/ui';
 import { Toolbar } from './components/Toolbar';
 import { Palette } from './components/Palette';
@@ -9,6 +9,7 @@ import { PagesPanel } from './components/PagesPanel';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
+import { SymbolsPanel } from './components/SymbolsPanel';
 import { useEditorStore } from './store/editor-store';
 import { mergeSiteSettings } from '@builderly/core';
 
@@ -16,6 +17,8 @@ import { mergeSiteSettings } from '@builderly/core';
 import '@builderly/core/registry';
 
 function App() {
+  const [isSymbolsPanelOpen, setIsSymbolsPanelOpen] = useState(false);
+  
   const {
     isPaletteOpen,
     isInspectorOpen,
@@ -140,6 +143,16 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Listen for symbols panel toggle event
+  useEffect(() => {
+    const handleToggleSymbols = () => {
+      setIsSymbolsPanelOpen(prev => !prev);
+    };
+    
+    window.addEventListener('toggle-symbols-panel', handleToggleSymbols);
+    return () => window.removeEventListener('toggle-symbols-panel', handleToggleSymbols);
+  }, []);
+
   return (
     <TooltipProvider>
       <DndProvider>
@@ -190,6 +203,12 @@ function App() {
           
           {/* Keyboard Shortcuts Dialog */}
           <KeyboardShortcutsDialog />
+          
+          {/* Symbols Panel */}
+          <SymbolsPanel 
+            isOpen={isSymbolsPanelOpen} 
+            onClose={() => setIsSymbolsPanelOpen(false)} 
+          />
         </div>
       </DndProvider>
     </TooltipProvider>
