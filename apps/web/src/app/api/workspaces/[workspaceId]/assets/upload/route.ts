@@ -4,6 +4,7 @@ import { requireWorkspacePermission } from '@/lib/permissions';
 import { canUploadAsset } from '@/lib/entitlements';
 import { uploadFile, generateAssetKey } from '@/lib/storage';
 import { processImage, isImage } from '@/lib/image-processor';
+import { createAuditLog } from '@/lib/audit';
 
 // Allowed file types
 const ALLOWED_TYPES = [
@@ -141,6 +142,14 @@ export async function POST(
         folder: folder || null,
         uploadedById: userId,
       },
+    });
+
+    await createAuditLog({
+      userId,
+      action: 'ASSET_UPLOADED',
+      entity: 'Asset',
+      entityId: asset.id,
+      details: { fileName: file.name, size: buffer.length, mimeType: optimizedMimeType },
     });
 
     return NextResponse.json(asset, { status: 201 });

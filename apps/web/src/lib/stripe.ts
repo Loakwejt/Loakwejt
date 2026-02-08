@@ -8,6 +8,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 export const STRIPE_PRICES: Record<string, Plan> = {
   [process.env.STRIPE_PRICE_PRO || 'price_pro']: 'PRO',
   [process.env.STRIPE_PRICE_BUSINESS || 'price_business']: 'BUSINESS',
+  [process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise']: 'ENTERPRISE',
 };
 
 export async function createCheckoutSession(
@@ -113,6 +114,10 @@ export async function handleSubscriptionUpdated(
         : null,
     },
   });
+
+  // Audit log (no userId – triggered by Stripe webhook)
+  const { createAuditLog } = await import('@/lib/audit');
+  await createAuditLog({ action: 'SUBSCRIPTION_UPDATED', entity: 'Workspace', entityId: workspaceId, details: { plan: plan || 'FREE', subscriptionId: subscription.id, status: subscription.status } });
 }
 
 export async function handleSubscriptionDeleted(
@@ -129,6 +134,10 @@ export async function handleSubscriptionDeleted(
       planExpiresAt: null,
     },
   });
+
+  // Audit log (no userId – triggered by Stripe webhook)
+  const { createAuditLog } = await import('@/lib/audit');
+  await createAuditLog({ action: 'SUBSCRIPTION_DELETED', entity: 'Workspace', entityId: workspaceId, details: { subscriptionId: subscription.id } });
 }
 
 export async function cancelSubscription(workspaceId: string): Promise<void> {

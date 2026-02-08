@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Separator, Badge } from '@builderly/ui';
+import { Button, Separator, Badge, cn, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label } from '@builderly/ui';
 import {
   Undo2,
   Redo2,
@@ -23,6 +23,8 @@ import {
   Keyboard,
   Component,
   History,
+  Clock,
+  Globe,
 } from 'lucide-react';
 import { useEditorStore, type Breakpoint } from '../store/editor-store';
 import { TemplatePicker } from './TemplatePicker';
@@ -43,11 +45,13 @@ export function Toolbar() {
     isPaletteOpen,
     isInspectorOpen,
     isLayerPanelOpen,
+    isLeftSidebarOpen,
     isSiteSettingsOpen,
     isPreviewMode,
     togglePalette,
     toggleInspector,
     toggleLayerPanel,
+    toggleLeftSidebar,
     toggleSiteSettings,
     setPreviewMode,
     canUndo,
@@ -62,6 +66,9 @@ export function Toolbar() {
 
   const [isPublishing, setIsPublishing] = useState(false);
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [publishComment, setPublishComment] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
 
   const breakpoints: { value: Breakpoint; icon: typeof Monitor; label: string }[] = [
     { value: 'desktop', icon: Monitor, label: 'Desktop' },
@@ -113,13 +120,13 @@ export function Toolbar() {
       setLastSaved(new Date());
     } catch (error) {
       console.error('Save error:', error);
-      alert(error instanceof Error ? error.message : 'Failed to save changes');
+      alert(error instanceof Error ? error.message : 'Fehler beim Speichern');
     } finally {
       setSaving(false);
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublish = async (schedule?: boolean) => {
     if (!workspaceId || !siteId || !pageId) return;
 
     // Save first
@@ -128,24 +135,38 @@ export function Toolbar() {
     setIsPublishing(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const body: Record<string, unknown> = { comment: publishComment || 'Veröffentlicht aus dem Editor' };
+      if (schedule && scheduledDate) {
+        body.scheduledPublishAt = new Date(scheduledDate).toISOString();
+      }
+
       const response = await fetch(
         `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/publish`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ comment: 'Published from editor' }),
+          body: JSON.stringify(body),
         }
       );
 
       if (!response.ok) {
-        throw new Error('Failed to publish');
+        throw new Error('Veröffentlichung fehlgeschlagen');
       }
 
-      alert('Page published successfully!');
+      const result = await response.json();
+      if (result.scheduled) {
+        alert(`Seite geplant für: ${new Date(result.scheduledAt).toLocaleString('de-DE')}`);
+      } else {
+        alert('Seite erfolgreich veröffentlicht!');
+      }
+
+      setPublishDialogOpen(false);
+      setPublishComment('');
+      setScheduledDate('');
     } catch (error) {
       console.error('Publish error:', error);
-      alert('Failed to publish page');
+      alert('Veröffentlichung fehlgeschlagen');
     } finally {
       setIsPublishing(false);
     }
@@ -160,134 +181,141 @@ export function Toolbar() {
             variant="secondary"
             size="sm"
             onClick={() => setPreviewMode(false)}
-            className="shadow-lg"
+            className="shadow-lg h-7 text-[11px]"
           >
-            <Eye className="mr-2 h-4 w-4" />
-            Exit Preview
+            <Eye className="mr-1.5 h-3.5 w-3.5" />
+            Vorschau beenden
           </Button>
         </div>
       ) : (
-        /* Editor Mode: Show editor toolbar */
-        <header className="h-14 border-b bg-background flex items-center px-4 gap-4">
+        /* Editor Mode: Photoshop-style compact toolbar */
+        <header className="h-10 border-b border-border bg-[hsl(220,10%,16%)] flex items-center px-2 gap-2">
           {/* Logo & Page name */}
-          <div className="flex items-center gap-3">
-            <Layers className="h-6 w-6 text-primary" />
-            <span className="font-semibold">{pageName}</span>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
+              <Layers className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <span className="text-[11px] font-medium text-foreground/90 max-w-[120px] truncate">{pageName}</span>
             {isDirty && (
-              <Badge variant="secondary" className="text-xs">
-                Unsaved
-              </Badge>
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" title="Ungespeicherte Änderungen" />
             )}
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
+          <div className="w-px h-5 bg-border" />
 
           {/* Undo/Redo */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="icon"
               onClick={undo}
               disabled={!canUndo()}
-              title="Undo (Ctrl+Z)"
+              title="Rückgängig (Strg+Z)"
+              className="h-7 w-7 rounded-[3px]"
             >
-              <Undo2 className="h-4 w-4" />
+              <Undo2 className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={redo}
               disabled={!canRedo()}
-              title="Redo (Ctrl+Shift+Z)"
+              title="Wiederholen (Strg+Umschalt+Z)"
+              className="h-7 w-7 rounded-[3px]"
             >
-              <Redo2 className="h-4 w-4" />
+              <Redo2 className="h-3.5 w-3.5" />
             </Button>
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
+          <div className="w-px h-5 bg-border" />
 
           {/* Templates */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setIsTemplatePickerOpen(true)}
-            className="gap-2"
+            className="h-7 px-2 text-[11px] rounded-[3px] gap-1.5"
           >
-            <LayoutTemplate className="h-4 w-4" />
-            Templates
+            <LayoutTemplate className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Vorlagen</span>
           </Button>
 
-          <Separator orientation="vertical" className="h-6" />
+          <div className="w-px h-5 bg-border" />
 
-          {/* Breakpoint switcher */}
-          <div className="flex items-center gap-1 bg-muted rounded-md p-1">
+          {/* Breakpoint switcher - compact pills */}
+          <div className="flex items-center bg-background/50 rounded-[3px] p-0.5">
             {breakpoints.map(({ value, icon: Icon, label }) => (
               <Button
                 key={value}
                 variant={breakpoint === value ? 'secondary' : 'ghost'}
                 size="icon"
-                className="h-7 w-7"
+                className={cn(
+                  "h-6 w-6 rounded-[2px]",
+                  breakpoint === value && "bg-primary/20 text-primary"
+                )}
                 onClick={() => setBreakpoint(value)}
                 title={label}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-3.5 w-3.5" />
               </Button>
             ))}
           </div>
 
-          <Separator orientation="vertical" className="h-6" />
+          <div className="w-px h-5 bg-border" />
 
-          {/* Zoom controls */}
-          <div className="flex items-center gap-1">
+          {/* Zoom controls - compact */}
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-6 w-6 rounded-[3px]"
               onClick={() => setZoom(zoom - 10)}
               disabled={zoom <= 25}
-              title="Zoom Out"
+              title="Verkleinern"
             >
-              <ZoomOut className="h-4 w-4" />
+              <ZoomOut className="h-3 w-3" />
             </Button>
             <button
-              className="text-xs font-medium w-12 text-center hover:bg-accent rounded px-1 py-0.5"
+              className="text-[10px] font-medium w-10 text-center hover:bg-accent rounded-[3px] py-0.5"
               onClick={() => setZoom(100)}
-              title="Reset Zoom"
+              title="Zoom zurücksetzen"
             >
               {zoom}%
             </button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-6 w-6 rounded-[3px]"
               onClick={() => setZoom(zoom + 10)}
               disabled={zoom >= 200}
-              title="Zoom In"
+              title="Vergrößern"
             >
-              <ZoomIn className="h-4 w-4" />
+              <ZoomIn className="h-3 w-3" />
             </Button>
           </div>
 
           {/* Spacer */}
           <div className="flex-1" />
 
-      {/* Panel toggles */}
-      <div className="flex items-center gap-1">
+      {/* Panel toggles - compact */}
+      <div className="flex items-center gap-0.5">
+        <Button
+          variant={isLeftSidebarOpen ? 'secondary' : 'ghost'}
+          size="icon"
+          onClick={toggleLeftSidebar}
+          title="Navigator-Panel"
+          className={cn("h-7 w-7 rounded-[3px]", isLeftSidebarOpen && "bg-primary/20 text-primary")}
+        >
+          <PanelLeft className="h-3.5 w-3.5" />
+        </Button>
         <Button
           variant={isPaletteOpen ? 'secondary' : 'ghost'}
           size="icon"
           onClick={togglePalette}
-          title="Toggle Components Panel"
+          title="Komponenten"
+          className={cn("h-7 w-7 rounded-[3px]", isPaletteOpen && "bg-primary/20 text-primary")}
         >
-          <PanelLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant={isLayerPanelOpen ? 'secondary' : 'ghost'}
-          size="icon"
-          onClick={toggleLayerPanel}
-          title="Toggle Layers Panel"
-        >
-          <ListTree className="h-4 w-4" />
+          <LayoutTemplate className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"
@@ -296,8 +324,9 @@ export function Toolbar() {
             window.dispatchEvent(new CustomEvent('toggle-symbols-panel'));
           }}
           title="Globale Symbole"
+          className="h-7 w-7 rounded-[3px]"
         >
-          <Component className="h-4 w-4" />
+          <Component className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"
@@ -306,79 +335,136 @@ export function Toolbar() {
             window.dispatchEvent(new CustomEvent('toggle-history-panel'));
           }}
           title="Versionsverlauf"
+          className="h-7 w-7 rounded-[3px]"
         >
-          <History className="h-4 w-4" />
+          <History className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant={isInspectorOpen ? 'secondary' : 'ghost'}
           size="icon"
           onClick={toggleInspector}
-          title="Toggle Inspector Panel"
+          title="Inspektor ein/ausblenden"
+          className={cn("h-7 w-7 rounded-[3px]", isInspectorOpen && "bg-primary/20 text-primary")}
         >
-          <PanelRight className="h-4 w-4" />
+          <PanelRight className="h-3.5 w-3.5" />
         </Button>
-        <Separator orientation="vertical" className="h-6 mx-1" />
+        <div className="w-px h-5 bg-border mx-1" />
         <Button
           variant="ghost"
           size="icon"
           onClick={() => {
-            // Dispatch custom event to open keyboard shortcuts
             window.dispatchEvent(new CustomEvent('open-keyboard-shortcuts'));
           }}
           title="Tastenkürzel (? drücken)"
+          className="h-7 w-7 rounded-[3px]"
         >
-          <Keyboard className="h-4 w-4" />
+          <Keyboard className="h-3.5 w-3.5" />
         </Button>
         <Button
-          variant={isSiteSettingsOpen ? 'default' : 'outline'}
+          variant={isSiteSettingsOpen ? 'secondary' : 'ghost'}
           size="sm"
           onClick={toggleSiteSettings}
           title="Website-Einstellungen"
-          className="gap-2"
+          className={cn("h-7 px-2 text-[11px] rounded-[3px] gap-1.5", isSiteSettingsOpen && "bg-primary/20 text-primary")}
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-3.5 w-3.5" />
           <span className="hidden lg:inline">Einstellungen</span>
         </Button>
       </div>
 
-      <Separator orientation="vertical" className="h-6" />
+      <div className="w-px h-5 bg-border" />
 
       {/* Preview */}
       <Button
         variant={isPreviewMode ? 'secondary' : 'ghost'}
         size="sm"
         onClick={() => setPreviewMode(!isPreviewMode)}
+        className="h-7 px-2 text-[11px] rounded-[3px] gap-1.5"
       >
-        <Eye className="mr-2 h-4 w-4" />
-        Preview
+        <Eye className="h-3.5 w-3.5" />
+        <span className="hidden md:inline">Vorschau</span>
       </Button>
 
       {/* Save */}
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={handleSave}
         disabled={isSaving || !isDirty}
+        className={cn(
+          "h-7 px-2 text-[11px] rounded-[3px] gap-1.5",
+          isDirty && "text-orange-400 hover:text-orange-300"
+        )}
       >
         {isSaving ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : isDirty ? (
-          <Save className="mr-2 h-4 w-4" />
+          <Save className="h-3.5 w-3.5" />
         ) : (
-          <Check className="mr-2 h-4 w-4" />
+          <Check className="h-3.5 w-3.5 text-green-500" />
         )}
-        {isSaving ? 'Saving...' : isDirty ? 'Save' : 'Saved'}
+        <span className="hidden md:inline">{isSaving ? 'Speichern...' : isDirty ? 'Speichern' : 'Gespeichert'}</span>
       </Button>
 
-      {/* Publish */}
-      <Button size="sm" onClick={handlePublish} disabled={isPublishing}>
+      {/* Publish - accent button */}
+      <Button 
+        size="sm" 
+        onClick={() => setPublishDialogOpen(true)} 
+        disabled={isPublishing}
+        className="h-7 px-3 text-[11px] rounded-[3px] gap-1.5 bg-primary hover:bg-primary/90"
+      >
         {isPublishing ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <Upload className="mr-2 h-4 w-4" />
+          <Upload className="h-3.5 w-3.5" />
         )}
-        {isPublishing ? 'Publishing...' : 'Publish'}
+        <span className="hidden sm:inline">{isPublishing ? 'Wird veröffentlicht...' : 'Veröffentlichen'}</span>
       </Button>
+
+      {/* Publish Dialog */}
+      <Dialog open={publishDialogOpen} onOpenChange={setPublishDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Seite veröffentlichen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Kommentar (optional)</Label>
+              <Input
+                value={publishComment}
+                onChange={(e) => setPublishComment(e.target.value)}
+                placeholder="Was wurde geändert?"
+              />
+            </div>
+            <div>
+              <Label>Zeitplanung (optional)</Label>
+              <Input
+                type="datetime-local"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+              />
+              {scheduledDate && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Wird veröffentlicht am {new Date(scheduledDate).toLocaleString('de-DE')}
+                </p>
+              )}
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            {scheduledDate ? (
+              <Button onClick={() => handlePublish(true)} disabled={isPublishing}>
+                <Clock className="w-4 h-4 mr-2" />
+                {isPublishing ? 'Planen...' : 'Planen'}
+              </Button>
+            ) : (
+              <Button onClick={() => handlePublish(false)} disabled={isPublishing}>
+                <Globe className="w-4 h-4 mr-2" />
+                {isPublishing ? 'Veröffentlichen...' : 'Jetzt veröffentlichen'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Template Picker Dialog */}
       <TemplatePicker

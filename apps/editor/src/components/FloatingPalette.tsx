@@ -3,23 +3,10 @@
 import { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Input, Button, Tooltip, TooltipContent, TooltipTrigger, cn } from '@builderly/ui';
-import { Search, X, GripVertical, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { Search, X, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 import { componentRegistry, type ComponentDefinition } from '@builderly/core';
 import { useEditorStore } from '../store/editor-store';
 import type { DragData } from './DndProvider';
-
-// Compact icon mapping
-const ICON_MAP: Record<string, string> = {
-  layout: '📐', type: '📝', heading: '🔤', image: '🖼️', square: '⬜',
-  layers: '📚', grid: '⊞', minus: '➖', smile: '😊', 'credit-card': '💳',
-  tag: '🏷️', 'alert-circle': '⚠️', 'file-text': '📄', 'text-cursor-input': '✏️',
-  'align-left': '≡', 'chevron-down': '⌄', 'check-square': '☑️', send: '📤',
-  menu: '☰', 'panel-bottom': '▬', link: '🔗', list: '📋', shield: '🛡️',
-  play: '▶️', 'map-pin': '📍', share: '📱', folder: '📁', file: '📄',
-  loader: '⏳', star: '⭐', hash: '#️⃣', quote: '💬', 'message-circle': '💭',
-  user: '👤', megaphone: '📢', table: '📊', code: '💻', 'git-branch': '🌿',
-  clock: '⏰', 'arrow-right': '→', 'move-vertical': '↕️',
-};
 
 interface DraggableItemProps {
   component: ComponentDefinition;
@@ -39,7 +26,8 @@ function DraggableItem({ component, onAdd }: DraggableItemProps) {
     ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
     : undefined;
 
-  const icon = ICON_MAP[component.icon] || '📦';
+  // Get short abbreviation from component name (first 2-3 letters)
+  const abbr = component.type.slice(0, 3).toUpperCase();
 
   return (
     <Tooltip>
@@ -51,16 +39,17 @@ function DraggableItem({ component, onAdd }: DraggableItemProps) {
           {...attributes}
           onClick={() => onAdd(component)}
           className={cn(
-            'w-10 h-10 flex items-center justify-center rounded-lg border bg-background',
-            'hover:bg-muted hover:border-primary/50 hover:scale-105',
+            'h-9 px-2 flex items-center justify-center rounded border bg-[hsl(220,10%,18%)]',
+            'hover:bg-[hsl(220,10%,25%)] hover:border-primary/50',
             'transition-all duration-150 cursor-grab active:cursor-grabbing',
-            isDragging && 'opacity-50 scale-110 shadow-lg z-50'
+            'text-[10px] font-medium text-muted-foreground hover:text-foreground',
+            isDragging && 'opacity-50 scale-105 shadow-lg z-50'
           )}
         >
-          <span className="text-lg">{icon}</span>
+          {abbr}
         </button>
       </TooltipTrigger>
-      <TooltipContent side="left" className="max-w-[200px]">
+      <TooltipContent side="top" className="max-w-[200px]">
         <p className="font-medium">{component.displayName}</p>
         <p className="text-xs text-muted-foreground">{component.description}</p>
       </TooltipContent>
@@ -100,34 +89,24 @@ export function FloatingPalette() {
     addNode(parentId, component.type);
   };
 
-  // Category icons
-  const categoryIcons: Record<string, string> = {
-    layout: '🏗️', content: '✍️', typography: '✍️', media: '📸',
-    forms: '📝', navigation: '🧭', feedback: '💬', data: '📊',
-    advanced: '⚡', ui: '🎨', cards: '🃏', marketing: '📢', social: '📱',
-  };
-
   if (isMinimized) {
     return (
       <div className="fixed bottom-4 right-4 z-50">
         <Button
           onClick={() => setIsMinimized(false)}
-          className="h-12 w-12 rounded-full shadow-lg"
+          className="h-10 w-10 rounded-lg shadow-lg text-xs font-medium"
         >
-          <Maximize2 className="h-5 w-5" />
+          +
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-72 bg-background/95 backdrop-blur border rounded-xl shadow-2xl overflow-hidden">
+    <div className="fixed bottom-4 right-4 z-50 w-80 bg-[hsl(220,10%,14%)] border border-border rounded-lg shadow-2xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b">
-        <div className="flex items-center gap-2">
-          <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-          <span className="text-sm font-semibold">Components</span>
-        </div>
+      <div className="flex items-center justify-between px-3 py-2 bg-[hsl(220,10%,12%)] border-b border-border">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Komponenten</span>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
@@ -135,7 +114,7 @@ export function FloatingPalette() {
             className="h-6 w-6 p-0"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
           </Button>
           <Button
             variant="ghost"
@@ -143,7 +122,7 @@ export function FloatingPalette() {
             className="h-6 w-6 p-0"
             onClick={() => setIsMinimized(true)}
           >
-            <Minimize2 className="h-4 w-4" />
+            <Minimize2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -151,14 +130,14 @@ export function FloatingPalette() {
       {isExpanded && (
         <>
           {/* Search */}
-          <div className="p-2 border-b">
+          <div className="p-2 border-b border-border">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search..."
-                className="h-7 pl-7 pr-7 text-xs"
+                placeholder="Suchen..."
+                className="h-7 pl-7 pr-7 text-xs bg-[hsl(220,10%,18%)] border-border"
               />
               {search && (
                 <button
@@ -172,26 +151,31 @@ export function FloatingPalette() {
           </div>
 
           {/* Category Tabs */}
-          <div className="flex gap-1 p-2 overflow-x-auto border-b scrollbar-hide">
-            <Button
-              variant={activeCategory === null ? 'default' : 'ghost'}
-              size="sm"
-              className="h-6 px-2 text-xs flex-shrink-0"
+          <div className="flex gap-1 p-2 overflow-x-auto border-b border-border scrollbar-hide">
+            <button
+              className={cn(
+                "h-6 px-2 text-[10px] font-medium rounded flex-shrink-0 transition-colors",
+                activeCategory === null 
+                  ? "bg-primary text-primary-foreground" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
               onClick={() => setActiveCategory(null)}
             >
-              All
-            </Button>
+              Alle
+            </button>
             {categoriesWithComponents.map(([category]) => (
-              <Button
+              <button
                 key={category.id}
-                variant={activeCategory === category.id ? 'default' : 'ghost'}
-                size="sm"
-                className="h-6 px-2 text-xs flex-shrink-0"
+                className={cn(
+                  "h-6 px-2 text-[10px] font-medium rounded flex-shrink-0 transition-colors",
+                  activeCategory === category.id 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
                 onClick={() => setActiveCategory(category.id)}
               >
-                <span className="mr-1">{categoryIcons[category.id] || '📦'}</span>
                 {category.name}
-              </Button>
+              </button>
             ))}
           </div>
 
@@ -202,12 +186,11 @@ export function FloatingPalette() {
               .map(([category, components]) => (
                 <div key={category.id} className="mb-3 last:mb-0">
                   {!activeCategory && (
-                    <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                      <span>{categoryIcons[category.id] || '📦'}</span>
+                    <div className="text-[10px] font-medium text-muted-foreground mb-1.5 uppercase tracking-wider">
                       {category.name}
                     </div>
                   )}
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div className="grid grid-cols-4 gap-1">
                     {components.map((component) => (
                       <DraggableItem
                         key={component.type}

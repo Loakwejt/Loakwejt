@@ -28,7 +28,7 @@ interface Page {
 }
 
 export function PagesPanel() {
-  const { workspaceId, siteId, pageId } = useEditorStore();
+  const { workspaceId, siteId, pageId, isLoadingPage } = useEditorStore();
   const [pages, setPages] = useState<Page[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -38,7 +38,6 @@ export function PagesPanel() {
   const [editName, setEditName] = useState('');
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  const editorUrl = window.location.origin;
 
   useEffect(() => {
     if (workspaceId && siteId) {
@@ -100,7 +99,7 @@ export function PagesPanel() {
 
   const handleDeletePage = async (pageIdToDelete: string) => {
     if (!workspaceId || !siteId) return;
-    if (!confirm('Are you sure you want to delete this page?')) return;
+    if (!confirm('Möchtest du diese Seite wirklich löschen?')) return;
 
     try {
       const response = await fetch(
@@ -119,10 +118,11 @@ export function PagesPanel() {
     }
   };
 
-  const openPage = (pageToOpen: Page) => {
+  const openPage = async (pageToOpen: Page) => {
     if (!workspaceId || !siteId) return;
-    const url = `${editorUrl}?workspaceId=${workspaceId}&siteId=${siteId}&pageId=${pageToOpen.id}`;
-    window.location.href = url;
+    // Smooth page switch using store's loadPage function
+    const { loadPage } = useEditorStore.getState();
+    await loadPage(workspaceId, siteId, pageToOpen.id);
   };
 
   const handleNameChange = (value: string) => {
@@ -132,69 +132,69 @@ export function PagesPanel() {
 
   if (!workspaceId || !siteId) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
-        <FolderOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">No site loaded</p>
+      <div className="h-full flex items-center justify-center p-3 bg-[hsl(220,10%,14%)]">
+        <div className="text-center">
+          <FolderOpen className="h-6 w-6 mx-auto mb-1 opacity-40" />
+          <p className="text-[10px] text-muted-foreground">Keine Website geladen</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-3 border-b flex items-center justify-between">
-        <h3 className="font-semibold text-sm flex items-center gap-2">
-          <FileText className="h-4 w-4 text-primary" />
-          Pages
-        </h3>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+    <div className="h-full flex flex-col bg-[hsl(220,10%,14%)]">
+      {/* Header - Photoshop style */}
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[hsl(220,10%,12%)] border-b border-border flex-shrink-0">
+        <div className="flex items-center gap-1.5">
+          <FileText className="h-3 w-3 text-primary" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">Seiten</span>
+        </div>
+        <button 
           onClick={() => setIsCreating(true)}
-          className="h-7 w-7 p-0"
+          className="h-5 w-5 rounded-[2px] hover:bg-accent flex items-center justify-center transition-colors"
         >
-          <Plus className="h-4 w-4" />
-        </Button>
+          <Plus className="h-3 w-3" />
+        </button>
       </div>
 
       {/* Create New Page Form */}
       {isCreating && (
-        <div className="p-3 border-b bg-muted/50 space-y-2">
-          <div className="space-y-1">
-            <Label className="text-xs">Page Name</Label>
+        <div className="p-2 border-b border-border bg-[hsl(220,10%,16%)] space-y-1.5">
+          <div>
+            <Label className="text-[10px] text-muted-foreground">Name</Label>
             <Input
               value={newPageName}
               onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="About Us"
-              className="h-8 text-sm"
+              placeholder="Über uns"
+              className="h-6 text-[11px] bg-input border-0 rounded-[3px] mt-0.5"
               autoFocus
             />
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">URL Slug</Label>
+          <div>
+            <Label className="text-[10px] text-muted-foreground">Slug</Label>
             <Input
               value={newPageSlug}
               onChange={(e) => setNewPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
               placeholder="about-us"
-              className="h-8 text-sm"
+              className="h-6 text-[11px] bg-input border-0 rounded-[3px] mt-0.5"
             />
           </div>
-          <div className="flex gap-2">
-            <Button size="sm" className="h-7 flex-1" onClick={handleCreatePage}>
-              <Check className="h-3 w-3 mr-1" />
-              Create
+          <div className="flex gap-1.5 pt-1">
+            <Button size="sm" className="h-6 flex-1 text-[10px] rounded-[3px]" onClick={handleCreatePage}>
+              <Check className="h-2.5 w-2.5 mr-1" />
+              Erstellen
             </Button>
             <Button 
               size="sm" 
-              variant="outline" 
-              className="h-7"
+              variant="ghost" 
+              className="h-6 w-6 p-0 rounded-[3px]"
               onClick={() => {
                 setIsCreating(false);
                 setNewPageName('');
                 setNewPageSlug('');
               }}
             >
-              <X className="h-3 w-3" />
+              <X className="h-2.5 w-2.5" />
             </Button>
           </div>
         </div>
@@ -203,67 +203,70 @@ export function PagesPanel() {
       {/* Pages List */}
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <div className="p-4 text-center">
-            <Loader2 className="h-5 w-5 mx-auto animate-spin text-muted-foreground" />
+          <div className="p-3 text-center">
+            <Loader2 className="h-4 w-4 mx-auto animate-spin text-muted-foreground" />
           </div>
         ) : pages.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No pages yet</p>
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="mt-1"
+          <div className="p-3 text-center">
+            <FileText className="h-5 w-5 mx-auto mb-1 opacity-40" />
+            <p className="text-[10px] text-muted-foreground">Noch keine Seiten</p>
+            <button 
+              className="text-[10px] text-primary hover:underline mt-0.5"
               onClick={() => setIsCreating(true)}
             >
-              Create your first page
-            </Button>
+              Erste Seite erstellen
+            </button>
           </div>
         ) : (
-          <div className="py-1">
-            {pages.map((page) => (
+          <div className="py-0.5">
+            {pages.map((page) => {
+              const isCurrentPage = page.id === pageId;
+              const isLoadingThisPage = isLoadingPage && !isCurrentPage;
+              
+              return (
               <div
                 key={page.id}
                 className={cn(
-                  'group flex items-center justify-between px-3 py-2 hover:bg-muted/50 cursor-pointer transition-colors',
-                  page.id === pageId && 'bg-primary/10 border-r-2 border-primary'
+                  'group flex items-center justify-between px-2 py-1 hover:bg-accent/50 cursor-pointer transition-all duration-200',
+                  isCurrentPage && 'bg-primary/15 border-l-2 border-primary',
+                  isLoadingThisPage && 'opacity-50 pointer-events-none'
                 )}
-                onClick={() => openPage(page)}
+                onClick={() => !isLoadingPage && openPage(page)}
               >
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  {page.isHomepage ? (
-                    <Home className="h-4 w-4 text-primary flex-shrink-0" />
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  {isLoadingPage && !isCurrentPage ? (
+                    <Loader2 className="h-3 w-3 text-primary animate-spin flex-shrink-0" />
+                  ) : page.isHomepage ? (
+                    <Home className="h-3 w-3 text-primary flex-shrink-0" />
                   ) : (
-                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{page.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">/{page.slug}</p>
+                    <p className="text-[11px] font-medium truncate text-foreground/90">{page.name}</p>
+                    <p className="text-[9px] text-muted-foreground truncate">/{page.slug}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   {page.publishedRevisionId ? (
-                    <Badge variant="success" className="text-[10px] px-1 py-0">Live</Badge>
+                    <span className="text-[8px] px-1 py-0.5 rounded-[2px] bg-green-500/20 text-green-400">Live</span>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px] px-1 py-0">Draft</Badge>
+                    <span className="text-[8px] px-1 py-0.5 rounded-[2px] bg-muted text-muted-foreground">Entwurf</span>
                   )}
                   {page.id !== pageId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                    <button
+                      className="h-5 w-5 rounded-[2px] hover:bg-destructive/20 hover:text-destructive flex items-center justify-center transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeletePage(page.id);
                       }}
                     >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </button>
                   )}
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>

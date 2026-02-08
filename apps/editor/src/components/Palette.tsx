@@ -158,48 +158,35 @@ function DraggableComponent({ component, onAddComponent }: DraggableComponentPro
             {...listeners}
             {...attributes}
             className={cn(
-              'group relative flex items-center gap-2 px-2 py-1.5 rounded-md border text-left',
-              'bg-gradient-to-r transition-all duration-150',
-              'hover:scale-[1.02] hover:shadow-md',
+              'group relative flex items-center gap-1.5 px-1.5 py-1 rounded-[3px] border text-left',
+              'bg-card/50 border-border/50 transition-all duration-100',
+              'hover:bg-accent hover:border-border',
               'cursor-grab active:cursor-grabbing',
-              iconData.color,
-              isDragging && 'opacity-50 ring-2 ring-primary'
+              isDragging && 'opacity-50 ring-1 ring-primary'
             )}
             onClick={() => onAddComponent(component)}
           >
-            <span className="text-sm shrink-0">
+            <span className="text-[10px] shrink-0">
               {iconData.icon}
             </span>
-            <span className="text-[11px] font-medium truncate">
+            <span className="text-[10px] font-medium truncate text-foreground/80">
               {component.displayName}
             </span>
           </button>
         </TooltipTrigger>
         <TooltipContent 
           side="right" 
-          className="max-w-[220px] p-2.5 bg-popover/95 backdrop-blur-sm border shadow-xl"
+          className="max-w-[200px] p-2 bg-popover border shadow-lg"
           sideOffset={5}
         >
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <span>{iconData.icon}</span>
-              <span className="font-semibold text-sm">{component.displayName}</span>
+              <span className="text-sm">{iconData.icon}</span>
+              <span className="font-semibold text-[11px]">{component.displayName}</span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
               {description}
             </p>
-            {component.tags && component.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {component.tags.slice(0, 3).map((tag) => (
-                  <span 
-                    key={tag} 
-                    className="text-[9px] px-1 py-0.5 rounded bg-muted text-muted-foreground"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </TooltipContent>
       </Tooltip>
@@ -274,30 +261,28 @@ export function Palette() {
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-xl">🧩</span>
-        <h2 className="font-semibold">Komponenten</h2>
+    <div className="flex flex-col h-full bg-[hsl(220,10%,14%)]">
+      {/* Header - Photoshop style */}
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-[hsl(220,10%,12%)] border-b border-border flex-shrink-0">
+        <span className="text-sm">🧩</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">Komponenten</span>
       </div>
       
-      {/* Drag hint */}
-      <p className="text-xs text-muted-foreground">
-        Hover für Info • Klicken oder ziehen zum Hinzufügen
-      </p>
-      
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Komponenten suchen..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 bg-muted/50 border-muted-foreground/20 focus:bg-background transition-colors"
-        />
+      {/* Search - compact */}
+      <div className="p-2 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            placeholder="Suchen..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-6 pl-7 pr-2 text-[11px] bg-input border-0 rounded-[3px]"
+          />
+        </div>
       </div>
 
-      {/* Component groups */}
-      <div className="space-y-5">
+      {/* Component groups - scrollable */}
+      <div className="flex-1 overflow-auto p-2 space-y-3">
         {Array.from(filteredGroups.entries()).map(([category, components]) => {
           if (components.length === 0) return null;
           
@@ -305,16 +290,16 @@ export function Palette() {
           
           return (
             <div key={category.id}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className={cn("text-sm", categoryStyle.color)}>{categoryStyle.icon}</span>
-                <h3 className="text-sm font-semibold">
+              <div className="flex items-center gap-1.5 mb-1.5 px-1">
+                <span className={cn("text-[10px]", categoryStyle.color)}>{categoryStyle.icon}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/60">
                   {category.name}
-                </h3>
-                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                </span>
+                <span className="text-[9px] text-muted-foreground ml-auto">
                   {components.length}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-2 gap-1">
                 {components.map((component) => (
                   <DraggableComponent
                     key={component.type}

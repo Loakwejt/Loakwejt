@@ -55,7 +55,7 @@ interface SymbolsPanelProps {
 }
 
 export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
-  const { workspaceId, siteId, selectedNodeId, tree, addNode } = useEditorStore();
+  const { workspaceId, siteId, selectedNodeId, tree, addNode, insertNodeTree } = useEditorStore();
   
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [loading, setLoading] = useState(false);
@@ -150,32 +150,16 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
   const handleInsertSymbol = (symbol: Symbol) => {
     const parentId = selectedNodeId || 'root';
     
-    // Create a SymbolInstance node
-    const instanceNode: BuilderNode = {
-      id: generateNodeId(),
-      type: 'SymbolInstance',
-      props: {
-        symbolId: symbol.id,
-        isDetached: false,
-      },
-      style: { base: {} },
-      actions: [],
-      children: [],
-    };
-    
-    // For now, we expand the symbol inline (copy the tree)
-    // In future, we could render SymbolInstance directly
+    // Clone the symbol tree with new IDs so each instance is independent
     const expandedNode = cloneNode(symbol.tree, true);
     expandedNode.meta = {
       ...expandedNode.meta,
       name: `Symbol: ${symbol.name}`,
+      symbolId: symbol.id,
     };
     
-    // Use the store's addNode logic or direct tree manipulation
-    // For simplicity, we'll add the expanded node directly
-    addNode(parentId, expandedNode.type);
-    
-    // TODO: Implement proper symbol instance insertion
+    // Insert the full cloned tree into the parent
+    insertNodeTree(parentId, expandedNode);
   };
 
   // Update symbol

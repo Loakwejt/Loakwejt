@@ -25,6 +25,10 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+    allowedHosts: [
+      'localhost',
+      '.trycloudflare.com',
+    ],
   },
   build: {
     outDir: 'dist',

@@ -113,7 +113,7 @@ export function DashboardNav({ user, isAdmin = false }: NavProps) {
           })}
           {isAdmin && (
             <Link
-              href="/dashboard/admin/templates"
+              href="/dashboard/admin"
               className={cn(
                 'flex items-center gap-2 px-3 py-2 rounded-md transition-colors',
                 pathname?.startsWith('/dashboard/admin') 

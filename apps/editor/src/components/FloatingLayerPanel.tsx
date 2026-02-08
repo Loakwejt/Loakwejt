@@ -146,7 +146,7 @@ function LayerItem({
                 <button
                   className="p-0.5 hover:bg-muted rounded"
                   onClick={handleStartEdit}
-                  title="Rename"
+                  title="Umbenennen"
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
@@ -156,7 +156,7 @@ function LayerItem({
                     e.stopPropagation();
                     duplicateNode(node.id);
                   }}
-                  title="Duplicate"
+                  title="Duplizieren"
                 >
                   <Copy className="h-3 w-3" />
                 </button>
@@ -166,7 +166,7 @@ function LayerItem({
                     e.stopPropagation();
                     deleteNode(node.id);
                   }}
-                  title="Delete"
+                  title="Löschen"
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
@@ -206,7 +206,7 @@ export function FloatingLayerPanel() {
       <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/50 rounded-t-lg">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Layers</span>
+          <span className="text-sm font-medium">Ebenen</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -214,7 +214,7 @@ export function FloatingLayerPanel() {
             size="icon"
             className="h-6 w-6"
             onClick={() => setIsExpanded(!isExpanded)}
-            title={isExpanded ? "Collapse" : "Expand"}
+            title={isExpanded ? "Einklappen" : "Ausklappen"}
           >
             <Maximize2 className="h-3 w-3" />
           </Button>
@@ -223,7 +223,7 @@ export function FloatingLayerPanel() {
             size="icon"
             className="h-6 w-6"
             onClick={() => setIsMinimized(!isMinimized)}
-            title={isMinimized ? "Show" : "Minimize"}
+            title={isMinimized ? "Anzeigen" : "Minimieren"}
           >
             <Minus className="h-3 w-3" />
           </Button>
@@ -238,7 +238,7 @@ export function FloatingLayerPanel() {
               <LayerItem node={tree.root} />
             ) : (
               <div className="p-4 text-center text-muted-foreground text-xs">
-                No elements yet. Drag components to the canvas.
+                Noch keine Elemente. Ziehe Komponenten auf die Leinwand.
               </div>
             )}
           </div>

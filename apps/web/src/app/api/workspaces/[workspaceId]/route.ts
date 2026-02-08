@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]
 export async function GET(
@@ -45,10 +46,21 @@ export async function PATCH(
   { params }: { params: { workspaceId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
 
     const body = await request.json();
-    const { name, description, logoUrl } = body;
+    const {
+      name,
+      description,
+      logoUrl,
+      companyName,
+      companyEmail,
+      companyPhone,
+      companyAddress,
+      companyVatId,
+      companyWebsite,
+      socialLinks,
+    } = body;
 
     const workspace = await prisma.workspace.update({
       where: { id: params.workspaceId },
@@ -56,7 +68,22 @@ export async function PATCH(
         ...(name && { name }),
         ...(description !== undefined && { description }),
         ...(logoUrl !== undefined && { logoUrl }),
+        ...(companyName !== undefined && { companyName }),
+        ...(companyEmail !== undefined && { companyEmail }),
+        ...(companyPhone !== undefined && { companyPhone }),
+        ...(companyAddress !== undefined && { companyAddress }),
+        ...(companyVatId !== undefined && { companyVatId }),
+        ...(companyWebsite !== undefined && { companyWebsite }),
+        ...(socialLinks !== undefined && { socialLinks: socialLinks as Prisma.InputJsonValue }),
       },
+    });
+
+    await createAuditLog({
+      userId,
+      action: 'WORKSPACE_UPDATED',
+      entity: 'Workspace',
+      entityId: params.workspaceId,
+      details: { fields: Object.keys(body) },
     });
 
     return NextResponse.json(workspace);
@@ -75,7 +102,14 @@ export async function DELETE(
   { params }: { params: { workspaceId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'owner');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'owner');
+
+    await createAuditLog({
+      userId,
+      action: 'WORKSPACE_DELETED',
+      entity: 'Workspace',
+      entityId: params.workspaceId,
+    });
 
     await prisma.workspace.delete({
       where: { id: params.workspaceId },

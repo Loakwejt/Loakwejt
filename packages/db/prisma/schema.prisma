@@ -21,6 +21,17 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // GDPR Consent fields
+  privacyConsentAt    DateTime?  // When user accepted privacy policy
+  privacyConsentVersion String?  // Version of privacy policy accepted
+  marketingConsent    Boolean   @default(false)
+  marketingConsentAt  DateTime?
+  
+  // Account status
+  isActive            Boolean   @default(true)
+  deletedAt           DateTime? // Soft delete for GDPR compliance
+  anonymizedAt        DateTime? // When data was anonymized
+
   // Relations
   accounts      Account[]
   sessions      Session[]
@@ -29,8 +40,12 @@ model User {
   revisions     PageRevision[]
   records       Record[]
   assets        Asset[]
+  auditLogs     AuditLog[]
+  dataExports   DataExportRequest[]
+  passwordResets PasswordResetToken[]
 
   @@index([email])
+  @@index([deletedAt])
 }
 
 model Account {
@@ -58,10 +73,18 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  
+  // Session metadata for security
+  ipAddress    String?
+  userAgent    String?
+  deviceType   String?  // desktop, mobile, tablet
+  lastActive   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([expires])
 }
 
 model VerificationToken {
@@ -70,6 +93,101 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Email verification tokens (separate from NextAuth VerificationToken)
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  email      String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([expires])
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  
+  // Security: track IP that requested reset
+  ipAddress String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expires])
+}
+
+// Audit log for GDPR compliance
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  
+  // Action details
+  action    String   // LOGIN, LOGOUT, DATA_EXPORT, CONSENT_UPDATE, etc.
+  entity    String?  // User, Workspace, Page, etc.
+  entityId  String?
+  
+  // Details
+  details   Json?    // Additional context
+  
+  // Request metadata
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([entity, entityId])
+}
+
+// Data export requests (GDPR Art. 15)
+model DataExportRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  
+  status    DataRequestStatus @default(PENDING)
+  
+  // Generated file
+  fileUrl   String?
+  expiresAt DateTime?
+  
+  // Processing
+  processedAt DateTime?
+  error       String?
+  
+  // Metadata
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum DataRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
 }
 
 // ============================================================================
@@ -82,8 +200,20 @@ model Workspace {
   slug        String   @unique
   description String?
   logoUrl     String?
+  type        WorkspaceType @default(WEBSITE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Company info
+  companyName    String?
+  companyEmail   String?
+  companyPhone   String?
+  companyAddress String?
+  companyVatId   String?
+  companyWebsite String?
+
+  // Social media links (JSON: { facebook?: string, instagram?: string, ... })
+  socialLinks    Json?
 
   // Billing
   stripeCustomerId     String?   @unique
@@ -127,6 +257,46 @@ enum Plan {
   FREE
   PRO
   BUSINESS
+  ENTERPRISE
+}
+
+// ============================================================================
+// PLAN CONFIGURATION (editable limits per plan)
+// ============================================================================
+
+model PlanConfig {
+  id   String @id @default(cuid())
+  plan Plan   @unique
+
+  // Display
+  displayName String  @default("")
+  description String  @default("")
+
+  // Numeric limits
+  maxSites                  Int @default(1)
+  maxPagesPerSite           Int @default(5)
+  maxStorage                BigInt @default(524288000)  // bytes, default 500 MB
+  maxCustomDomains          Int @default(0)
+  maxTeamMembers            Int @default(1)
+  maxFormSubmissionsPerMonth Int @default(50)
+
+  // Feature flags
+  customDomains      Boolean @default(false)
+  removeWatermark    Boolean @default(false)
+  prioritySupport    Boolean @default(false)
+  dedicatedSupport   Boolean @default(false)
+  ecommerce          Boolean @default(false)
+  passwordProtection Boolean @default(false)
+  ssoSaml            Boolean @default(false)
+  whiteLabel         Boolean @default(false)
+  auditLog           Boolean @default(false)
+  slaGuarantee       Boolean @default(false)
+
+  // Integrations — stored as JSON array of integration IDs
+  integrations Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================================================
@@ -140,6 +310,19 @@ model Site {
   slug        String
   description String?
   faviconUrl  String?
+  logoUrl     String?
+  
+  // Company / Branding
+  companyName   String?
+  companyEmail  String?
+  companyPhone  String?
+  companyAddress String?
+  companyVatId  String?
+  companyWebsite String?
+  
+  // Feature Flags
+  enableUserAuth Boolean @default(false)
+  userAuthEnabledAt DateTime?
   
   // Settings
   settings    Json     @default("{}")
@@ -153,16 +336,77 @@ model Site {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  pages       Page[]
-  collections Collection[]
-  assets      Asset[]
-  forms       Form[]
-  symbols     Symbol[]
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pages         Page[]
+  collections   Collection[]
+  assets        Asset[]
+  forms         Form[]
+  symbols       Symbol[]
+  customDomains CustomDomain[]
+  siteUsers     SiteUser[]
+  products           Product[]
+  orders             Order[]
+  coupons            Coupon[]
+  productCategories  ProductCategory[]
+  paymentMethods     PaymentMethod[]
+  shippingMethods    ShippingMethod[]
+  shopSettings       ShopSettings?
+  forumCategories    ForumCategory[]
+  pageViews          PageView[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId])
   @@index([slug])
+  @@index([customDomain])
+}
+
+// ============================================================================
+// CUSTOM DOMAINS
+// ============================================================================
+
+model CustomDomain {
+  id       String @id @default(cuid())
+  siteId   String
+  domain   String @unique // e.g. "www.example.com"
+  
+  // Verification
+  status           DomainStatus @default(PENDING)
+  verificationToken String?     // TXT record value for DNS verification
+  verifiedAt       DateTime?
+  
+  // SSL
+  sslStatus   SslStatus @default(PENDING)
+  sslIssuedAt DateTime?
+  sslExpiresAt DateTime?
+  
+  // DNS
+  dnsConfigured Boolean @default(false)
+  lastCheckedAt DateTime?
+  
+  isPrimary Boolean @default(false) // Primary domain for this site
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@index([siteId])
+  @@index([domain])
+}
+
+enum DomainStatus {
+  PENDING
+  VERIFYING
+  VERIFIED
+  FAILED
+}
+
+enum SslStatus {
+  PENDING
+  PROVISIONING
+  ACTIVE
+  EXPIRED
+  FAILED
 }
 
 model Page {
@@ -186,7 +430,8 @@ model Page {
   
   // Publishing
   publishedRevisionId String?
-  
+  scheduledPublishAt  DateTime?
+
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -196,6 +441,7 @@ model Page {
   createdBy         User           @relation("PageCreator", fields: [createdById], references: [id])
   revisions         PageRevision[]
   publishedRevision PageRevision?  @relation("PublishedRevision", fields: [publishedRevisionId], references: [id])
+  pageViews         PageView[]
 
   @@unique([siteId, slug])
   @@index([siteId])
@@ -360,12 +606,119 @@ model Asset {
 }
 
 // ============================================================================
+// SITE USERS - Authentication for website visitors
+// ============================================================================
+
+model SiteUser {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  // Auth
+  email       String
+  passwordHash String?
+  
+  // Profile
+  name        String?
+  avatar      String?
+  bio         String?
+  
+  // Custom profile data (flexible JSON for site-specific fields)
+  profileData Json     @default("{}")
+  
+  // Role & Status
+  role        SiteUserRole @default(MEMBER)
+  isActive    Boolean      @default(true)
+  isBanned    Boolean      @default(false)
+  banReason   String?
+  
+  // Verification
+  emailVerified DateTime?
+  verificationToken String?
+  
+  // OAuth (website visitors can also log in via Google etc.)
+  provider    String?   // 'email', 'google', 'facebook'
+  providerId  String?   // Provider-specific user ID
+  
+  // Tracking
+  lastLoginAt DateTime?
+  loginCount  Int       @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  site        Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  sessions    SiteUserSession[]
+  orders      Order[]
+
+  @@unique([siteId, email])
+  @@unique([siteId, provider, providerId])
+  @@index([siteId])
+  @@index([email])
+  @@index([role])
+}
+
+model SiteUserSession {
+  id          String   @id @default(cuid())
+  siteUserId  String
+  
+  token       String   @unique
+  expiresAt   DateTime
+  
+  // Metadata
+  ipAddress   String?
+  userAgent   String?
+  deviceType  String?
+  
+  createdAt   DateTime @default(now())
+  lastActiveAt DateTime @default(now())
+
+  // Relations
+  siteUser    SiteUser @relation(fields: [siteUserId], references: [id], onDelete: Cascade)
+
+  @@index([siteUserId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model SiteUserPasswordReset {
+  id         String   @id @default(cuid())
+  siteId     String
+  email      String
+  token      String   @unique
+  expires    DateTime
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([token])
+  @@index([siteId, email])
+}
+
+enum SiteUserRole {
+  ADMIN      // Full access, manages other users
+  MODERATOR  // Can moderate content/comments
+  MEMBER     // Standard registered user
+  VIP        // Premium/paid members
+}
+
+enum WorkspaceType {
+  WEBSITE    // General purpose website
+  SHOP       // E-commerce / online store
+  BLOG       // Blog / news site
+  FORUM      // Community forum
+  WIKI       // Knowledge base / wiki
+  PORTFOLIO  // Portfolio / showcase
+  LANDING    // Single landing page
+}
+
+// ============================================================================
 // SHOP - PRODUCTS & ORDERS (Plugin: Shop)
 // ============================================================================
 
 model Product {
   id          String   @id @default(cuid())
   siteId      String
+  categoryId  String?
   
   name        String
   slug        String
@@ -373,23 +726,74 @@ model Product {
   
   // Pricing
   price       Int      // in cents
-  currency    String   @default("USD")
+  compareAtPrice Int?   // original price for discounts
+  costPrice   Int?     // cost/purchase price in cents (for margin calc)
+  currency    String   @default("EUR")
+  taxRate     Float?   // product-specific tax rate override (e.g. 19.0)
   
   // Inventory
   sku         String?
+  barcode     String?  // EAN / UPC / GTIN
   inventory   Int      @default(0)
+  lowStockThreshold Int? // alert when stock drops below this
+  trackInventory Boolean @default(false)
   
   // Media
   images      Json     @default("[]")
   
+  // Variants / Options (e.g. size, color)
+  options     Json?    // [{ name: "Größe", values: ["S","M","L"] }]
+  
+  // Physical product / Shipping
+  weight      Float?   // in grams
+  length      Float?   // in cm
+  width       Float?   // in cm
+  height      Float?   // in cm
+  requiresShipping Boolean @default(true)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Organisation
+  tags        Json     @default("[]")  // string array for filtering
+  vendor      String?  // brand / manufacturer
+  
   // Status
   isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  isDigital   Boolean  @default(false) // digital product (no shipping)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
+  site        Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  category    ProductCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   orderItems  OrderItem[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([categoryId])
+  @@index([siteId, isActive])
+}
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String
+  slug        String
+  description String?
+  image       String?
+  sortOrder   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  products    Product[]
 
   @@unique([siteId, slug])
   @@index([siteId])
@@ -398,17 +802,20 @@ model Product {
 model Order {
   id          String      @id @default(cuid())
   siteId      String
+  couponId    String?
   
   // Customer
   email       String
   name        String?
+  siteUserId  String?     // Optional: linked to registered SiteUser
   
   // Totals
   subtotal    Int
   tax         Int         @default(0)
   shipping    Int         @default(0)
+  discount    Int         @default(0)
   total       Int
-  currency    String      @default("USD")
+  currency    String      @default("EUR")
   
   // Status
   status      OrderStatus @default(PENDING)
@@ -423,11 +830,16 @@ model Order {
   updatedAt   DateTime    @updatedAt
 
   // Relations
+  site        Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
   items       OrderItem[]
+  siteUser    SiteUser?   @relation(fields: [siteUserId], references: [id], onDelete: SetNull)
+  coupon      Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
 
   @@index([siteId])
+  @@index([siteUserId])
   @@index([email])
   @@index([status])
+  @@index([couponId])
 }
 
 model OrderItem {
@@ -449,10 +861,172 @@ model OrderItem {
 enum OrderStatus {
   PENDING
   PAID
+  PROCESSING
   SHIPPED
   DELIVERED
   CANCELLED
   REFUNDED
+}
+
+// ============================================================================
+// SHOP - COUPONS & DISCOUNTS
+// ============================================================================
+
+model Coupon {
+  id          String      @id @default(cuid())
+  siteId      String
+  
+  code        String
+  description String?
+  
+  // Discount
+  type        DiscountType @default(PERCENTAGE)
+  value       Int          // percentage (e.g. 10 = 10%) or fixed amount in cents
+  
+  // Constraints
+  minOrderAmount  Int?     // minimum order total in cents
+  maxUses         Int?     // null = unlimited
+  maxUsesPerUser  Int?     @default(1)
+  usedCount       Int      @default(0)
+  
+  // Validity
+  startsAt    DateTime    @default(now())
+  expiresAt   DateTime?
+  
+  // Status
+  isActive    Boolean     @default(true)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  site        Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@unique([siteId, code])
+  @@index([siteId])
+  @@index([code])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+// ============================================================================
+// SHOP - PAYMENT METHODS
+// ============================================================================
+
+model PaymentMethod {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String              // e.g. "Kreditkarte", "PayPal", "Rechnung"
+  provider    PaymentProvider     @default(MANUAL)
+  
+  // Provider config (encrypted or tokenized)
+  config      Json     @default("{}")
+  
+  // Display
+  description String?
+  icon        String?             // icon URL or identifier
+  sortOrder   Int      @default(0)
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+  INVOICE
+  MANUAL
+}
+
+// ============================================================================
+// SHOP - SHIPPING METHODS
+// ============================================================================
+
+model ShippingMethod {
+  id          String   @id @default(cuid())
+  siteId      String
+  
+  name        String              // e.g. "Standardversand", "Expressversand"
+  description String?
+  
+  // Pricing
+  price       Int      @default(0) // in cents
+  freeAbove   Int?                  // free shipping above this order total (cents)
+  
+  // Delivery time
+  estimatedDaysMin Int?  @default(3)
+  estimatedDaysMax Int?  @default(5)
+  
+  // Restrictions
+  countries   String[] @default([])  // empty = all countries
+  maxWeight   Float?                  // max weight in grams
+  
+  // Display
+  sortOrder   Int      @default(0)
+  
+  // Status
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+}
+
+// ============================================================================
+// SHOP - SETTINGS
+// ============================================================================
+
+model ShopSettings {
+  id          String   @id @default(cuid())
+  siteId      String   @unique
+  
+  // General
+  currency        String   @default("EUR")
+  taxRate         Float    @default(19.0)  // default tax rate in %
+  taxIncluded     Boolean  @default(true)  // prices include tax?
+  
+  // Checkout
+  requireAccount  Boolean  @default(false)
+  enableGuestCheckout Boolean @default(true)
+  
+  // Notifications
+  orderNotifyEmail String?
+  
+  // Legal
+  termsUrl        String?
+  privacyUrl      String?
+  returnPolicyUrl String?
+  imprintUrl      String?
+  
+  // Branding
+  shopName        String?
+  shopLogo        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================================
@@ -549,6 +1123,7 @@ model ForumCategory {
   updatedAt   DateTime @updatedAt
 
   // Relations
+  site        Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
   threads     ForumThread[]
 
   @@unique([siteId, slug])
@@ -647,4 +1222,30 @@ enum TemplateCategory {
   ECOMMERCE
   CONTENT
   FULL_PAGE
+}
+
+// ============================================================================
+// ANALYTICS
+// ============================================================================
+
+model PageView {
+  id        String   @id @default(cuid())
+  siteId    String
+  pageId    String?
+  path      String
+  referrer  String?
+  userAgent String?
+  country   String?
+  device    String?  // desktop, mobile, tablet
+  browser   String?
+  os        String?
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  page Page? @relation(fields: [pageId], references: [id], onDelete: SetNull)
+
+  @@index([siteId, createdAt])
+  @@index([siteId, path])
+  @@index([pageId])
 }

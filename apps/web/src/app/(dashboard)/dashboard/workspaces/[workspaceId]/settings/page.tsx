@@ -37,6 +37,7 @@ import {
   Globe,
   AlertTriangle
 } from 'lucide-react';
+import { WorkspaceSocialLinks } from '@/components/dashboard/workspace-social-links';
 
 interface WorkspaceSettingsPageProps {
   params: { workspaceId: string };
@@ -165,7 +166,7 @@ export default async function WorkspaceSettingsPage({ params }: WorkspaceSetting
             <CardHeader>
               <CardTitle>Workspace Plan</CardTitle>
               <CardDescription>
-                Your current subscription plan
+                Dein aktueller Abo-Plan
               </CardDescription>
             </CardHeader>
             <CardContent className="flex items-center justify-between">
@@ -174,21 +175,36 @@ export default async function WorkspaceSettingsPage({ params }: WorkspaceSetting
                   <Crown className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-lg">{workspace.plan} Plan</p>
+                  <p className="font-medium text-lg">
+                    {workspace.plan === 'FREE' ? 'Starter' : workspace.plan === 'ENTERPRISE' ? 'Enterprise' : workspace.plan === 'BUSINESS' ? 'Business' : 'Pro'} Plan
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {workspace.plan === 'FREE' 
-                      ? 'Basic features for personal use'
+                      ? 'Basis-Features zum Ausprobieren'
                       : workspace.plan === 'PRO'
-                      ? 'Advanced features for growing teams'
-                      : 'Enterprise features for large organizations'}
+                      ? 'Erweiterte Features für Freelancer & kleine Projekte'
+                      : workspace.plan === 'BUSINESS'
+                      ? 'Professionelle Features für Teams & Unternehmen'
+                      : 'Enterprise-Features für Agenturen & große Organisationen'}
                   </p>
                 </div>
               </div>
               {isOwnerOrAdmin && workspace.plan === 'FREE' && (
-                <Button>Upgrade Plan</Button>
+                <Button>Plan upgraden</Button>
               )}
             </CardContent>
           </Card>
+
+          {/* Social Media Links */}
+          <WorkspaceSocialLinks
+            workspaceId={workspace.id}
+            initialLinks={
+              Array.isArray((workspace as any).socialLinks)
+                ? (workspace as any).socialLinks
+                : []
+            }
+            isEditable={isOwnerOrAdmin}
+          />
         </TabsContent>
 
         {/* Members Tab */}

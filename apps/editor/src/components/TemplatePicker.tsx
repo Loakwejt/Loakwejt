@@ -221,14 +221,18 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
     
     // Replace entire tree with the page template
     const clonedTree = {
-      ...pendingPage.tree,
+      builderVersion: pendingPage.tree.builderVersion ?? 1,
       root: cloneNode(pendingPage.tree.root, true),
     };
     
     // Apply theme colors from site settings to the entire template
     const themedTree = applyThemeToTree(clonedTree, siteSettings.theme.colors);
     
-    replaceTree(themedTree);
+    // Ensure builderVersion is set (required by BuilderTree)
+    replaceTree({
+      ...themedTree,
+      builderVersion: themedTree.builderVersion ?? 1,
+    });
     setConfirmDialogOpen(false);
     setPendingPage(null);
     onOpenChange(false);
@@ -246,7 +250,7 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <LayoutTemplate className="h-5 w-5" />
-            Template Library
+            Vorlagen-Bibliothek
           </DialogTitle>
         </DialogHeader>
 
@@ -255,7 +259,7 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search templates..."
+              placeholder="Vorlagen suchen..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -267,11 +271,11 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="section" className="flex items-center gap-2">
                 <Layers className="h-4 w-4" />
-                Sections
+                Sektionen
               </TabsTrigger>
               <TabsTrigger value="page" className="flex items-center gap-2">
                 <LayoutTemplate className="h-4 w-4" />
-                Full Pages
+                Ganze Seiten
               </TabsTrigger>
             </TabsList>
 
@@ -284,7 +288,7 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
                   size="sm"
                   onClick={() => setSelectedCategory('all')}
                 >
-                  All
+                  Alle
                 </Button>
                 {categories.map(category => {
                   const info = templateRegistry.getCategoryInfo(category);
@@ -323,7 +327,7 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
                 </div>
                 {filteredSections.length === 0 && !loadingDb && (
                   <div className="text-center text-muted-foreground py-8">
-                    No templates found matching your search.
+                    Keine Vorlagen zu deiner Suche gefunden.
                   </div>
                 )}
               </div>
@@ -349,7 +353,7 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
               </div>
               {filteredPages.length === 0 && (
                 <div className="text-center text-muted-foreground py-8">
-                  No page templates found matching your search.
+                  Keine Seitenvorlagen zu deiner Suche gefunden.
                 </div>
               )}
             </TabsContent>
@@ -533,7 +537,7 @@ export function TemplatePickerButton() {
         className="gap-2"
       >
         <LayoutTemplate className="h-4 w-4" />
-        Templates
+        Vorlagen
       </Button>
       <TemplatePicker open={open} onOpenChange={setOpen} />
     </>

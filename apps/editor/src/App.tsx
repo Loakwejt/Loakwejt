@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { TooltipProvider } from '@builderly/ui';
 import { Toolbar } from './components/Toolbar';
-import { Palette } from './components/Palette';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
-import { SidebarLayerPanel } from './components/SidebarLayerPanel';
-import { PagesPanel } from './components/PagesPanel';
+import { LeftSidebar } from './components/LeftSidebar';
+import { FloatingPalette } from './components/FloatingPalette';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
@@ -22,10 +21,11 @@ function App() {
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
   
   const {
-    isPaletteOpen,
     isInspectorOpen,
-    isLayerPanelOpen,
     isPreviewMode,
+    isPaletteOpen,
+    isLeftSidebarOpen,
+    toggleLeftSidebar,
     setPageContext,
     setTree,
     setPageName,
@@ -168,44 +168,31 @@ function App() {
   return (
     <TooltipProvider>
       <DndProvider>
-        <div className="h-screen flex flex-col bg-muted/30">
-          {/* Toolbar */}
+        <div className="h-screen flex flex-col bg-background overflow-hidden">
+          {/* Toolbar - Compact Photoshop style */}
           <Toolbar />
 
           {/* Main editor area */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Left sidebar - Pages Panel + Palette */}
+            {/* Left sidebar - Pages, Layers, Components */}
             {!isPreviewMode && (
-              <aside className="w-64 border-r bg-background flex flex-col flex-shrink-0 overflow-hidden">
-                {/* Pages Panel */}
-                <div className="h-48 border-b overflow-auto flex-shrink-0">
-                  <PagesPanel />
-                </div>
-                {/* Component Palette - scrollable */}
-                {isPaletteOpen && (
-                  <div className="flex-1 overflow-auto">
-                    <Palette />
-                  </div>
-                )}
-              </aside>
+              <LeftSidebar 
+                isCollapsed={!isLeftSidebarOpen}
+                onToggleCollapse={toggleLeftSidebar}
+              />
             )}
 
-            {/* Center - Canvas */}
-            <main className="flex-1 overflow-auto bg-muted/50 relative">
+            {/* Center - Canvas with checkerboard */}
+            <main className="flex-1 overflow-auto relative editor-canvas">
               <Canvas />
+              {/* Floating Palette */}
+              {isPaletteOpen && !isPreviewMode && <FloatingPalette />}
             </main>
 
-            {/* Right sidebar - Inspector + Layers */}
+            {/* Right sidebar - Inspector */}
             {isInspectorOpen && !isPreviewMode && (
-              <aside className="w-80 border-l bg-background flex flex-col flex-shrink-0 overflow-hidden">
-                {/* Inspector - top section */}
-                <div className="flex-1 overflow-auto">
-                  <Inspector />
-                </div>
-                {/* Layer Panel - bottom section */}
-                <div className="h-64 flex-shrink-0">
-                  <SidebarLayerPanel />
-                </div>
+              <aside className="w-80 flex flex-col flex-shrink-0 overflow-hidden border-l border-border bg-[hsl(220,10%,14%)]">
+                <Inspector />
               </aside>
             )}
           </div>

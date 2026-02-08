@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { UpdateSiteSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/sites/[siteId]
 export async function GET(
@@ -47,13 +48,52 @@ export async function PATCH(
 
     const body = await request.json();
     const validated = UpdateSiteSchema.parse(body);
+    
+    // Destructure settings to handle separately
+    const { settings, ...restValidated } = validated;
+    const enableUserAuth = (validated as Record<string, unknown>).enableUserAuth as boolean | undefined;
+
+    // Enforce irreversibility: enableUserAuth can only go false → true
+    if (enableUserAuth !== undefined) {
+      const existingSite = await prisma.site.findFirst({
+        where: { id: params.siteId, workspaceId: params.workspaceId },
+      });
+
+      if (!existingSite) {
+        return NextResponse.json({ error: 'Site not found' }, { status: 404 });
+      }
+
+      if ((existingSite as Record<string, unknown>).enableUserAuth && !enableUserAuth) {
+        return NextResponse.json(
+          { error: 'Das Login-System kann nicht deaktiviert werden, sobald es aktiviert wurde.' },
+          { status: 400 },
+        );
+      }
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { enableUserAuth: _ea, ...cleanData } = restValidated as Record<string, unknown>;
 
     const site = await prisma.site.update({
       where: {
         id: params.siteId,
         workspaceId: params.workspaceId,
       },
-      data: validated,
+      data: {
+        ...cleanData,
+        ...(enableUserAuth === true && {
+          enableUserAuth: true,
+          userAuthEnabledAt: new Date(),
+        }),
+        ...(settings !== undefined && { settings: settings as Prisma.InputJsonValue }),
+      },
+    });
+
+    await createAuditLog({
+      action: 'SITE_UPDATED',
+      entity: 'Site',
+      entityId: params.siteId,
+      details: { fields: Object.keys(validated) },
     });
 
     return NextResponse.json(site);
@@ -73,6 +113,12 @@ export async function DELETE(
 ) {
   try {
     await requireWorkspacePermission(params.workspaceId, 'admin');
+
+    await createAuditLog({
+      action: 'SITE_DELETED',
+      entity: 'Site',
+      entityId: params.siteId,
+    });
 
     await prisma.site.delete({
       where: {

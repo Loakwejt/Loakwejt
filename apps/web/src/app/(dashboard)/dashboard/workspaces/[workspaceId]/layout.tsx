@@ -27,7 +27,7 @@ export default async function WorkspaceLayout({
     },
     include: {
       workspace: {
-        select: { name: true },
+        select: { name: true, type: true },
       },
     },
   });
@@ -41,6 +41,7 @@ export default async function WorkspaceLayout({
       <WorkspaceSidebar
         workspaceId={params.workspaceId}
         workspaceName={membership.workspace.name}
+        workspaceType={(membership.workspace as any).type || 'WEBSITE'}
       />
       <main className="flex-1 min-h-[calc(100vh-3.5rem)] overflow-auto">
         {children}

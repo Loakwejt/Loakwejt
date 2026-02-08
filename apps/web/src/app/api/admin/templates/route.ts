@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { getCurrentUser } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 // Schema for creating/updating templates
@@ -110,6 +111,8 @@ export async function POST(request: NextRequest) {
         createdById: user.id,
       },
     });
+
+    await createAuditLog({ userId: user.id, action: 'TEMPLATE_CREATED', entity: 'Template', entityId: template.id, details: { name: validated.name, slug: validated.slug, category: validated.category } });
 
     return NextResponse.json({ data: template }, { status: 201 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const UpdateRecordSchema = z.object({
@@ -59,7 +60,7 @@ export async function PATCH(
   { params }: { params: { workspaceId: string; collectionId: string; recordId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const validated = UpdateRecordSchema.parse(body);
@@ -110,7 +111,7 @@ export async function PATCH(
     const record = await prisma.record.update({
       where: { id: params.recordId },
       data: {
-        ...(validated.data !== undefined && { data: validated.data }),
+        ...(validated.data !== undefined && { data: validated.data as Prisma.InputJsonValue }),
         ...(validated.slug !== undefined && { slug: validated.slug }),
         ...(validated.status !== undefined && { status: validated.status }),
         // Update publishedAt timestamp if publishing
@@ -119,6 +120,8 @@ export async function PATCH(
         }),
       },
     });
+
+    await createAuditLog({ userId, action: 'RECORD_UPDATED', entity: 'Record', entityId: params.recordId, details: { collectionId: params.collectionId, status: validated.status } });
 
     return NextResponse.json(record);
   } catch (error) {
@@ -139,7 +142,7 @@ export async function DELETE(
   { params }: { params: { workspaceId: string; collectionId: string; recordId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     // Verify collection belongs to workspace
     const collection = await prisma.collection.findFirst({
@@ -169,6 +172,8 @@ export async function DELETE(
     await prisma.record.delete({
       where: { id: params.recordId },
     });
+
+    await createAuditLog({ userId, action: 'RECORD_DELETED', entity: 'Record', entityId: params.recordId, details: { collectionId: params.collectionId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

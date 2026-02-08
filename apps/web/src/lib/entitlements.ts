@@ -1,5 +1,85 @@
 import { prisma, Plan } from '@builderly/db';
-import { PLAN_ENTITLEMENTS, type Entitlements } from '@builderly/sdk';
+import { PLAN_ENTITLEMENTS, PLAN_INTEGRATIONS, type Entitlements, type IntegrationId } from '@builderly/sdk';
+
+// ============================================================================
+// IN-MEMORY CACHE for PlanConfig rows (TTL-based, auto-refreshed)
+// ============================================================================
+
+interface CachedEntitlements {
+  data: Record<string, Entitlements>;
+  fetchedAt: number;
+}
+
+const CACHE_TTL_MS = 60_000; // 1 minute
+let _cache: CachedEntitlements | null = null;
+
+/**
+ * Loads all PlanConfig rows from the DB and maps them to the Entitlements shape.
+ * Falls back to the hardcoded PLAN_ENTITLEMENTS if PlanConfig table is empty
+ * (e.g. before seed has run).
+ */
+async function loadPlanConfigs(): Promise<Record<string, Entitlements>> {
+  try {
+    const rows = await prisma.planConfig.findMany();
+
+    if (rows.length === 0) {
+      // Fallback: Tabelle noch nicht geseeded → hardcoded Werte nutzen
+      return { ...PLAN_ENTITLEMENTS };
+    }
+
+    const map: Record<string, Entitlements> = {};
+    for (const row of rows) {
+      const integrations: string[] = Array.isArray(row.integrations)
+        ? (row.integrations as string[])
+        : [];
+
+      map[row.plan] = {
+        plan: row.plan,
+        maxSites: row.maxSites,
+        maxPagesPerSite: row.maxPagesPerSite,
+        maxStorage: Number(row.maxStorage),
+        maxCustomDomains: row.maxCustomDomains,
+        maxTeamMembers: row.maxTeamMembers,
+        maxFormSubmissionsPerMonth: row.maxFormSubmissionsPerMonth,
+        customDomains: row.customDomains,
+        removeWatermark: row.removeWatermark,
+        prioritySupport: row.prioritySupport,
+        dedicatedSupport: row.dedicatedSupport,
+        ecommerce: row.ecommerce,
+        passwordProtection: row.passwordProtection,
+        ssoSaml: row.ssoSaml,
+        whiteLabel: row.whiteLabel,
+        auditLog: row.auditLog,
+        slaGuarantee: row.slaGuarantee,
+        integrations: integrations as IntegrationId[],
+      };
+    }
+
+    return map;
+  } catch {
+    // Falls die Tabelle noch nicht existiert (z.B. Migration noch nicht gelaufen)
+    return { ...PLAN_ENTITLEMENTS };
+  }
+}
+
+async function getCachedPlanConfigs(): Promise<Record<string, Entitlements>> {
+  const now = Date.now();
+  if (_cache && now - _cache.fetchedAt < CACHE_TTL_MS) {
+    return _cache.data;
+  }
+  const data = await loadPlanConfigs();
+  _cache = { data, fetchedAt: now };
+  return data;
+}
+
+/** Invalidate the in-memory cache (call after admin updates a PlanConfig). */
+export function invalidatePlanConfigCache(): void {
+  _cache = null;
+}
+
+// ============================================================================
+// CORE: getWorkspaceEntitlements
+// ============================================================================
 
 export async function getWorkspaceEntitlements(workspaceId: string): Promise<Entitlements> {
   const workspace = await prisma.workspace.findUnique({
@@ -11,8 +91,8 @@ export async function getWorkspaceEntitlements(workspaceId: string): Promise<Ent
     throw new Error('Workspace not found');
   }
 
-  // workspace.plan is always a valid Plan enum value, so the lookup is guaranteed to succeed
-  return (PLAN_ENTITLEMENTS[workspace.plan] ?? PLAN_ENTITLEMENTS.FREE) as Entitlements;
+  const configs = await getCachedPlanConfigs();
+  return configs[workspace.plan] ?? configs.FREE ?? PLAN_ENTITLEMENTS.FREE;
 }
 
 export async function checkEntitlement(
@@ -33,7 +113,7 @@ export async function canCreateSite(workspaceId: string): Promise<{ allowed: boo
   if (siteCount >= entitlements.maxSites) {
     return {
       allowed: false,
-      reason: `You have reached the maximum number of sites (${entitlements.maxSites}) for your plan. Please upgrade to create more sites.`,
+      reason: `Du hast die maximale Anzahl an Websites (${entitlements.maxSites}) für deinen Plan erreicht. Bitte upgrade für mehr Websites.`,
     };
   }
 
@@ -47,7 +127,7 @@ export async function canCreatePage(siteId: string): Promise<{ allowed: boolean;
   });
 
   if (!site) {
-    return { allowed: false, reason: 'Site not found' };
+    return { allowed: false, reason: 'Site nicht gefunden' };
   }
 
   const entitlements = await getWorkspaceEntitlements(site.workspaceId);
@@ -59,7 +139,7 @@ export async function canCreatePage(siteId: string): Promise<{ allowed: boolean;
   if (pageCount >= entitlements.maxPagesPerSite) {
     return {
       allowed: false,
-      reason: `You have reached the maximum number of pages (${entitlements.maxPagesPerSite}) for this site. Please upgrade to create more pages.`,
+      reason: `Du hast die maximale Anzahl an Seiten (${entitlements.maxPagesPerSite}) für diese Site erreicht. Bitte upgrade für mehr Seiten.`,
     };
   }
 
@@ -85,7 +165,7 @@ export async function canUploadAsset(
     const currentUsageMB = Math.round(currentUsage / (1024 * 1024));
     return {
       allowed: false,
-      reason: `Storage limit exceeded. You are using ${currentUsageMB}MB of ${maxStorageMB}MB. Please upgrade for more storage.`,
+      reason: `Speicherlimit überschritten. Du nutzt ${currentUsageMB} MB von ${maxStorageMB} MB. Bitte upgrade für mehr Speicher.`,
     };
   }
 
@@ -100,4 +180,64 @@ export async function shouldShowWatermark(workspaceId: string): Promise<boolean>
 export async function canUseCustomDomain(workspaceId: string): Promise<boolean> {
   const entitlements = await getWorkspaceEntitlements(workspaceId);
   return entitlements.customDomains;
+}
+
+export async function canAddTeamMember(workspaceId: string): Promise<{ allowed: boolean; reason?: string }> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  
+  const memberCount = await prisma.workspaceMember.count({
+    where: { workspaceId },
+  });
+
+  if (memberCount >= entitlements.maxTeamMembers) {
+    return {
+      allowed: false,
+      reason: `Du hast die maximale Anzahl an Team-Mitgliedern (${entitlements.maxTeamMembers}) für deinen Plan erreicht. Bitte upgrade für mehr Mitglieder.`,
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function canUseIntegration(
+  workspaceId: string,
+  integrationId: string
+): Promise<{ allowed: boolean; reason?: string }> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  
+  const allowedIntegrations = entitlements.integrations ?? [];
+  
+  if (!allowedIntegrations.includes(integrationId as any)) {
+    return {
+      allowed: false,
+      reason: `Die Integration "${integrationId}" ist in deinem aktuellen Plan nicht verfügbar. Bitte upgrade um diese Funktion zu nutzen.`,
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function canUseEcommerce(workspaceId: string): Promise<boolean> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  return entitlements.ecommerce;
+}
+
+export async function canUsePasswordProtection(workspaceId: string): Promise<boolean> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  return entitlements.passwordProtection;
+}
+
+export async function canUseSso(workspaceId: string): Promise<boolean> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  return entitlements.ssoSaml;
+}
+
+export async function canUseWhiteLabel(workspaceId: string): Promise<boolean> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  return entitlements.whiteLabel;
+}
+
+export async function canUseAuditLog(workspaceId: string): Promise<boolean> {
+  const entitlements = await getWorkspaceEntitlements(workspaceId);
+  return entitlements.auditLog;
 }

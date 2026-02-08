@@ -3,9 +3,35 @@ import type { NextRequest } from 'next/server';
 
 const isDev = process.env.NODE_ENV !== 'production';
 const editorUrl = process.env.NEXT_PUBLIC_EDITOR_URL || 'http://localhost:5173';
+const appHostname = process.env.APP_HOSTNAME || 'localhost:3000';
 
 export function middleware(request: NextRequest) {
-  // Handle CORS preflight requests
+  const hostname = request.headers.get('host') || '';
+  const pathname = request.nextUrl.pathname;
+
+  // ── Custom Domain Routing ────────────────────────────────────────────
+  // If the hostname doesn't match our app hostname and isn't localhost,
+  // treat it as a custom domain and rewrite to the runtime site renderer
+  const isAppHost =
+    hostname === appHostname ||
+    hostname.startsWith('localhost') ||
+    hostname.endsWith('.vercel.app') ||
+    hostname.endsWith('.builderly.app');
+
+  if (!isAppHost && !pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
+    // Custom domain detected — rewrite to /s/_custom/[pageSlug]
+    // The page renderer will resolve the site by custom domain
+    const url = request.nextUrl.clone();
+    if (pathname === '/' || pathname === '') {
+      url.pathname = `/s/_custom`;
+    } else {
+      url.pathname = `/s/_custom${pathname}`;
+    }
+    url.searchParams.set('__domain', hostname);
+    return NextResponse.rewrite(url);
+  }
+
+  // ── CORS for API routes ──────────────────────────────────────────────
   if (request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 });
     
@@ -18,11 +44,9 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // For other requests, add CORS headers to the response
   const response = NextResponse.next();
   
-  // Only add CORS headers for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     response.headers.set('Access-Control-Allow-Origin', isDev ? editorUrl : (process.env.EDITOR_DOMAIN || editorUrl));
     response.headers.set('Access-Control-Allow-Credentials', 'true');
   }
@@ -30,7 +54,6 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Only run middleware on API routes
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

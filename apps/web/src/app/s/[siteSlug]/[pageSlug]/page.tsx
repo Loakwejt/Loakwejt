@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@builderly/db';
 import { SafeRenderer } from '@/components/runtime/safe-renderer';
+import { SiteAuthProvider } from '@/components/runtime/site-auth-provider';
 import type { BuilderTree } from '@builderly/core';
 import { Layers } from 'lucide-react';
 
@@ -71,18 +72,37 @@ export default async function SitePage({ params }: Props) {
     notFound();
   }
 
-  const builderTree = page.publishedRevision.builderTree as BuilderTree;
+  const builderTree = page.publishedRevision.builderTree as unknown as BuilderTree;
   const showWatermark = site.workspace.plan === 'FREE';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: page.metaTitle || page.name,
+    description: page.metaDescription || '',
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://builderly.de'}/s/${params.siteSlug}/${params.pageSlug}`,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: site.name,
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://builderly.de'}/s/${params.siteSlug}`,
+    },
+  };
 
   return (
     <div className="min-h-screen">
-      <SafeRenderer 
-        tree={builderTree} 
-        context={{
-          siteId: site.id,
-          pageId: page.id,
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <SiteAuthProvider siteSlug={params.siteSlug}>
+        <SafeRenderer 
+          tree={builderTree} 
+          context={{
+            siteId: site.id,
+            pageId: page.id,
+          }}
+        />
+      </SiteAuthProvider>
       
       {showWatermark && (
         <div className="fixed bottom-4 right-4 z-50">

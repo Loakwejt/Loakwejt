@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { UpdatePageSchema } from '@builderly/sdk';
 import { ZodError } from 'zod';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/sites/[siteId]/pages/[pageId]
 export async function GET(
@@ -74,12 +75,25 @@ export async function PATCH(
       });
     }
 
+    // Destructure builderTree to handle separately
+    const { builderTree, ...restValidated } = validated;
+    
     const page = await prisma.page.update({
       where: {
         id: params.pageId,
         siteId: params.siteId,
       },
-      data: validated,
+      data: {
+        ...restValidated,
+        ...(builderTree !== undefined && { builderTree: builderTree as Prisma.InputJsonValue }),
+      },
+    });
+
+    await createAuditLog({
+      action: 'PAGE_UPDATED',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { fields: Object.keys(validated), siteId: params.siteId },
     });
 
     return NextResponse.json(page);
@@ -133,6 +147,13 @@ export async function DELETE(
         id: params.pageId,
         siteId: params.siteId,
       },
+    });
+
+    await createAuditLog({
+      action: 'PAGE_DELETED',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { siteId: params.siteId },
     });
 
     return new NextResponse(null, { status: 204 });

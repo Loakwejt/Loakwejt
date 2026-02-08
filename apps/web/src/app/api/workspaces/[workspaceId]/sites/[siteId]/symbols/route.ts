@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 // Schema for creating a symbol
@@ -53,7 +54,7 @@ export async function POST(
   { params }: { params: { workspaceId: string; siteId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const validated = CreateSymbolSchema.parse(body);
@@ -85,6 +86,8 @@ export async function POST(
         thumbnailUrl: validated.thumbnailUrl,
       },
     });
+
+    await createAuditLog({ userId, action: 'SYMBOL_CREATED', entity: 'Symbol', entityId: symbol.id, details: { name: validated.name, category: validated.category, siteId: params.siteId } });
 
     return NextResponse.json({ data: symbol }, { status: 201 });
   } catch (error) {

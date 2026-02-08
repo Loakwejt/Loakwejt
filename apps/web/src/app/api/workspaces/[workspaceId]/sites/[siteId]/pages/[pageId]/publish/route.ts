@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { PublishPageSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // POST /api/workspaces/[workspaceId]/sites/[siteId]/pages/[pageId]/publish
 export async function POST(
@@ -14,6 +15,9 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const validated = PublishPageSchema.parse(body);
 
+    // Support scheduled publishing
+    const scheduledAt = body.scheduledPublishAt ? new Date(body.scheduledPublishAt) : null;
+
     // Get the current page
     const page = await prisma.page.findFirst({
       where: {
@@ -24,6 +28,24 @@ export async function POST(
 
     if (!page) {
       return NextResponse.json({ error: 'Page not found' }, { status: 404 });
+    }
+
+    // If scheduled for later, set the schedule and exit without publishing now
+    if (scheduledAt && scheduledAt > new Date()) {
+      await prisma.page.update({
+        where: { id: params.pageId },
+        data: { scheduledPublishAt: scheduledAt },
+      });
+
+      await createAuditLog({
+        userId,
+        action: 'PAGE_SCHEDULED',
+        entity: 'Page',
+        entityId: params.pageId,
+        details: { siteId: params.siteId, scheduledAt: scheduledAt.toISOString() },
+      });
+
+      return NextResponse.json({ scheduled: true, scheduledAt: scheduledAt.toISOString() }, { status: 200 });
     }
 
     // Get the latest version number
@@ -51,6 +73,7 @@ export async function POST(
       data: {
         publishedRevisionId: revision.id,
         isDraft: false,
+        scheduledPublishAt: null, // Clear any schedule
       },
     });
 
@@ -61,6 +84,14 @@ export async function POST(
         isPublished: true,
         publishedAt: new Date(),
       },
+    });
+
+    await createAuditLog({
+      userId,
+      action: 'PAGE_PUBLISHED',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { siteId: params.siteId, version: newVersion, revisionId: revision.id },
     });
 
     return NextResponse.json(revision, { status: 201 });

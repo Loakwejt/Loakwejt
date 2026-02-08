@@ -7,7 +7,7 @@ import { componentRegistry, type ComponentDefinition } from './component-registr
 
 const SectionComponent: ComponentDefinition = {
   type: 'Section',
-  displayName: 'Section',
+  displayName: 'Bereich',
   description: 'A full-width section container',
   icon: 'layout',
   category: 'layout',
@@ -52,7 +52,7 @@ const ContainerComponent: ComponentDefinition = {
 
 const StackComponent: ComponentDefinition = {
   type: 'Stack',
-  displayName: 'Stack',
+  displayName: 'Stapel',
   description: 'Flex container for stacking elements',
   icon: 'layers',
   category: 'layout',
@@ -77,7 +77,7 @@ const StackComponent: ComponentDefinition = {
 
 const GridComponent: ComponentDefinition = {
   type: 'Grid',
-  displayName: 'Grid',
+  displayName: 'Raster',
   description: 'Grid layout for responsive columns',
   icon: 'grid',
   category: 'layout',
@@ -101,7 +101,7 @@ const GridComponent: ComponentDefinition = {
 
 const DividerComponent: ComponentDefinition = {
   type: 'Divider',
-  displayName: 'Divider',
+  displayName: 'Trennlinie',
   description: 'Horizontal divider line',
   icon: 'minus',
   category: 'layout',
@@ -117,7 +117,7 @@ const DividerComponent: ComponentDefinition = {
 
 const SpacerComponent: ComponentDefinition = {
   type: 'Spacer',
-  displayName: 'Spacer',
+  displayName: 'Abstand',
   description: 'Empty space for layout adjustments',
   icon: 'move-vertical',
   category: 'layout',
@@ -153,7 +153,7 @@ const TextComponent: ComponentDefinition = {
 
 const HeadingComponent: ComponentDefinition = {
   type: 'Heading',
-  displayName: 'Heading',
+  displayName: 'Überschrift',
   description: 'Heading text (h1-h6)',
   icon: 'heading',
   category: 'content',
@@ -171,7 +171,7 @@ const HeadingComponent: ComponentDefinition = {
 
 const ImageComponent: ComponentDefinition = {
   type: 'Image',
-  displayName: 'Image',
+  displayName: 'Bild',
   description: 'Display an image',
   icon: 'image',
   category: 'content',
@@ -193,7 +193,7 @@ const ImageComponent: ComponentDefinition = {
 
 const IconComponent: ComponentDefinition = {
   type: 'Icon',
-  displayName: 'Icon',
+  displayName: 'Symbol',
   description: 'Display an icon',
   icon: 'smile',
   category: 'content',
@@ -239,7 +239,7 @@ const ButtonComponent: ComponentDefinition = {
 
 const CardComponent: ComponentDefinition = {
   type: 'Card',
-  displayName: 'Card',
+  displayName: 'Karte',
   description: 'Card container with optional header',
   icon: 'credit-card',
   category: 'ui',
@@ -259,7 +259,7 @@ const CardComponent: ComponentDefinition = {
 
 const BadgeComponent: ComponentDefinition = {
   type: 'Badge',
-  displayName: 'Badge',
+  displayName: 'Abzeichen',
   description: 'Small label badge',
   icon: 'tag',
   category: 'ui',
@@ -277,7 +277,7 @@ const BadgeComponent: ComponentDefinition = {
 
 const AlertComponent: ComponentDefinition = {
   type: 'Alert',
-  displayName: 'Alert',
+  displayName: 'Hinweis',
   description: 'Alert message box',
   icon: 'alert-circle',
   category: 'ui',
@@ -302,7 +302,7 @@ const AlertComponent: ComponentDefinition = {
 
 const FormComponent: ComponentDefinition = {
   type: 'Form',
-  displayName: 'Form',
+  displayName: 'Formular',
   description: 'Form container',
   icon: 'file-text',
   category: 'forms',
@@ -321,7 +321,7 @@ const FormComponent: ComponentDefinition = {
 
 const InputComponent: ComponentDefinition = {
   type: 'Input',
-  displayName: 'Input',
+  displayName: 'Eingabefeld',
   description: 'Text input field',
   icon: 'text-cursor-input',
   category: 'forms',
@@ -346,7 +346,7 @@ const InputComponent: ComponentDefinition = {
 
 const TextareaComponent: ComponentDefinition = {
   type: 'Textarea',
-  displayName: 'Textarea',
+  displayName: 'Textbereich',
   description: 'Multi-line text input',
   icon: 'align-left',
   category: 'forms',
@@ -370,7 +370,7 @@ const TextareaComponent: ComponentDefinition = {
 
 const SelectComponent: ComponentDefinition = {
   type: 'Select',
-  displayName: 'Select',
+  displayName: 'Auswahl',
   description: 'Dropdown select',
   icon: 'chevron-down',
   category: 'forms',
@@ -396,7 +396,7 @@ const SelectComponent: ComponentDefinition = {
 
 const CheckboxComponent: ComponentDefinition = {
   type: 'Checkbox',
-  displayName: 'Checkbox',
+  displayName: 'Kontrollkästchen',
   description: 'Checkbox input',
   icon: 'check-square',
   category: 'forms',
@@ -416,7 +416,7 @@ const CheckboxComponent: ComponentDefinition = {
 
 const SubmitButtonComponent: ComponentDefinition = {
   type: 'SubmitButton',
-  displayName: 'Submit Button',
+  displayName: 'Absenden Button',
   description: 'Form submit button',
   icon: 'send',
   category: 'forms',
@@ -440,7 +440,7 @@ const SubmitButtonComponent: ComponentDefinition = {
 
 const NavbarComponent: ComponentDefinition = {
   type: 'Navbar',
-  displayName: 'Navbar',
+  displayName: 'Navigationsleiste',
   description: 'Navigation bar',
   icon: 'menu',
   category: 'navigation',
@@ -459,7 +459,7 @@ const NavbarComponent: ComponentDefinition = {
 
 const FooterComponent: ComponentDefinition = {
   type: 'Footer',
-  displayName: 'Footer',
+  displayName: 'Fußzeile',
   description: 'Page footer',
   icon: 'panel-bottom',
   category: 'navigation',
@@ -500,7 +500,7 @@ const LinkComponent: ComponentDefinition = {
 
 const CollectionListComponent: ComponentDefinition = {
   type: 'CollectionList',
-  displayName: 'Collection List',
+  displayName: 'Sammlungs-Liste',
   description: 'Display a list of collection records',
   icon: 'list',
   category: 'data',
@@ -528,7 +528,7 @@ const CollectionListComponent: ComponentDefinition = {
 
 const RecordFieldTextComponent: ComponentDefinition = {
   type: 'RecordFieldText',
-  displayName: 'Record Field',
+  displayName: 'Datensatz-Feld',
   description: 'Display a field from the current record',
   icon: 'file-text',
   category: 'data',
@@ -552,7 +552,7 @@ const RecordFieldTextComponent: ComponentDefinition = {
 
 const PaginationComponent: ComponentDefinition = {
   type: 'Pagination',
-  displayName: 'Pagination',
+  displayName: 'Seitennavigation',
   description: 'Pagination controls',
   icon: 'chevrons-left-right',
   category: 'data',
@@ -574,7 +574,7 @@ const PaginationComponent: ComponentDefinition = {
 
 const AvatarComponent: ComponentDefinition = {
   type: 'Avatar',
-  displayName: 'Avatar',
+  displayName: 'Profilbild',
   description: 'User avatar image',
   icon: 'smile',
   category: 'content',
@@ -618,7 +618,7 @@ const VideoComponent: ComponentDefinition = {
 
 const MapComponent: ComponentDefinition = {
   type: 'Map',
-  displayName: 'Map',
+  displayName: 'Karte',
   description: 'Embedded Google Maps',
   icon: 'map-pin',
   category: 'media',
@@ -638,7 +638,7 @@ const MapComponent: ComponentDefinition = {
 
 const SocialLinksComponent: ComponentDefinition = {
   type: 'SocialLinks',
-  displayName: 'Social Links',
+  displayName: 'Social Media Links',
   description: 'Social media icon links',
   icon: 'share',
   category: 'navigation',
@@ -664,7 +664,7 @@ const SocialLinksComponent: ComponentDefinition = {
 
 const AccordionComponent: ComponentDefinition = {
   type: 'Accordion',
-  displayName: 'Accordion',
+  displayName: 'Akkordeon',
   description: 'Collapsible FAQ sections',
   icon: 'chevron-down',
   category: 'layout',
@@ -682,7 +682,7 @@ const AccordionComponent: ComponentDefinition = {
 
 const AccordionItemComponent: ComponentDefinition = {
   type: 'AccordionItem',
-  displayName: 'Accordion Item',
+  displayName: 'Akkordeon-Element',
   description: 'Single accordion item',
   icon: 'chevron-down',
   category: 'layout',
@@ -736,7 +736,7 @@ const TabComponent: ComponentDefinition = {
 
 const CarouselComponent: ComponentDefinition = {
   type: 'Carousel',
-  displayName: 'Carousel',
+  displayName: 'Karussell',
   description: 'Image/content slider',
   icon: 'chevrons-left-right',
   category: 'layout',
@@ -758,7 +758,7 @@ const CarouselComponent: ComponentDefinition = {
 
 const ProgressComponent: ComponentDefinition = {
   type: 'Progress',
-  displayName: 'Progress Bar',
+  displayName: 'Fortschrittsbalken',
   description: 'Progress indicator',
   icon: 'loader',
   category: 'content',
@@ -778,7 +778,7 @@ const ProgressComponent: ComponentDefinition = {
 
 const RatingComponent: ComponentDefinition = {
   type: 'Rating',
-  displayName: 'Rating',
+  displayName: 'Bewertung',
   description: 'Star rating display',
   icon: 'star',
   category: 'content',
@@ -799,7 +799,7 @@ const RatingComponent: ComponentDefinition = {
 
 const CounterComponent: ComponentDefinition = {
   type: 'Counter',
-  displayName: 'Counter',
+  displayName: 'Zähler',
   description: 'Animated number counter',
   icon: 'hash',
   category: 'content',
@@ -821,7 +821,7 @@ const CounterComponent: ComponentDefinition = {
 
 const QuoteComponent: ComponentDefinition = {
   type: 'Quote',
-  displayName: 'Quote',
+  displayName: 'Zitat',
   description: 'Blockquote with author',
   icon: 'quote',
   category: 'content',
@@ -841,7 +841,7 @@ const QuoteComponent: ComponentDefinition = {
 
 const PricingCardComponent: ComponentDefinition = {
   type: 'PricingCard',
-  displayName: 'Pricing Card',
+  displayName: 'Preis-Karte',
   description: 'Pricing plan card',
   icon: 'credit-card',
   category: 'content',
@@ -866,7 +866,7 @@ const PricingCardComponent: ComponentDefinition = {
 
 const FeatureCardComponent: ComponentDefinition = {
   type: 'FeatureCard',
-  displayName: 'Feature Card',
+  displayName: 'Feature-Karte',
   description: 'Feature highlight with icon',
   icon: 'star',
   category: 'content',
@@ -886,7 +886,7 @@ const FeatureCardComponent: ComponentDefinition = {
 
 const TestimonialCardComponent: ComponentDefinition = {
   type: 'TestimonialCard',
-  displayName: 'Testimonial',
+  displayName: 'Kundenstimme',
   description: 'Customer testimonial card',
   icon: 'message-circle',
   category: 'content',
@@ -910,7 +910,7 @@ const TestimonialCardComponent: ComponentDefinition = {
 
 const TeamMemberComponent: ComponentDefinition = {
   type: 'TeamMember',
-  displayName: 'Team Member',
+  displayName: 'Teammitglied',
   description: 'Team member profile card',
   icon: 'user',
   category: 'content',
@@ -934,7 +934,7 @@ const TeamMemberComponent: ComponentDefinition = {
 
 const LogoCloudComponent: ComponentDefinition = {
   type: 'LogoCloud',
-  displayName: 'Logo Cloud',
+  displayName: 'Logo-Sammlung',
   description: 'Display partner/client logos',
   icon: 'grid',
   category: 'content',
@@ -952,7 +952,7 @@ const LogoCloudComponent: ComponentDefinition = {
 
 const CTAComponent: ComponentDefinition = {
   type: 'CTA',
-  displayName: 'CTA Block',
+  displayName: 'Handlungsaufruf',
   description: 'Call-to-action section',
   icon: 'megaphone',
   category: 'layout',
@@ -968,7 +968,7 @@ const CTAComponent: ComponentDefinition = {
 
 const BreadcrumbComponent: ComponentDefinition = {
   type: 'Breadcrumb',
-  displayName: 'Breadcrumb',
+  displayName: 'Navigationspfad',
   description: 'Navigation breadcrumb trail',
   icon: 'chevron-right',
   category: 'navigation',
@@ -988,7 +988,7 @@ const BreadcrumbComponent: ComponentDefinition = {
 
 const TableComponent: ComponentDefinition = {
   type: 'Table',
-  displayName: 'Table',
+  displayName: 'Tabelle',
   description: 'Data table with rows and columns',
   icon: 'table',
   category: 'data',
@@ -1007,7 +1007,7 @@ const TableComponent: ComponentDefinition = {
 
 const CodeBlockComponent: ComponentDefinition = {
   type: 'CodeBlock',
-  displayName: 'Code Block',
+  displayName: 'Code-Block',
   description: 'Syntax highlighted code',
   icon: 'code',
   category: 'content',
@@ -1026,7 +1026,7 @@ const CodeBlockComponent: ComponentDefinition = {
 
 const TimelineComponent: ComponentDefinition = {
   type: 'Timeline',
-  displayName: 'Timeline',
+  displayName: 'Zeitleiste',
   description: 'Vertical timeline for history/steps',
   icon: 'git-branch',
   category: 'layout',
@@ -1042,7 +1042,7 @@ const TimelineComponent: ComponentDefinition = {
 
 const TimelineItemComponent: ComponentDefinition = {
   type: 'TimelineItem',
-  displayName: 'Timeline Item',
+  displayName: 'Zeitleisten-Eintrag',
   description: 'Single timeline entry',
   icon: 'circle',
   category: 'layout',
@@ -1086,7 +1086,7 @@ const CountdownComponent: ComponentDefinition = {
 
 const MarqueeComponent: ComponentDefinition = {
   type: 'Marquee',
-  displayName: 'Marquee',
+  displayName: 'Lauftext',
   description: 'Scrolling text/content ticker',
   icon: 'arrow-right',
   category: 'content',
@@ -1109,7 +1109,7 @@ const MarqueeComponent: ComponentDefinition = {
 
 const AuthGateComponent: ComponentDefinition = {
   type: 'AuthGate',
-  displayName: 'Auth Gate',
+  displayName: 'Anmeldesperre',
   description: 'Show/hide content based on authentication',
   icon: 'shield',
   category: 'gates',
@@ -1125,12 +1125,305 @@ const AuthGateComponent: ComponentDefinition = {
 };
 
 // ============================================================================
+// AUTH / USER COMPONENTS
+// ============================================================================
+
+const LoginFormComponent: ComponentDefinition = {
+  type: 'LoginForm',
+  displayName: 'Anmeldeformular',
+  description: 'Login form for site visitors',
+  icon: 'log-in',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    title: 'Anmelden',
+    subtitle: 'Melde dich mit deinem Konto an.',
+    showRemember: true,
+    showForgotPassword: true,
+    showRegisterLink: true,
+    registerUrl: '/register',
+    forgotPasswordUrl: '/forgot-password',
+    redirectAfterLogin: '/',
+    buttonText: 'Anmelden',
+    variant: 'card',
+    showSocialLogin: false,
+    emailLabel: 'E-Mail',
+    passwordLabel: 'Passwort',
+  },
+  propsSchema: z.object({
+    title: z.string().default('Anmelden'),
+    subtitle: z.string().default('Melde dich mit deinem Konto an.'),
+    showRemember: z.boolean().default(true),
+    showForgotPassword: z.boolean().default(true),
+    showRegisterLink: z.boolean().default(true),
+    registerUrl: z.string().default('/register'),
+    forgotPasswordUrl: z.string().default('/forgot-password'),
+    redirectAfterLogin: z.string().default('/'),
+    buttonText: z.string().default('Anmelden'),
+    variant: z.enum(['card', 'inline', 'minimal']).default('card'),
+    showSocialLogin: z.boolean().default(false),
+    emailLabel: z.string().default('E-Mail'),
+    passwordLabel: z.string().default('Passwort'),
+    successMessage: z.string().optional(),
+    errorMessage: z.string().optional(),
+  }),
+  tags: ['login', 'auth', 'signin', 'form', 'user', 'anmelden'],
+};
+
+const RegisterFormComponent: ComponentDefinition = {
+  type: 'RegisterForm',
+  displayName: 'Registrierungsformular',
+  description: 'Registration form for new site visitors',
+  icon: 'user-plus',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    title: 'Registrieren',
+    subtitle: 'Erstelle ein neues Konto.',
+    showName: true,
+    showLoginLink: true,
+    loginUrl: '/login',
+    redirectAfterRegister: '/',
+    buttonText: 'Konto erstellen',
+    variant: 'card',
+    requireEmailVerification: false,
+    showTerms: false,
+    termsUrl: '/agb',
+    privacyUrl: '/datenschutz',
+    nameLabel: 'Name',
+    emailLabel: 'E-Mail',
+    passwordLabel: 'Passwort',
+    confirmPasswordLabel: 'Passwort bestätigen',
+  },
+  propsSchema: z.object({
+    title: z.string().default('Registrieren'),
+    subtitle: z.string().default('Erstelle ein neues Konto.'),
+    showName: z.boolean().default(true),
+    showLoginLink: z.boolean().default(true),
+    loginUrl: z.string().default('/login'),
+    redirectAfterRegister: z.string().default('/'),
+    buttonText: z.string().default('Konto erstellen'),
+    variant: z.enum(['card', 'inline', 'minimal']).default('card'),
+    requireEmailVerification: z.boolean().default(false),
+    showTerms: z.boolean().default(false),
+    termsUrl: z.string().default('/agb'),
+    privacyUrl: z.string().default('/datenschutz'),
+    nameLabel: z.string().default('Name'),
+    emailLabel: z.string().default('E-Mail'),
+    passwordLabel: z.string().default('Passwort'),
+    confirmPasswordLabel: z.string().default('Passwort bestätigen'),
+    showPasswordStrength: z.boolean().default(true),
+    minPasswordLength: z.number().min(6).max(32).default(8),
+    successMessage: z.string().optional(),
+    errorMessage: z.string().optional(),
+  }),
+  tags: ['register', 'signup', 'auth', 'form', 'user', 'registrieren'],
+};
+
+const PasswordResetFormComponent: ComponentDefinition = {
+  type: 'PasswordResetForm',
+  displayName: 'Passwort zurücksetzen',
+  description: 'Password reset request form',
+  icon: 'key',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    title: 'Passwort vergessen?',
+    subtitle: 'Gib deine E-Mail-Adresse ein und wir senden dir einen Link.',
+    buttonText: 'Link senden',
+    variant: 'card',
+    loginUrl: '/login',
+    showLoginLink: true,
+    emailLabel: 'E-Mail',
+  },
+  propsSchema: z.object({
+    title: z.string().default('Passwort vergessen?'),
+    subtitle: z.string().default('Gib deine E-Mail-Adresse ein und wir senden dir einen Link.'),
+    buttonText: z.string().default('Link senden'),
+    variant: z.enum(['card', 'inline', 'minimal']).default('card'),
+    loginUrl: z.string().default('/login'),
+    showLoginLink: z.boolean().default(true),
+    emailLabel: z.string().default('E-Mail'),
+    successMessage: z.string().optional(),
+    errorMessage: z.string().optional(),
+  }),
+  tags: ['password', 'reset', 'forgot', 'auth', 'form'],
+};
+
+const UserProfileComponent: ComponentDefinition = {
+  type: 'UserProfile',
+  displayName: 'Benutzerprofil',
+  description: 'Display and edit the logged-in visitor\'s profile',
+  icon: 'user-circle',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    variant: 'card',
+    showAvatar: true,
+    showName: true,
+    showEmail: true,
+    showBio: true,
+    editable: true,
+    showChangePassword: true,
+    showDeleteAccount: false,
+    title: 'Mein Profil',
+    saveButtonText: 'Speichern',
+  },
+  propsSchema: z.object({
+    variant: z.enum(['card', 'inline', 'sidebar']).default('card'),
+    showAvatar: z.boolean().default(true),
+    showName: z.boolean().default(true),
+    showEmail: z.boolean().default(true),
+    showBio: z.boolean().default(true),
+    editable: z.boolean().default(true),
+    showChangePassword: z.boolean().default(true),
+    showDeleteAccount: z.boolean().default(false),
+    title: z.string().default('Mein Profil'),
+    saveButtonText: z.string().default('Speichern'),
+    avatarSize: z.enum(['sm', 'md', 'lg', 'xl']).default('lg'),
+    showJoinDate: z.boolean().default(true),
+    showRole: z.boolean().default(false),
+  }),
+  tags: ['profile', 'user', 'account', 'settings', 'profil', 'konto'],
+};
+
+const UserAvatarComponent: ComponentDefinition = {
+  type: 'UserAvatar',
+  displayName: 'Benutzer-Avatar',
+  description: 'Show the logged-in visitor\'s avatar and name',
+  icon: 'circle-user',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    size: 'md',
+    showName: true,
+    showRole: false,
+    fallbackIcon: 'user',
+    namePosition: 'right',
+    showDropdown: true,
+    profileUrl: '/profil',
+    logoutRedirect: '/',
+  },
+  propsSchema: z.object({
+    size: z.enum(['xs', 'sm', 'md', 'lg', 'xl']).default('md'),
+    showName: z.boolean().default(true),
+    showRole: z.boolean().default(false),
+    fallbackIcon: z.string().default('user'),
+    namePosition: z.enum(['right', 'below']).default('right'),
+    showDropdown: z.boolean().default(true),
+    profileUrl: z.string().default('/profil'),
+    logoutRedirect: z.string().default('/'),
+    showLoginButton: z.boolean().default(true),
+    loginUrl: z.string().default('/login'),
+    loginButtonText: z.string().default('Anmelden'),
+  }),
+  tags: ['avatar', 'user', 'profile', 'picture', 'account'],
+};
+
+const LogoutButtonComponent: ComponentDefinition = {
+  type: 'LogoutButton',
+  displayName: 'Abmelde-Button',
+  description: 'A button that logs out the current visitor',
+  icon: 'log-out',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    text: 'Abmelden',
+    variant: 'outline',
+    size: 'md',
+    redirectTo: '/',
+    confirmLogout: false,
+    confirmMessage: 'Möchtest du dich wirklich abmelden?',
+  },
+  propsSchema: z.object({
+    text: z.string().default('Abmelden'),
+    variant: z.enum(['primary', 'secondary', 'outline', 'ghost', 'destructive', 'link']).default('outline'),
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+    redirectTo: z.string().default('/'),
+    confirmLogout: z.boolean().default(false),
+    confirmMessage: z.string().default('Möchtest du dich wirklich abmelden?'),
+    icon: z.string().optional(),
+    showIcon: z.boolean().default(true),
+    fullWidth: z.boolean().default(false),
+  }),
+  tags: ['logout', 'signout', 'auth', 'button', 'abmelden'],
+};
+
+const MemberListComponent: ComponentDefinition = {
+  type: 'MemberList',
+  displayName: 'Mitglieder-Liste',
+  description: 'Display a list of registered site members',
+  icon: 'users',
+  category: 'auth',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'grid',
+    columns: 3,
+    showAvatar: true,
+    showName: true,
+    showRole: true,
+    showBio: false,
+    showJoinDate: false,
+    pageSize: 12,
+    showSearch: true,
+    filterByRole: 'all',
+    title: 'Unsere Mitglieder',
+  },
+  propsSchema: z.object({
+    layout: z.enum(['grid', 'list', 'compact']).default('grid'),
+    columns: z.number().min(1).max(6).default(3),
+    columnsMobile: z.number().min(1).max(3).default(1),
+    showAvatar: z.boolean().default(true),
+    showName: z.boolean().default(true),
+    showRole: z.boolean().default(true),
+    showBio: z.boolean().default(false),
+    showJoinDate: z.boolean().default(false),
+    pageSize: z.number().min(4).max(100).default(12),
+    showSearch: z.boolean().default(true),
+    filterByRole: z.enum(['all', 'admin', 'moderator', 'member', 'vip']).default('all'),
+    title: z.string().default('Unsere Mitglieder'),
+    showPagination: z.boolean().default(true),
+    avatarSize: z.enum(['sm', 'md', 'lg']).default('md'),
+    linkToProfile: z.boolean().default(true),
+    profileUrlPattern: z.string().default('/mitglieder/{id}'),
+  }),
+  tags: ['members', 'users', 'community', 'directory', 'mitglieder', 'liste'],
+};
+
+const ProtectedContentComponent: ComponentDefinition = {
+  type: 'ProtectedContent',
+  displayName: 'Geschützter Inhalt',
+  description: 'Wrap content that requires specific roles or authentication',
+  icon: 'lock',
+  category: 'auth',
+  canHaveChildren: true,
+  defaultProps: {
+    requiredRole: 'any',
+    showFallback: true,
+    fallbackMessage: 'Du musst angemeldet sein, um diesen Inhalt zu sehen.',
+    showLoginButton: true,
+    loginUrl: '/login',
+    loginButtonText: 'Jetzt anmelden',
+  },
+  propsSchema: z.object({
+    requiredRole: z.enum(['any', 'admin', 'moderator', 'member', 'vip']).default('any'),
+    showFallback: z.boolean().default(true),
+    fallbackMessage: z.string().default('Du musst angemeldet sein, um diesen Inhalt zu sehen.'),
+    showLoginButton: z.boolean().default(true),
+    loginUrl: z.string().default('/login'),
+    loginButtonText: z.string().default('Jetzt anmelden'),
+    hideCompletely: z.boolean().default(false),
+  }),
+  tags: ['protected', 'restricted', 'role', 'access', 'geschützt', 'zugang'],
+};
+
+// ============================================================================
 // SYMBOL INSTANCE - For Global Symbols
 // ============================================================================
 
 const SymbolInstanceComponent: ComponentDefinition = {
   type: 'SymbolInstance',
-  displayName: 'Symbol',
+  displayName: 'Komponente',
   description: 'An instance of a reusable global symbol',
   icon: 'component',
   category: 'advanced',
@@ -1220,6 +1513,16 @@ export function registerBuiltinComponents(): void {
   
   // Gates
   componentRegistry.register(AuthGateComponent);
+  
+  // Auth / Users
+  componentRegistry.register(LoginFormComponent);
+  componentRegistry.register(RegisterFormComponent);
+  componentRegistry.register(PasswordResetFormComponent);
+  componentRegistry.register(UserProfileComponent);
+  componentRegistry.register(UserAvatarComponent);
+  componentRegistry.register(LogoutButtonComponent);
+  componentRegistry.register(MemberListComponent);
+  componentRegistry.register(ProtectedContentComponent);
   
   // Symbols
   componentRegistry.register(SymbolInstanceComponent);

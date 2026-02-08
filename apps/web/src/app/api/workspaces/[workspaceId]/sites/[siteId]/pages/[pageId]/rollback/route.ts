@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const RollbackSchema = z.object({
@@ -37,6 +38,13 @@ export async function POST(
         builderTree: revision.builderTree as object,
         publishedRevisionId: revision.id,
       },
+    });
+
+    await createAuditLog({
+      action: 'PAGE_ROLLED_BACK',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { siteId: params.siteId, revisionId, version: revision.version },
     });
 
     return NextResponse.json(page);

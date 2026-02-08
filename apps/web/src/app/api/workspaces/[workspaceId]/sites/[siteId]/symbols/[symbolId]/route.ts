@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 // Schema for updating a symbol
@@ -49,7 +50,7 @@ export async function PATCH(
   { params }: { params: { workspaceId: string; siteId: string; symbolId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const validated = UpdateSymbolSchema.parse(body);
@@ -82,10 +83,18 @@ export async function PATCH(
       }
     }
 
+    // Destructure tree to handle separately
+    const { tree, ...restValidated } = validated;
+
     const symbol = await prisma.symbol.update({
       where: { id: params.symbolId },
-      data: validated,
+      data: {
+        ...restValidated,
+        ...(tree !== undefined && { tree: tree as Prisma.InputJsonValue }),
+      },
     });
+
+    await createAuditLog({ userId, action: 'SYMBOL_UPDATED', entity: 'Symbol', entityId: params.symbolId, details: { name: validated.name, siteId: params.siteId } });
 
     return NextResponse.json({ data: symbol });
   } catch (error) {
@@ -106,7 +115,7 @@ export async function DELETE(
   { params }: { params: { workspaceId: string; siteId: string; symbolId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     // Verify symbol exists and belongs to this site
     const existing = await prisma.symbol.findUnique({
@@ -120,6 +129,8 @@ export async function DELETE(
     await prisma.symbol.delete({
       where: { id: params.symbolId },
     });
+
+    await createAuditLog({ userId, action: 'SYMBOL_DELETED', entity: 'Symbol', entityId: params.symbolId, details: { name: existing.name, siteId: params.siteId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

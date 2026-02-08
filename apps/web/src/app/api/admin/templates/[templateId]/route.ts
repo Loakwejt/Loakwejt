@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { getCurrentUser } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 // Schema for updating templates
@@ -107,10 +108,18 @@ export async function PUT(
       }
     }
 
+    // Destructure tree to handle separately
+    const { tree, ...restValidated } = validated;
+
     const template = await prisma.template.update({
       where: { id: templateId },
-      data: validated,
+      data: {
+        ...restValidated,
+        ...(tree !== undefined && { tree: tree as Prisma.InputJsonValue }),
+      },
     });
+
+    await createAuditLog({ userId: user.id, action: 'TEMPLATE_UPDATED', entity: 'Template', entityId: templateId, details: { name: validated.name, slug: validated.slug } });
 
     return NextResponse.json({ data: template });
   } catch (error) {
@@ -159,6 +168,8 @@ export async function DELETE(
     await prisma.template.delete({
       where: { id: templateId },
     });
+
+    await createAuditLog({ userId: user.id, action: 'TEMPLATE_DELETED', entity: 'Template', entityId: templateId, details: { name: existing.name, slug: existing.slug } });
 
     return NextResponse.json({ message: 'Template deleted successfully' });
   } catch (error) {

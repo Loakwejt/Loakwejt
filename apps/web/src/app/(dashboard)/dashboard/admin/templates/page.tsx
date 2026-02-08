@@ -1,14 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Button,
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Badge,
   Input,
   Textarea,
@@ -24,8 +20,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from '@builderly/ui';
 import { 
   Plus, 
@@ -36,8 +35,21 @@ import {
   EyeOff, 
   Crown,
   ArrowLeft,
-  Search,
-  Filter
+  ChevronDown,
+  ChevronRight,
+  Layout,
+  Puzzle,
+  FileText,
+  Sparkles,
+  MessageSquare,
+  Users,
+  HelpCircle,
+  Image,
+  BarChart3,
+  ShoppingCart,
+  DollarSign,
+  Phone,
+  Megaphone,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -65,6 +77,13 @@ const CATEGORIES = [
   'ECOMMERCE', 'CONTENT', 'FULL_PAGE'
 ];
 
+// Section modules - not full pages
+const MODULE_CATEGORIES = [
+  'HEADER', 'HERO', 'FEATURES', 'PRICING', 'TESTIMONIALS', 'CTA', 
+  'CONTACT', 'TEAM', 'FAQ', 'FOOTER', 'GALLERY', 'STATS', 'BLOG',
+  'ECOMMERCE', 'CONTENT'
+];
+
 const CATEGORY_LABELS: Record<string, string> = {
   HERO: 'Hero Sektion',
   FEATURES: 'Features',
@@ -84,6 +103,25 @@ const CATEGORY_LABELS: Record<string, string> = {
   FULL_PAGE: 'Komplette Seite',
 };
 
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  HERO: <Sparkles className="h-4 w-4" />,
+  FEATURES: <Puzzle className="h-4 w-4" />,
+  PRICING: <DollarSign className="h-4 w-4" />,
+  TESTIMONIALS: <MessageSquare className="h-4 w-4" />,
+  CTA: <Megaphone className="h-4 w-4" />,
+  CONTACT: <Phone className="h-4 w-4" />,
+  TEAM: <Users className="h-4 w-4" />,
+  FAQ: <HelpCircle className="h-4 w-4" />,
+  FOOTER: <Layout className="h-4 w-4" />,
+  HEADER: <Layout className="h-4 w-4" />,
+  GALLERY: <Image className="h-4 w-4" />,
+  STATS: <BarChart3 className="h-4 w-4" />,
+  BLOG: <FileText className="h-4 w-4" />,
+  ECOMMERCE: <ShoppingCart className="h-4 w-4" />,
+  CONTENT: <FileText className="h-4 w-4" />,
+  FULL_PAGE: <Layout className="h-4 w-4" />,
+};
+
 export default function AdminTemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,9 +129,8 @@ export default function AdminTemplatesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const router = useRouter();
+  const [activeTab, setActiveTab] = useState('full-pages');
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -282,12 +319,22 @@ export default function AdminTemplatesPage() {
     setIsCreateDialogOpen(true);
   };
 
-  const filteredTemplates = templates.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.slug.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  // Split templates by type
+  const fullPageTemplates = templates.filter(t => t.category === 'FULL_PAGE');
+  const moduleTemplates = templates.filter(t => t.category !== 'FULL_PAGE');
+
+  // Get templates by category
+  const getTemplatesByCategory = (category: string) => 
+    moduleTemplates.filter(t => t.category === category);
+
+  // Toggle category expansion
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
 
   if (loading) {
     return (
@@ -481,18 +528,18 @@ export default function AdminTemplatesPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button asChild variant="ghost" size="sm">
+          <Button asChild variant="ghost" size="icon">
             <Link href="/dashboard">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Template-Verwaltung</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-bold">Template-Verwaltung</h1>
+            <p className="text-muted-foreground text-sm">
               Erstelle und verwalte Templates für alle Benutzer
             </p>
           </div>
@@ -503,165 +550,145 @@ export default function AdminTemplatesPage() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Templates suchen..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Kategorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle Kategorien</SelectItem>
-                {CATEGORIES.map(cat => (
-                  <SelectItem key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-4">
             <div className="text-2xl font-bold">{templates.length}</div>
             <p className="text-muted-foreground text-sm">Gesamt</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-green-600">
               {templates.filter(t => t.isPublished).length}
             </div>
             <p className="text-muted-foreground text-sm">Veröffentlicht</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-amber-500">
               {templates.filter(t => t.isPro).length}
             </div>
             <p className="text-muted-foreground text-sm">Pro Templates</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold">
-              {templates.filter(t => t.category === 'FULL_PAGE').length}
+          <CardContent className="p-4">
+            <div className="text-2xl font-bold text-blue-600">
+              {moduleTemplates.length}
             </div>
-            <p className="text-muted-foreground text-sm">Komplette Seiten</p>
+            <p className="text-muted-foreground text-sm">Module</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Template List */}
-      <div className="grid gap-4">
-        {filteredTemplates.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <p className="text-muted-foreground">
-                {searchQuery || categoryFilter !== 'all' 
-                  ? 'Keine Templates gefunden.' 
-                  : 'Noch keine Templates vorhanden. Erstelle dein erstes Template!'}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredTemplates.map(template => (
-            <Card key={template.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-semibold">{template.name}</h3>
-                      <Badge variant="outline">{CATEGORY_LABELS[template.category]}</Badge>
-                      {template.isPro && (
-                        <Badge className="bg-amber-500">
-                          <Crown className="h-3 w-3 mr-1" />
-                          Pro
-                        </Badge>
-                      )}
-                      {template.isSystem && (
-                        <Badge variant="secondary">System</Badge>
-                      )}
-                      {!template.isPublished && (
-                        <Badge variant="secondary">
-                          <EyeOff className="h-3 w-3 mr-1" />
-                          Entwurf
-                        </Badge>
-                      )}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="full-pages" className="flex items-center gap-2">
+            <Layout className="h-4 w-4" />
+            Komplette Seiten
+            <Badge variant="secondary" className="ml-1">{fullPageTemplates.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="modules" className="flex items-center gap-2">
+            <Puzzle className="h-4 w-4" />
+            Module
+            <Badge variant="secondary" className="ml-1">{moduleTemplates.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Full Pages Tab */}
+        <TabsContent value="full-pages" className="space-y-4">
+          {fullPageTemplates.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center py-12">
+                <Layout className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p className="text-muted-foreground mb-4">
+                  Noch keine kompletten Seiten-Templates vorhanden.
+                </p>
+                <Button onClick={() => { resetForm(); setFormData(prev => ({ ...prev, category: 'FULL_PAGE' })); setIsCreateDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Erstes Seiten-Template erstellen
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {fullPageTemplates.map(template => (
+                <TemplateCard key={template.id} template={template} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Modules Tab */}
+        <TabsContent value="modules" className="space-y-3">
+          {MODULE_CATEGORIES.map(category => {
+            const categoryTemplates = getTemplatesByCategory(category);
+            const isExpanded = expandedCategories.includes(category);
+            
+            return (
+              <Card key={category} className="overflow-hidden">
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-muted">
+                      {CATEGORY_ICONS[category]}
                     </div>
-                    <p className="text-muted-foreground text-sm mb-2">
-                      {template.description || 'Keine Beschreibung'}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span>Slug: <code className="bg-muted px-1 rounded">{template.slug}</code></span>
-                      {template.websiteType && <span>Typ: {template.websiteType}</span>}
-                      {template.tags.length > 0 && (
-                        <span>Tags: {template.tags.join(', ')}</span>
-                      )}
+                    <div>
+                      <h3 className="font-medium">{CATEGORY_LABELS[category]}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {categoryTemplates.length} Template{categoryTemplates.length !== 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDuplicate(template)}
-                      title="Duplizieren"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        resetForm();
+                        setFormData(prev => ({ ...prev, category }));
+                        setIsCreateDialogOpen(true);
+                      }}
+                      className="h-8"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Plus className="h-4 w-4 mr-1" />
+                      Hinzufügen
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(template)}
-                      title="Bearbeiten"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(template)}
-                      disabled={template.isSystem}
-                      title={template.isSystem ? 'System-Templates können nicht gelöscht werden' : 'Löschen'}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    {template.category === 'FULL_PAGE' && (
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        title="Im Editor öffnen"
-                      >
-                        <a href={`http://localhost:5173/?templateId=${template.id}`} target="_blank" rel="noopener noreferrer">
-                          <Eye className="h-4 w-4 mr-1" /> Im Editor öffnen
-                        </a>
-                      </Button>
+                    {isExpanded ? (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+                </button>
+                
+                {isExpanded && (
+                  <div className="border-t">
+                    {categoryTemplates.length === 0 ? (
+                      <div className="p-6 text-center text-muted-foreground text-sm">
+                        Noch keine {CATEGORY_LABELS[category]} Templates vorhanden.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                        {categoryTemplates.map(template => (
+                          <TemplateCard key={template.id} template={template} compact />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </TabsContent>
+      </Tabs>
 
       {/* Create Dialog */}
       <TemplateFormDialog
@@ -684,4 +711,102 @@ export default function AdminTemplatesPage() {
       />
     </div>
   );
+
+  // Template Card Component
+  function TemplateCard({ template, compact = false }: { template: Template; compact?: boolean }) {
+    return (
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+        {/* Thumbnail */}
+        <div className={`${compact ? 'aspect-[16/9]' : 'aspect-video'} bg-muted relative overflow-hidden`}>
+          {template.thumbnail ? (
+            <img 
+              src={template.thumbnail} 
+              alt={template.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
+              <span className="text-3xl opacity-50">{CATEGORY_ICONS[template.category] || '📄'}</span>
+            </div>
+          )}
+          {/* Status Badges */}
+          <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+            {template.isPro && (
+              <Badge className="bg-amber-500 text-white text-xs">
+                <Crown className="h-3 w-3 mr-1" />
+                Pro
+              </Badge>
+            )}
+            {template.isSystem && (
+              <Badge variant="secondary" className="text-xs">System</Badge>
+            )}
+            {!template.isPublished && (
+              <Badge variant="secondary" className="text-xs">
+                <EyeOff className="h-3 w-3 mr-1" />
+                Entwurf
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        <CardContent className={compact ? 'p-3' : 'p-4'}>
+          {/* Title */}
+          <h3 className={`font-semibold ${compact ? 'text-sm' : 'text-base'} mb-1 line-clamp-1`}>{template.name}</h3>
+          
+          {/* Description */}
+          {!compact && (
+            <p className="text-muted-foreground text-sm mb-3 line-clamp-2 min-h-[2.5rem]">
+              {template.description || 'Keine Beschreibung'}
+            </p>
+          )}
+          
+          {/* Actions */}
+          <div className={`flex items-center justify-between ${compact ? 'pt-2' : 'pt-3 border-t'}`}>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDuplicate(template)}
+                title="Duplizieren"
+                className="h-7 w-7 p-0"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleEdit(template)}
+                title="Bearbeiten"
+                className="h-7 w-7 p-0"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDelete(template)}
+                disabled={template.isSystem}
+                title={template.isSystem ? 'System-Templates können nicht gelöscht werden' : 'Löschen'}
+                className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            {template.category === 'FULL_PAGE' && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+              >
+                <a href={`http://localhost:5173/?templateId=${template.id}`} target="_blank" rel="noopener noreferrer">
+                  <Eye className="h-3 w-3 mr-1" /> Öffnen
+                </a>
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 }

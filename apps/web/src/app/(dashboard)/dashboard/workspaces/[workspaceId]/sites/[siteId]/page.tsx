@@ -28,7 +28,6 @@ import {
   Home,
   Globe,
   Trash2,
-  Settings,
   MoreVertical,
   Copy,
   Eye,
@@ -97,11 +96,11 @@ export default async function SiteDetailPage({ params }: Props) {
           <h1 className="text-3xl font-bold mt-2 flex items-center gap-3">
             {site.name}
             <Badge variant={site.isPublished ? 'success' : 'secondary'}>
-              {site.isPublished ? 'Published' : 'Draft'}
+              {site.isPublished ? 'Live' : 'Entwurf'}
             </Badge>
           </h1>
           <p className="text-muted-foreground mt-1">
-            {site.description || 'No description'}
+            {site.description || 'Keine Beschreibung'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -109,16 +108,10 @@ export default async function SiteDetailPage({ params }: Props) {
             <Link href={`/s/${site.slug}`} target="_blank">
               <Button variant="outline">
                 <ExternalLink className="mr-2 h-4 w-4" />
-                View Site
+                Site ansehen
               </Button>
             </Link>
           )}
-          <Link href={`/dashboard/workspaces/${params.workspaceId}/sites/${params.siteId}/settings`}>
-            <Button variant="outline">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -132,7 +125,7 @@ export default async function SiteDetailPage({ params }: Props) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{site.pages.length}</p>
-                <p className="text-xs text-muted-foreground">Pages</p>
+                <p className="text-xs text-muted-foreground">Seiten</p>
               </div>
             </div>
           </CardContent>
@@ -145,7 +138,7 @@ export default async function SiteDetailPage({ params }: Props) {
               </div>
               <div>
                 <p className="text-2xl font-bold">{site.pages.filter(p => p.publishedRevisionId).length}</p>
-                <p className="text-xs text-muted-foreground">Published</p>
+                <p className="text-xs text-muted-foreground">Veröffentlicht</p>
               </div>
             </div>
           </CardContent>
@@ -173,7 +166,7 @@ export default async function SiteDetailPage({ params }: Props) {
                 <p className="text-sm font-medium">
                   {new Date(site.updatedAt).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-muted-foreground">Last Updated</p>
+                <p className="text-xs text-muted-foreground">Zuletzt aktualisiert</p>
               </div>
             </div>
           </CardContent>
@@ -185,34 +178,31 @@ export default async function SiteDetailPage({ params }: Props) {
         <TabsList>
           <TabsTrigger value="pages" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Pages
+            Seiten
           </TabsTrigger>
           <TabsTrigger value="collections" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
-            Collections
+            Sammlungen
           </TabsTrigger>
           <TabsTrigger value="design" className="flex items-center gap-2">
             <Palette className="h-4 w-4" />
             Design
           </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
+
         </TabsList>
 
         <TabsContent value="pages" className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-xl font-semibold">Pages</h2>
+              <h2 className="text-xl font-semibold">Seiten</h2>
               <p className="text-sm text-muted-foreground">
-                Manage all pages on your site
+                Verwalte alle Seiten deiner Website
               </p>
             </div>
             <CreatePageDialog workspaceId={params.workspaceId} siteId={params.siteId}>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                New Page
+                Neue Seite
               </Button>
             </CreatePageDialog>
           </div>
@@ -226,14 +216,14 @@ export default async function SiteDetailPage({ params }: Props) {
                     <FileText className="h-8 w-8 text-white" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">No pages yet</h3>
+                <h3 className="text-lg font-semibold mb-2">Noch keine Seiten</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Create your first page to start building your site. Each page can have its own design and content.
+                  Erstelle deine erste Seite, um mit dem Aufbau deiner Website zu beginnen. Jede Seite kann ihr eigenes Design und eigene Inhalte haben.
                 </p>
                 <CreatePageDialog workspaceId={params.workspaceId} siteId={params.siteId}>
                   <Button size="lg">
                     <Plus className="mr-2 h-5 w-5" />
-                    Create First Page
+                    Erste Seite erstellen
                   </Button>
                 </CreatePageDialog>
               </CardContent>
@@ -278,7 +268,7 @@ export default async function SiteDetailPage({ params }: Props) {
                         >
                           <Button size="sm" className="gap-2">
                             <Edit className="h-4 w-4" />
-                            Edit in Builder
+                            Im Builder bearbeiten
                           </Button>
                         </Link>
                         {page.publishedRevisionId && (
@@ -310,14 +300,14 @@ export default async function SiteDetailPage({ params }: Props) {
         <TabsContent value="collections" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-medium">Collections</h3>
+              <h3 className="text-lg font-medium">Sammlungen</h3>
               <p className="text-sm text-muted-foreground">
-                Manage your content collections (CMS)
+                Verwalte deine Inhaltssammlungen (CMS)
               </p>
             </div>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              New Collection
+              Neue Sammlung
             </Button>
           </div>
 
@@ -330,12 +320,12 @@ export default async function SiteDetailPage({ params }: Props) {
                     <Layers className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-medium">Blog Posts</h4>
-                    <p className="text-xs text-muted-foreground">12 items</p>
+                    <h4 className="font-medium">Blog-Beiträge</h4>
+                    <p className="text-xs text-muted-foreground">12 Einträge</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Articles, news, and updates
+                  Artikel, Neuigkeiten und Updates
                 </p>
               </CardContent>
             </Card>
@@ -347,12 +337,12 @@ export default async function SiteDetailPage({ params }: Props) {
                     <Layers className="h-5 w-5 text-green-500" />
                   </div>
                   <div>
-                    <h4 className="font-medium">Products</h4>
-                    <p className="text-xs text-muted-foreground">48 items</p>
+                    <h4 className="font-medium">Produkte</h4>
+                    <p className="text-xs text-muted-foreground">48 Einträge</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Product catalog and inventory
+                  Produktkatalog und Inventar
                 </p>
               </CardContent>
             </Card>
@@ -360,9 +350,9 @@ export default async function SiteDetailPage({ params }: Props) {
             <Card className="border-dashed hover:shadow-md transition-shadow cursor-pointer">
               <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full min-h-[140px]">
                 <Plus className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm font-medium">Create Collection</p>
+                <p className="text-sm font-medium">Sammlung erstellen</p>
                 <p className="text-xs text-muted-foreground">
-                  Add a new content type
+                  Neuen Inhaltstyp hinzufügen
                 </p>
               </CardContent>
             </Card>
@@ -371,9 +361,9 @@ export default async function SiteDetailPage({ params }: Props) {
 
         <TabsContent value="design" className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium">Design Settings</h3>
+            <h3 className="text-lg font-medium">Design-Einstellungen</h3>
             <p className="text-sm text-muted-foreground">
-              Configure your site&apos;s visual appearance
+              Konfiguriere das visuelle Erscheinungsbild deiner Website
             </p>
           </div>
 
@@ -382,36 +372,36 @@ export default async function SiteDetailPage({ params }: Props) {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Palette className="h-4 w-4" />
-                  Colors
+                  Farben
                 </CardTitle>
                 <CardDescription>
-                  Define your brand colors
+                  Definiere deine Markenfarben
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Primary Color</span>
+                  <span className="text-sm">Primärfarbe</span>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-md bg-primary border" />
                     <span className="text-sm text-muted-foreground">#3B82F6</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Secondary Color</span>
+                  <span className="text-sm">Sekundärfarbe</span>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-md bg-secondary border" />
                     <span className="text-sm text-muted-foreground">#6B7280</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Accent Color</span>
+                  <span className="text-sm">Akzentfarbe</span>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-md bg-green-500 border" />
                     <span className="text-sm text-muted-foreground">#22C55E</span>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Customize Colors
+                  Farben anpassen
                 </Button>
               </CardContent>
             </Card>
@@ -425,24 +415,24 @@ export default async function SiteDetailPage({ params }: Props) {
                   Typography
                 </CardTitle>
                 <CardDescription>
-                  Font settings for your site
+                  Schrifteinstellungen für deine Website
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Heading Font</span>
+                  <span className="text-sm">Überschrift-Schrift</span>
                   <span className="text-sm font-medium">Inter</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Body Font</span>
+                  <span className="text-sm">Text-Schrift</span>
                   <span className="text-sm">Inter</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Base Size</span>
+                  <span className="text-sm">Basisgröße</span>
                   <span className="text-sm text-muted-foreground">16px</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Customize Typography
+                  Typografie anpassen
                 </Button>
               </CardContent>
             </Card>
@@ -457,24 +447,24 @@ export default async function SiteDetailPage({ params }: Props) {
                   Layout
                 </CardTitle>
                 <CardDescription>
-                  Page layout and spacing
+                  Seitenlayout und Abstände
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Container Width</span>
+                  <span className="text-sm">Container-Breite</span>
                   <span className="text-sm text-muted-foreground">1200px</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Section Spacing</span>
+                  <span className="text-sm">Abschnitts-Abstand</span>
                   <span className="text-sm text-muted-foreground">80px</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Border Radius</span>
+                  <span className="text-sm">Eckenradius</span>
                   <span className="text-sm text-muted-foreground">8px</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Customize Layout
+                  Layout anpassen
                 </Button>
               </CardContent>
             </Card>
@@ -483,182 +473,30 @@ export default async function SiteDetailPage({ params }: Props) {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Globe className="h-4 w-4" />
-                  Global Styles
+                  Globale Stile
                 </CardTitle>
                 <CardDescription>
-                  Site-wide style settings
+                  Seitenweite Stil-Einstellungen
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Theme</span>
-                  <Badge>Light</Badge>
+                  <span className="text-sm">Farbschema</span>
+                  <Badge>Hell</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Dark Mode</span>
-                  <Badge variant="outline">Enabled</Badge>
+                  <span className="text-sm">Dunkelmodus</span>
+                  <Badge variant="outline">Aktiviert</Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Animations</span>
-                  <Badge variant="outline">Enabled</Badge>
+                  <span className="text-sm">Animationen</span>
+                  <Badge variant="outline">Aktiviert</Badge>
                 </div>
                 <Button variant="outline" size="sm" className="w-full">
-                  Customize Global Styles
+                  Globale Stile anpassen
                 </Button>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="settings" className="space-y-6">
-          <div>
-            <h3 className="text-lg font-medium">Site Settings</h3>
-            <p className="text-sm text-muted-foreground">
-              Configure your site&apos;s settings and metadata
-            </p>
-          </div>
-
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">General</CardTitle>
-                <CardDescription>
-                  Basic site information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Site Name</label>
-                    <input
-                      type="text"
-                      defaultValue={site.name}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">URL Slug</label>
-                    <div className="flex">
-                      <span className="px-3 py-2 bg-muted border border-r-0 rounded-l-md text-sm text-muted-foreground">
-                        /s/
-                      </span>
-                      <input
-                        type="text"
-                        defaultValue={site.slug}
-                        className="w-full px-3 py-2 border rounded-r-md text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <textarea
-                    rows={3}
-                    placeholder="A brief description of your site..."
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  Domain
-                </CardTitle>
-                <CardDescription>
-                  Configure your custom domain
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Custom Domain</label>
-                  <input
-                    type="text"
-                    defaultValue={site.customDomain || ''}
-                    placeholder="www.example.com"
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Point your domain&apos;s CNAME record to builderly.app
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                    <Clock className="h-3 w-3 mr-1" />
-                    DNS Pending
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    Verify Domain
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">SEO & Social</CardTitle>
-                <CardDescription>
-                  Optimize your site for search engines
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meta Title</label>
-                  <input
-                    type="text"
-                    placeholder="My Awesome Site"
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Meta Description</label>
-                  <textarea
-                    rows={2}
-                    placeholder="A brief description for search engines..."
-                    className="w-full px-3 py-2 border rounded-md text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Social Image</label>
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Drop an image here or click to upload
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Recommended: 1200x630px
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-red-200">
-              <CardHeader>
-                <CardTitle className="text-base text-red-600">Danger Zone</CardTitle>
-                <CardDescription>
-                  Irreversible actions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
-                  <div>
-                    <p className="font-medium">Delete Site</p>
-                    <p className="text-sm text-muted-foreground">
-                      Permanently delete this site and all its pages
-                    </p>
-                  </div>
-                  <Button variant="destructive" size="sm">
-                    Delete Site
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end">
-              <Button>Save Changes</Button>
-            </div>
           </div>
         </TabsContent>
       </Tabs>

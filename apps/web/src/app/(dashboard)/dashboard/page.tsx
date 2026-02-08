@@ -60,7 +60,7 @@ export default async function DashboardPage() {
     orderBy: { createdAt: 'desc' },
   });
 
-  type MembershipWithWorkspace = Awaited<ReturnType<typeof prisma.workspaceMember.findMany>>[number];
+  type MembershipWithWorkspace = (typeof memberships)[number];
   type WorkspaceWithRole = MembershipWithWorkspace['workspace'] & { role: MembershipWithWorkspace['role'] };
   
   const workspaces: WorkspaceWithRole[] = [];
@@ -88,9 +88,10 @@ export default async function DashboardPage() {
 
   // Plan limits
   const planLimits = {
-    FREE: { sites: 1, storage: 100 },
-    PRO: { sites: 5, storage: 1000 },
-    BUSINESS: { sites: 999, storage: 10000 },
+    FREE: { sites: 1, storage: 500 },
+    PRO: { sites: 3, storage: 2000 },
+    BUSINESS: { sites: 10, storage: 10000 },
+    ENTERPRISE: { sites: 999, storage: 50000 },
   };
 
   // If user has no workspaces, show onboarding
@@ -309,7 +310,7 @@ export default async function DashboardPage() {
         </div>
 
         {workspaces.map((workspace) => {
-          const limits = planLimits[workspace.plan];
+          const limits = planLimits[workspace.plan as keyof typeof planLimits];
           const sitesUsed = workspace._count.sites;
           const sitesPercent = Math.min(100, (sitesUsed / limits.sites) * 100);
           
@@ -325,10 +326,10 @@ export default async function DashboardPage() {
                       <CardTitle className="flex items-center gap-2">
                         {workspace.name}
                         <Badge 
-                          variant={workspace.plan === 'FREE' ? 'secondary' : workspace.plan === 'PRO' ? 'default' : 'success'}
+                          variant={workspace.plan === 'FREE' ? 'secondary' : workspace.plan === 'ENTERPRISE' ? 'success' : 'default'}
                           className="text-xs"
                         >
-                          {workspace.plan}
+                          {workspace.plan === 'FREE' ? 'Starter' : workspace.plan === 'ENTERPRISE' ? 'Enterprise' : workspace.plan === 'BUSINESS' ? 'Business' : 'Pro'}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
                           {workspace.role}

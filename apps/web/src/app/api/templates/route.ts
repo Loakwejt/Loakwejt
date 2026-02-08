@@ -39,21 +39,32 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform to match FullPageTemplate / TemplateDefinition format
-    const transformed = templates.map(t => ({
-      id: t.id,
-      name: t.name,
-      slug: t.slug,
-      description: t.description || '',
-      thumbnail: t.thumbnail,
-      category: t.category.toLowerCase().replace('_', '-'),
-      style: t.style || 'modern',
-      websiteType: t.websiteType || 'business',
-      websiteTypes: t.websiteType ? [t.websiteType] : ['business'],
-      tags: t.tags,
-      isPro: t.isPro,
-      tree: t.tree,
-      node: t.category !== 'FULL_PAGE' ? t.tree : undefined,
-    }));
+    const transformed = templates.map(t => {
+      const tree = t.tree as { root?: { children?: unknown[] } };
+      
+      // For section templates (non FULL_PAGE), extract the first child from root
+      // as the actual section node
+      let node = undefined;
+      if (t.category !== 'FULL_PAGE' && tree?.root?.children?.[0]) {
+        node = tree.root.children[0];
+      }
+      
+      return {
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        description: t.description || '',
+        thumbnail: t.thumbnail,
+        category: t.category.toLowerCase().replace('_', '-'),
+        style: t.style || 'modern',
+        websiteType: t.websiteType || 'business',
+        websiteTypes: t.websiteType ? [t.websiteType] : ['business'],
+        tags: t.tags,
+        isPro: t.isPro,
+        tree: t.tree,
+        node: node,
+      };
+    });
 
     return NextResponse.json({ data: transformed });
   } catch (error) {

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useEditorStore, Breakpoint } from '../store/editor-store';
 import { CanvasNode } from './CanvasNode';
@@ -11,6 +11,7 @@ import {
   Menu, 
   X, 
   ChevronUp,
+  ChevronRight,
   Mail,
   Phone,
   MapPin,
@@ -19,6 +20,12 @@ import {
   Twitter,
   Linkedin,
   Youtube,
+  Loader2,
+  Home,
+  Search,
+  ShoppingCart,
+  Heart,
+  User,
 } from 'lucide-react';
 import { generateCssVariables } from '@builderly/core';
 import type { SiteSettings } from '@builderly/core';
@@ -31,7 +38,18 @@ const DEVICE_CONFIG: Record<Breakpoint, { width: string; icon: React.ReactNode; 
 };
 
 export function Canvas() {
-  const { tree, breakpoint, zoom, isPreviewMode, selectNode, siteSettings } = useEditorStore();
+  const { 
+    tree, 
+    breakpoint, 
+    zoom, 
+    isPreviewMode, 
+    selectNode, 
+    siteSettings, 
+    isLoadingPage, 
+    pageName,
+    isMobileSidebarOpen,
+    setMobileSidebarOpen,
+  } = useEditorStore();
   const { overId, activeId } = useDndState();
 
   const config = DEVICE_CONFIG[breakpoint];
@@ -156,33 +174,45 @@ export function Canvas() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Device indicator */}
+    <div className="flex flex-col h-full relative">
+      {/* Loading overlay for smooth page transitions */}
+      {isLoadingPage && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-all duration-300">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">Seite wird geladen...</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Device indicator - compact Photoshop style */}
       {!isPreviewMode && (
-        <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-1.5 py-1.5 text-[10px] text-muted-foreground bg-[hsl(220,5%,20%)] border-b border-border">
           {config.icon}
-          <span>{config.label}</span>
+          <span className="font-medium">{config.label}</span>
           {breakpoint !== 'desktop' && (
-            <span className="text-muted-foreground/60">({config.width})</span>
+            <span className="text-muted-foreground/60">• {config.width}</span>
           )}
+          <span className="text-muted-foreground/60 ml-2">@ {zoom}%</span>
         </div>
       )}
 
-      {/* Canvas container */}
+      {/* Canvas container - checkerboard from CSS */}
       <div
         className={cn(
-          'flex-1 flex justify-center overflow-auto',
-          !isPreviewMode && 'p-4 bg-[repeating-linear-gradient(45deg,#f5f5f5_0,#f5f5f5_1px,transparent_0,transparent_50%)] bg-[length:10px_10px]'
+          'flex-1 flex justify-center overflow-auto p-6',
+          !isPreviewMode && 'editor-canvas'
         )}
         onClick={handleCanvasClick}
       >
         {/* Device frame */}
         <div
           className={cn(
-            'relative shadow-2xl overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col',
-            breakpoint === 'mobile' && 'rounded-[2rem] border-[8px] border-gray-800',
-            breakpoint === 'tablet' && 'rounded-xl border-[6px] border-gray-700',
-            isPreviewMode ? '' : 'ring-1 ring-border',
+            'relative overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col',
+            breakpoint === 'mobile' && 'rounded-[2rem] border-[8px] border-gray-800 shadow-xl',
+            breakpoint === 'tablet' && 'rounded-xl border-[6px] border-gray-700 shadow-xl',
+            breakpoint === 'desktop' && 'shadow-lg',
+            !isPreviewMode && 'ring-1 ring-white/10',
             isOver && activeId && 'ring-2 ring-primary'
           )}
           style={{
@@ -198,6 +228,14 @@ export function Canvas() {
           {/* Notch for mobile */}
           {breakpoint === 'mobile' && !isPreviewMode && (
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-xl z-50" />
+          )}
+
+          {/* Mobile Sidebar Overlay */}
+          {(breakpoint === 'mobile' || breakpoint === 'tablet') && isMobileSidebarOpen && (
+            <MobileSidebar 
+              onClose={() => setMobileSidebarOpen(false)} 
+              isPreviewMode={isPreviewMode}
+            />
           )}
 
           {/* Image/Video overlay */}
@@ -789,4 +827,101 @@ function generateAnimationStyles(settings: SiteSettings): string {
   }
 
   return css;
+}
+
+// ============================================================================
+// MOBILE SIDEBAR COMPONENT
+// ============================================================================
+
+interface MobileSidebarProps {
+  onClose: () => void;
+  isPreviewMode: boolean;
+}
+
+function MobileSidebar({ onClose }: MobileSidebarProps) {
+  const navItems = [
+    { id: 'elektronik', text: 'Elektronik', href: '/elektronik' },
+    { id: 'haus-garten', text: 'Haus & Garten', href: '/haus-garten' },
+    { id: 'sport-outdoor', text: 'Sport & Outdoor', href: '/sport-outdoor' },
+    { id: 'beauty', text: 'Beauty', href: '/beauty' },
+    { id: 'baby-kind', text: 'Baby & Kind', href: '/baby-kind' },
+    { id: 'marken', text: 'Marken', href: '/marken' },
+    { id: 'sale', text: 'SALE', href: '/sale', isSpecial: true },
+  ];
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 z-[200]"
+        onClick={onClose}
+        style={{ animation: 'fadeIn 200ms ease-out' }}
+      />
+      
+      {/* Sidebar Panel */}
+      <div 
+        className="fixed left-0 top-0 bottom-0 w-[280px] bg-white z-[201] shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+        style={{ animation: 'slideInLeft 250ms ease-out' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <span className="text-xl font-bold tracking-tight">NEXUS</span>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Navigation - Categories */}
+        <nav className="flex-1 overflow-y-auto">
+          <div className="py-3">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategorien</div>
+            <ul>
+              {navItems.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={item.href}
+                    className={cn(
+                      'flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors border-l-2 border-transparent hover:border-gray-300',
+                      item.isSpecial && 'text-red-600 font-semibold'
+                    )}
+                  >
+                    <span className="text-[15px]">{item.text}</span>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+
+        {/* Footer Actions */}
+        <div className="border-t border-gray-200 p-4 space-y-1 bg-gray-50">
+          <a href="/login" className="flex items-center gap-3 px-3 py-2.5 hover:bg-white rounded-lg transition-colors">
+            <User className="h-5 w-5 text-gray-600" />
+            <span className="text-sm">Anmelden</span>
+          </a>
+          <a href="/wishlist" className="flex items-center gap-3 px-3 py-2.5 hover:bg-white rounded-lg transition-colors">
+            <Heart className="h-5 w-5 text-gray-600" />
+            <span className="text-sm">Wunschliste</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
+    </>
+  );
 }

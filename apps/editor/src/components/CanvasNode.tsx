@@ -20,6 +20,7 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
     isPreviewMode,
     selectNode,
     hoverNode,
+    breakpoint,
   } = useEditorStore();
 
   const { activeId, overId } = useDndState();
@@ -78,8 +79,8 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
     <CanvasNode key={child.id} node={child} />
   ));
 
-  // Render based on component type
-  const content = renderComponent(node, children, definition, isPreviewMode);
+  // Render based on component type (pass breakpoint for responsive styles)
+  const content = renderComponent(node, children, definition, isPreviewMode, breakpoint);
 
   if (isPreviewMode) {
     // Wrap in AnimatedWrapper for preview mode
@@ -94,8 +95,11 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
   }
 
   // Determine if this is an inline/non-full-width element
-  const isInlineElement = ['Button', 'Badge', 'Link', 'Text', 'Heading'].includes(node.type);
-  const isFullWidth = node.props.fullWidth === true || node.style?.base?.width === '100%';
+  // These elements' width should be controlled by their own style, not forced to w-full
+  const isInlineElement = ['Button', 'Badge', 'Link', 'Text', 'Heading', 'Input', 'Textarea', 'Stack', 'Container'].includes(node.type);
+  // Only force w-full if explicitly set to 100% AND no maxWidth is set
+  const hasMaxWidth = !!node.style?.base?.maxWidth;
+  const isFullWidth = (node.props.fullWidth === true || node.style?.base?.width === '100%') && !hasMaxWidth;
 
   return (
     <div
@@ -167,6 +171,11 @@ function executeAction(action: { type: string; [key: string]: unknown }) {
       window.location.href = pageSlug;
       break;
     }
+    case 'toggleMobileSidebar': {
+      // Toggle mobile sidebar using the store
+      useEditorStore.getState().toggleMobileSidebar();
+      break;
+    }
     default:
       console.log('Action not implemented:', action.type);
   }
@@ -191,9 +200,10 @@ function renderComponent(
   node: BuilderNode,
   children: React.ReactNode,
   definition: ReturnType<typeof componentRegistry.get>,
-  isPreviewMode: boolean = false
+  isPreviewMode: boolean = false,
+  breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ): React.ReactNode {
-  const { classes: styleClasses, inlineStyles } = mapStyles(node.style);
+  const { classes: styleClasses, inlineStyles } = mapStyles(node.style, breakpoint);
   const actionHandler = createActionHandler(node.actions as Array<{ event: string; action: { type: string; [key: string]: unknown } }>, isPreviewMode);
 
   switch (node.type) {
@@ -256,6 +266,9 @@ function renderComponent(
       const centered = (node.props.centered as boolean) ?? true;
       const minHeight = (node.props.minHeight as string) || 'auto';
       
+      // Check if explicit width is set in styles
+      const hasExplicitWidth = node.style?.base?.width && node.style.base.width !== '100%';
+      
       const maxWidthMap: Record<string, string> = {
         xs: 'max-w-xs',
         sm: 'max-w-screen-sm',
@@ -275,16 +288,20 @@ function renderComponent(
       // Check if container has a background color - if so, wrap it in a full-width div
       const hasBackground = inlineStyles.backgroundColor || styleClasses.includes('bg-');
       
+      // Extract only background for wrapper, all other styles go on content
+      const { backgroundColor, ...layoutStyles } = inlineStyles;
+      
       const innerContent = (
         <div 
           className={cn(
-            'w-full',
-            centered && 'mx-auto',
-            maxWidthMap[maxWidth] || 'max-w-screen-lg',
+            // Only use w-full if no explicit width is set
+            !hasExplicitWidth && 'w-full',
+            centered && !hasExplicitWidth && 'mx-auto',
+            !hasExplicitWidth && (maxWidthMap[maxWidth] || 'max-w-screen-lg'),
             minHeightMap[minHeight],
-            !hasBackground && styleClasses
+            styleClasses // Always apply styleClasses here for flex/align to work
           )}
-          style={!hasBackground ? inlineStyles : undefined}
+          style={layoutStyles}
         >
           {children}
         </div>
@@ -294,8 +311,8 @@ function renderComponent(
       if (hasBackground) {
         return (
           <div 
-            className={cn('w-full', styleClasses)}
-            style={inlineStyles}
+            className="w-full"
+            style={{ backgroundColor }}
           >
             {innerContent}
           </div>
@@ -306,13 +323,58 @@ function renderComponent(
     }
 
     case 'Stack': {
-      const direction = (node.props.direction as string) || 'column';
-      const gap = (node.props.gap as string) || 'md';
-      const justify = (node.props.justify as string) || 'start';
-      const align = (node.props.align as string) || 'stretch';
+      // Read layout from style.base (Style Tab) with fallback to props for backwards compatibility
+      const styleBase = node.style?.base || {};
+      
+      // Map CSS flexDirection values to our direction prop values
+      const cssFlexDirection = styleBase.flexDirection as string;
+      let direction = (node.props.direction as string) || 'column';
+      if (cssFlexDirection) {
+        direction = cssFlexDirection; // Use CSS value directly (row, column, row-reverse, column-reverse)
+      }
+      
+      // Map CSS justifyContent values
+      const cssJustify = styleBase.justifyContent as string;
+      let justify = (node.props.justify as string) || 'start';
+      if (cssJustify) {
+        // Map CSS values to our shorthand
+        const justifyFromCss: Record<string, string> = {
+          'flex-start': 'start',
+          'center': 'center',
+          'flex-end': 'end',
+          'space-between': 'between',
+          'space-around': 'around',
+          'space-evenly': 'evenly',
+        };
+        justify = justifyFromCss[cssJustify] || justify;
+      }
+      
+      // Map CSS alignItems values
+      const cssAlign = styleBase.alignItems as string;
+      let align = (node.props.align as string) || 'stretch';
+      if (cssAlign) {
+        const alignFromCss: Record<string, string> = {
+          'flex-start': 'start',
+          'center': 'center',
+          'flex-end': 'end',
+          'stretch': 'stretch',
+          'baseline': 'baseline',
+        };
+        align = alignFromCss[cssAlign] || align;
+      }
+      
+      // Gap from style or props
+      const cssGap = styleBase.gap as string;
+      let gap = (node.props.gap as string) || 'md';
+      if (cssGap) {
+        // If it's a CSS gap value like '1rem', use it directly in inline styles
+        gap = cssGap;
+      }
+      
+      // Wrap
+      const cssWrap = styleBase.flexWrap as string;
       const wrapProp = node.props.wrap;
-      // Support both boolean true and string 'wrap'
-      const wrap = wrapProp === true || wrapProp === 'wrap';
+      const wrap = cssWrap === 'wrap' || cssWrap === 'wrap-reverse' || wrapProp === true || wrapProp === 'wrap';
       
       const directionMap: Record<string, string> = {
         row: 'flex-row',
@@ -336,18 +398,23 @@ function renderComponent(
         baseline: 'items-baseline',
       };
       
+      // Check if gap is a CSS value (contains 'rem', 'px', etc.) or a size token
+      const isCssGap = typeof gap === 'string' && (gap.includes('rem') || gap.includes('px') || gap.includes('em'));
+      const gapStyle = isCssGap ? { gap } : {};
+      const gapClass = isCssGap ? '' : `gap-${mapSpacing(gap)}`;
+      
       return (
         <div 
           className={cn(
             'flex',
             directionMap[direction],
-            `gap-${mapSpacing(gap)}`,
+            gapClass,
             justifyMap[justify],
             alignMap[align],
             wrap && 'flex-wrap',
             styleClasses
           )}
-          style={inlineStyles}
+          style={{ ...inlineStyles, ...gapStyle }}
         >
           {children}
         </div>
@@ -355,9 +422,36 @@ function renderComponent(
     }
 
     case 'Grid': {
+      // Read from style.base with fallback to props for backwards compatibility
+      const styleBase = node.style?.base || {};
+      
+      // Check if gridTemplateColumns is set in styles (responsive)
+      const hasResponsiveColumns = 
+        inlineStyles.gridTemplateColumns || 
+        styleBase.gridTemplateColumns;
+      
+      // Columns from props (Grid-specific, not a general CSS property)
       const columns = (node.props.columns as number) || 3;
-      const gridGap = (node.props.gap as string) || 'md';
-      const alignItems = (node.props.alignItems as string) || 'stretch';
+      
+      // Gap from style or props
+      const cssGap = styleBase.gap as string;
+      let gridGap = (node.props.gap as string) || 'md';
+      if (cssGap) {
+        gridGap = cssGap;
+      }
+      
+      // AlignItems from style or props
+      const cssAlign = styleBase.alignItems as string;
+      let alignItems = (node.props.alignItems as string) || 'stretch';
+      if (cssAlign) {
+        const alignFromCss: Record<string, string> = {
+          'start': 'start',
+          'center': 'center',
+          'end': 'end',
+          'stretch': 'stretch',
+        };
+        alignItems = alignFromCss[cssAlign] || alignItems;
+      }
       
       const alignMap: Record<string, string> = {
         start: 'items-start',
@@ -366,16 +460,25 @@ function renderComponent(
         stretch: 'items-stretch',
       };
       
+      // Check if gap is a CSS value
+      const isCssGap = typeof gridGap === 'string' && (gridGap.includes('rem') || gridGap.includes('px') || gridGap.includes('em'));
+      const gapStyle = isCssGap ? { gap: gridGap } : {};
+      const gapClass = isCssGap ? '' : `gap-${mapSpacing(gridGap)}`;
+      
+      // If responsive gridTemplateColumns is set, use CSS grid directly
+      // Otherwise use Tailwind classes
+      const gridColsClass = hasResponsiveColumns ? '' : `grid-cols-${Math.min(columns, 12)}`;
+      
       return (
         <div 
           className={cn(
             'grid',
-            `grid-cols-${Math.min(columns, 12)}`,
-            `gap-${mapSpacing(gridGap)}`,
+            gridColsClass,
+            gapClass,
             alignMap[alignItems],
             styleClasses
           )}
-          style={inlineStyles}
+          style={{ ...inlineStyles, ...gapStyle }}
         >
           {children}
         </div>
@@ -519,9 +622,25 @@ function renderComponent(
       const inputLabel = (node.props.label as string) || '';
       const placeholder = (node.props.placeholder as string) || '';
       const inputType = (node.props.type as string) || 'text';
+      
+      // If no label, apply styles directly to input
+      if (!inputLabel) {
+        return (
+          <input
+            type={inputType}
+            placeholder={placeholder}
+            className={cn(
+              'flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              styleClasses
+            )}
+            style={inlineStyles}
+          />
+        );
+      }
+      
       return (
         <div className={cn('space-y-2', styleClasses)} style={inlineStyles}>
-          {inputLabel && <label className="text-sm font-medium">{inputLabel}</label>}
+          <label className="text-sm font-medium">{inputLabel}</label>
           <input
             type={inputType}
             placeholder={placeholder}
@@ -1080,37 +1199,82 @@ interface StyleResult {
   inlineStyles: React.CSSProperties;
 }
 
-function mapStyleToClasses(style: BuilderStyle): string {
-  return mapStyles(style).classes;
+function mapStyleToClasses(style: BuilderStyle, breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'): string {
+  return mapStyles(style, breakpoint).classes;
 }
 
-function mapStyles(style: BuilderStyle): StyleResult {
-  const props = style.base;
+/**
+ * Maps BuilderStyle to CSS classes and inline styles
+ * Merges base styles with breakpoint-specific overrides
+ */
+function mapStyles(style: BuilderStyle, breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'): StyleResult {
+  // Merge base with breakpoint-specific styles
+  // For mobile: base + mobile
+  // For tablet: base + tablet
+  // For desktop: base + desktop (if exists)
+  let props = { ...style.base };
+  
+  if (breakpoint === 'mobile' && style.mobile) {
+    props = { ...props, ...style.mobile };
+  } else if (breakpoint === 'tablet' && style.tablet) {
+    props = { ...props, ...style.tablet };
+  } else if (breakpoint === 'desktop' && style.desktop) {
+    props = { ...props, ...style.desktop };
+  }
+  
   if (!props) return { classes: '', inlineStyles: {} };
 
   const classes: string[] = [];
   const inlineStyles: React.CSSProperties = {};
 
+  // Helper to handle spacing props - use inline style if CSS value, otherwise Tailwind class
+  const handleSpacing = (prop: string | undefined, classPrefix: string, styleProp: keyof React.CSSProperties) => {
+    if (!prop) return;
+    if (isCSSValue(prop)) {
+      (inlineStyles as Record<string, string>)[styleProp as string] = prop;
+    } else {
+      classes.push(`${classPrefix}-${mapSpacing(prop)}`);
+    }
+  };
+
   // Padding
-  if (props.padding) classes.push(`p-${mapSpacing(props.padding)}`);
-  if (props.paddingX) classes.push(`px-${mapSpacing(props.paddingX)}`);
-  if (props.paddingY) classes.push(`py-${mapSpacing(props.paddingY)}`);
-  if (props.paddingTop) classes.push(`pt-${mapSpacing(props.paddingTop)}`);
-  if (props.paddingBottom) classes.push(`pb-${mapSpacing(props.paddingBottom)}`);
-  if (props.paddingLeft) classes.push(`pl-${mapSpacing(props.paddingLeft)}`);
-  if (props.paddingRight) classes.push(`pr-${mapSpacing(props.paddingRight)}`);
+  handleSpacing(props.padding, 'p', 'padding');
+  handleSpacing(props.paddingX, 'px', 'paddingLeft'); // px maps to both paddingLeft and paddingRight
+  if (props.paddingX && isCSSValue(props.paddingX)) {
+    inlineStyles.paddingRight = props.paddingX;
+  }
+  handleSpacing(props.paddingY, 'py', 'paddingTop'); // py maps to both paddingTop and paddingBottom
+  if (props.paddingY && isCSSValue(props.paddingY)) {
+    inlineStyles.paddingBottom = props.paddingY;
+  }
+  handleSpacing(props.paddingTop, 'pt', 'paddingTop');
+  handleSpacing(props.paddingBottom, 'pb', 'paddingBottom');
+  handleSpacing(props.paddingLeft, 'pl', 'paddingLeft');
+  handleSpacing(props.paddingRight, 'pr', 'paddingRight');
 
   // Margin
-  if (props.margin) classes.push(`m-${mapSpacing(props.margin)}`);
-  if (props.marginX) classes.push(`mx-${mapSpacing(props.marginX)}`);
-  if (props.marginY) classes.push(`my-${mapSpacing(props.marginY)}`);
-  if (props.marginTop) classes.push(`mt-${mapSpacing(props.marginTop)}`);
-  if (props.marginBottom) classes.push(`mb-${mapSpacing(props.marginBottom)}`);
-  if (props.marginLeft) classes.push(`ml-${mapSpacing(props.marginLeft)}`);
-  if (props.marginRight) classes.push(`mr-${mapSpacing(props.marginRight)}`);
+  handleSpacing(props.margin, 'm', 'margin');
+  handleSpacing(props.marginX, 'mx', 'marginLeft');
+  if (props.marginX && isCSSValue(props.marginX)) {
+    inlineStyles.marginRight = props.marginX;
+  }
+  handleSpacing(props.marginY, 'my', 'marginTop');
+  if (props.marginY && isCSSValue(props.marginY)) {
+    inlineStyles.marginBottom = props.marginY;
+  }
+  handleSpacing(props.marginTop, 'mt', 'marginTop');
+  handleSpacing(props.marginBottom, 'mb', 'marginBottom');
+  handleSpacing(props.marginLeft, 'ml', 'marginLeft');
+  handleSpacing(props.marginRight, 'mr', 'marginRight');
 
   // Gap
-  if (props.gap) classes.push(`gap-${mapSpacing(props.gap)}`);
+  if (props.gap) {
+    if (isCSSValue(props.gap)) {
+      inlineStyles.gap = props.gap;
+    } else {
+      classes.push(`gap-${mapSpacing(props.gap)}`);
+    }
+  }
 
   // Theme Colors (Tailwind)
   // Note: 'background' value means "use page background" so we skip it to let the global background show through
@@ -1150,7 +1314,12 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.backgroundRepeat = props.backgroundRepeat || 'no-repeat';
   }
 
-  // Gradient Background
+  // Background (for gradients and other CSS background values)
+  if (props.background) {
+    inlineStyles.background = props.background;
+  }
+
+  // Gradient Background (alias for background)
   if (props.gradient) {
     inlineStyles.background = props.gradient;
   }
@@ -1211,23 +1380,47 @@ function mapStyles(style: BuilderStyle): StyleResult {
 
   // Object Fit (for images)
   if (props.objectFit) {
-    classes.push(`object-${props.objectFit}`);
+    if (props.objectFit === 'contain' || props.objectFit === 'cover' || props.objectFit === 'fill' || props.objectFit === 'none' || props.objectFit === 'scale-down') {
+      inlineStyles.objectFit = props.objectFit as React.CSSProperties['objectFit'];
+    } else {
+      classes.push(`object-${props.objectFit}`);
+    }
   }
 
-  // Typography
-  if (props.textAlign) classes.push(`text-${props.textAlign}`);
-  if (props.fontSize) classes.push(`text-${props.fontSize}`);
-  if (props.fontWeight) classes.push(`font-${props.fontWeight}`);
-  if (props.lineHeight) classes.push(`leading-${props.lineHeight}`);
-  if (props.letterSpacing) classes.push(`tracking-${props.letterSpacing}`);
+  // Typography - support both tokens and CSS values
+  if (props.textAlign) {
+    inlineStyles.textAlign = props.textAlign as React.CSSProperties['textAlign'];
+  }
+  if (props.fontSize) {
+    if (isCSSValue(props.fontSize)) {
+      inlineStyles.fontSize = props.fontSize;
+    } else {
+      classes.push(`text-${props.fontSize}`);
+    }
+  }
+  if (props.fontWeight) {
+    if (/^\d+$/.test(props.fontWeight)) {
+      inlineStyles.fontWeight = parseInt(props.fontWeight) as React.CSSProperties['fontWeight'];
+    } else {
+      classes.push(`font-${props.fontWeight}`);
+    }
+  }
+  if (props.lineHeight) {
+    if (isCSSValue(props.lineHeight) || /^[\d.]+$/.test(props.lineHeight)) {
+      inlineStyles.lineHeight = props.lineHeight;
+    } else {
+      classes.push(`leading-${props.lineHeight}`);
+    }
+  }
+  if (props.letterSpacing) {
+    if (isCSSValue(props.letterSpacing)) {
+      inlineStyles.letterSpacing = props.letterSpacing;
+    } else {
+      classes.push(`tracking-${props.letterSpacing}`);
+    }
+  }
   if (props.textDecoration) {
-    const decoMap: Record<string, string> = {
-      underline: 'underline',
-      'line-through': 'line-through',
-      none: 'no-underline',
-    };
-    const decoClass = decoMap[props.textDecoration];
-    if (decoClass) classes.push(decoClass);
+    inlineStyles.textDecoration = props.textDecoration;
   }
   if (props.textTransform) {
     const transformMap: Record<string, string> = {
@@ -1240,9 +1433,30 @@ function mapStyles(style: BuilderStyle): StyleResult {
     if (transformClass) classes.push(transformClass);
   }
 
-  // Border
-  if (props.borderWidth) classes.push(`border-${props.borderWidth}`);
-  if (props.borderRadius) classes.push(`rounded-${props.borderRadius}`);
+  // Border - support both tokens and CSS values
+  if (props.border) {
+    inlineStyles.border = props.border;
+  }
+  if (props.borderBottom) {
+    inlineStyles.borderBottom = props.borderBottom;
+  }
+  if (props.borderTop) {
+    inlineStyles.borderTop = props.borderTop;
+  }
+  if (props.borderWidth) {
+    if (isCSSValue(props.borderWidth)) {
+      inlineStyles.borderWidth = props.borderWidth;
+    } else {
+      classes.push(`border-${props.borderWidth}`);
+    }
+  }
+  if (props.borderRadius) {
+    if (isCSSValue(props.borderRadius)) {
+      inlineStyles.borderRadius = props.borderRadius;
+    } else {
+      classes.push(`rounded-${props.borderRadius}`);
+    }
+  }
   if (props.borderStyle) {
     const styleMap: Record<string, string> = {
       solid: 'border-solid',
@@ -1270,31 +1484,29 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.opacity = props.opacity / 100;
   }
 
-  // Display
+  // Display - support both tokens and CSS values
   if (props.display) {
-    const displayMap: Record<string, string> = {
-      flex: 'flex',
-      block: 'block',
-      inline: 'inline',
-      'inline-block': 'inline-block',
-      grid: 'grid',
-      hidden: 'hidden',
-    };
-    const displayClass = displayMap[props.display];
-    if (displayClass) classes.push(displayClass);
+    // Use inline style for all display values for consistency
+    inlineStyles.display = props.display as React.CSSProperties['display'];
   }
 
-  // Position
+  // Position - support both tokens and CSS values
   if (props.position) {
-    const posMap: Record<string, string> = {
-      relative: 'relative',
-      absolute: 'absolute',
-      fixed: 'fixed',
-      sticky: 'sticky',
-      static: 'static',
-    };
-    const posClass = posMap[props.position];
-    if (posClass) classes.push(posClass);
+    inlineStyles.position = props.position as React.CSSProperties['position'];
+  }
+  
+  // Position values (top, left, right, bottom)
+  if (props.top) {
+    inlineStyles.top = props.top;
+  }
+  if (props.left) {
+    inlineStyles.left = props.left;
+  }
+  if (props.right) {
+    inlineStyles.right = props.right;
+  }
+  if (props.bottom) {
+    inlineStyles.bottom = props.bottom;
   }
 
   // Z-Index (inline for arbitrary values)
@@ -1335,30 +1547,45 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.maxHeight = props.maxHeight;
   }
 
-  // Flexbox
-  if (props.flexDirection) classes.push(`flex-${props.flexDirection}`);
+  // Flexbox - support both tokens and CSS values
+  if (props.flexDirection) {
+    // Direct CSS values like 'row', 'column'
+    inlineStyles.flexDirection = props.flexDirection as React.CSSProperties['flexDirection'];
+  }
   if (props.alignItems) {
-    const alignMap: Record<string, string> = {
-      start: 'items-start',
-      center: 'items-center',
-      end: 'items-end',
-      stretch: 'items-stretch',
-      baseline: 'items-baseline',
-    };
-    const alignClass = alignMap[props.alignItems];
-    if (alignClass) classes.push(alignClass);
+    // Check for CSS values first
+    const cssAlignValues = ['flex-start', 'flex-end', 'center', 'stretch', 'baseline'];
+    if (cssAlignValues.includes(props.alignItems)) {
+      inlineStyles.alignItems = props.alignItems as React.CSSProperties['alignItems'];
+    } else {
+      const alignMap: Record<string, string> = {
+        start: 'items-start',
+        center: 'items-center',
+        end: 'items-end',
+        stretch: 'items-stretch',
+        baseline: 'items-baseline',
+      };
+      const alignClass = alignMap[props.alignItems];
+      if (alignClass) classes.push(alignClass);
+    }
   }
   if (props.justifyContent) {
-    const justifyMap: Record<string, string> = {
-      start: 'justify-start',
-      center: 'justify-center',
-      end: 'justify-end',
-      between: 'justify-between',
-      around: 'justify-around',
-      evenly: 'justify-evenly',
-    };
-    const justifyClass = justifyMap[props.justifyContent];
-    if (justifyClass) classes.push(justifyClass);
+    // Check for CSS values first
+    const cssJustifyValues = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'];
+    if (cssJustifyValues.includes(props.justifyContent)) {
+      inlineStyles.justifyContent = props.justifyContent as React.CSSProperties['justifyContent'];
+    } else {
+      const justifyMap: Record<string, string> = {
+        start: 'justify-start',
+        center: 'justify-center',
+        end: 'justify-end',
+        between: 'justify-between',
+        around: 'justify-around',
+        evenly: 'justify-evenly',
+      };
+      const justifyClass = justifyMap[props.justifyContent];
+      if (justifyClass) classes.push(justifyClass);
+    }
   }
   if (props.flexWrap) classes.push(`flex-${props.flexWrap}`);
   if (props.flexGrow !== undefined) {
@@ -1399,9 +1626,21 @@ function mapStyles(style: BuilderStyle): StyleResult {
   if (props.gridRows) classes.push(`grid-rows-${props.gridRows}`);
   if (props.gridColumnSpan) classes.push(`col-span-${props.gridColumnSpan}`);
   if (props.gridRowSpan) classes.push(`row-span-${props.gridRowSpan}`);
+  
+  // Grid/Flex place-items (for centering)
+  if (props.placeItems) {
+    inlineStyles.placeItems = props.placeItems;
+  }
+  
+  // Flex item - flex shorthand
+  if (props.flex) {
+    inlineStyles.flex = props.flex;
+  }
 
-  // Cursor
-  if (props.cursor) classes.push(`cursor-${props.cursor}`);
+  // Cursor - use inline style for flexibility
+  if (props.cursor) {
+    inlineStyles.cursor = props.cursor as React.CSSProperties['cursor'];
+  }
 
   // Transition Duration (for hover effects)
   if (props.transitionDuration) {
@@ -1411,21 +1650,21 @@ function mapStyles(style: BuilderStyle): StyleResult {
   }
 
   // Hover Properties (stored as CSS custom properties for :hover via class)
-  const hoverStyles: React.CSSProperties = {};
+  const hoverStyles: Record<string, string> = {};
   if (props.hoverBackgroundColor) {
-    hoverStyles['--hover-bg' as string] = props.hoverBackgroundColor;
+    hoverStyles['--hover-bg'] = props.hoverBackgroundColor;
     classes.push('hover-bg-custom');
   }
   if (props.hoverTextColor) {
-    hoverStyles['--hover-color' as string] = props.hoverTextColor;
+    hoverStyles['--hover-color'] = props.hoverTextColor;
     classes.push('hover-color-custom');
   }
   if (props.hoverBorderColor) {
-    hoverStyles['--hover-border' as string] = props.hoverBorderColor;
+    hoverStyles['--hover-border'] = props.hoverBorderColor;
     classes.push('hover-border-custom');
   }
   if (props.hoverScale) {
-    hoverStyles['--hover-scale' as string] = `${Number(props.hoverScale) / 100}`;
+    hoverStyles['--hover-scale'] = `${Number(props.hoverScale) / 100}`;
     classes.push('hover-scale-custom');
   }
   if (props.hoverShadow) {
@@ -1436,11 +1675,11 @@ function mapStyles(style: BuilderStyle): StyleResult {
       xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
       glow: '0 0 20px 5px var(--hover-bg, rgba(255,255,255,0.3))',
     };
-    hoverStyles['--hover-shadow' as string] = shadowMap[props.hoverShadow] || props.hoverShadow;
+    hoverStyles['--hover-shadow'] = shadowMap[props.hoverShadow] || props.hoverShadow;
     classes.push('hover-shadow-custom');
   }
   if (props.hoverOpacity !== undefined) {
-    hoverStyles['--hover-opacity' as string] = `${Number(props.hoverOpacity) / 100}`;
+    hoverStyles['--hover-opacity'] = `${Number(props.hoverOpacity) / 100}`;
     classes.push('hover-opacity-custom');
   }
 
@@ -1464,4 +1703,10 @@ function mapSpacing(token: string | undefined): string {
     auto: 'auto',
   };
   return map[token] || '4';
+}
+
+// Check if a value is a CSS value (px, rem, %, etc.) vs a token
+function isCSSValue(value: string | undefined): boolean {
+  if (!value) return false;
+  return value.includes('px') || value.includes('rem') || value.includes('%') || value.includes('em') || value.includes('vh') || value.includes('vw') || /^\d+$/.test(value);
 }

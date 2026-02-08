@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const UpdateCollectionSchema = z.object({
@@ -74,6 +75,12 @@ export async function PATCH(
       },
     });
 
+    await createAuditLog({
+      action: 'COLLECTION_UPDATED',
+      entity: 'Collection',
+      entityId: params.collectionId,
+    });
+
     return NextResponse.json(collection);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -110,6 +117,13 @@ export async function DELETE(
     // Delete collection (records will be cascade deleted)
     await prisma.collection.delete({
       where: { id: params.collectionId },
+    });
+
+    await createAuditLog({
+      action: 'COLLECTION_DELETED',
+      entity: 'Collection',
+      entityId: params.collectionId,
+      details: { name: existing.name },
     });
 
     return NextResponse.json({ success: true });

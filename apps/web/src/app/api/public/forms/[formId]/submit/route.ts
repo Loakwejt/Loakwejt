@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
+import { createAuditLog } from '@/lib/audit';
 import { rateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 import { sanitizeObject } from '@/lib/sanitize';
 
@@ -88,7 +89,7 @@ export async function POST(
       where: { id: params.formId },
       include: {
         site: {
-          select: { id: true, isPublished: true },
+          select: { id: true, isPublished: true, workspaceId: true, name: true },
         },
       },
     });
@@ -114,7 +115,7 @@ export async function POST(
     });
 
     // Validate against form schema if defined
-    const schema = form.schema as FormSchema;
+    const schema = form.schema as unknown as FormSchema;
     if (schema?.fields?.length) {
       const validationErrors: { field: string; message: string }[] = [];
 
@@ -208,13 +209,15 @@ export async function POST(
         form.notifyEmails,
         {
           formName: form.name,
-          siteName: 'Your Site', // Would come from site relation
+          siteName: form.site.name || 'Unbekannte Website',
           submittedAt: new Date().toLocaleString(),
           submissionData: submissionDataFormatted,
-          submissionUrl: `${process.env.NEXTAUTH_URL}/dashboard/workspaces/TODO/sites/${form.siteId}/forms/${form.id}/submissions/${submission.id}`,
+          submissionUrl: `${process.env.NEXTAUTH_URL}/dashboard/workspaces/${form.site.workspaceId}/sites/${form.siteId}/forms/${form.id}/submissions/${submission.id}`,
         }
       ).catch(err => console.error('Failed to send notification email:', err));
     }
+
+    await createAuditLog({ action: 'FORM_SUBMISSION_CREATED', entity: 'FormSubmission', entityId: submission.id, details: { formId: params.formId, isSpam, spamScore } });
 
     return NextResponse.json({
       success: true,

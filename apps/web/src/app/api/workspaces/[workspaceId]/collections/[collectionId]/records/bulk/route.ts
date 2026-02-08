@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const BulkOperationSchema = z.object({
@@ -14,7 +15,7 @@ export async function POST(
   { params }: { params: { workspaceId: string; collectionId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const { action, recordIds } = BulkOperationSchema.parse(body);
@@ -60,6 +61,7 @@ export async function POST(
             collectionId: params.collectionId,
           },
         });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_DELETED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -77,6 +79,7 @@ export async function POST(
             publishedAt: new Date(),
           },
         });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_PUBLISHED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -93,6 +96,7 @@ export async function POST(
             status: 'DRAFT',
           },
         });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_UNPUBLISHED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -109,6 +113,7 @@ export async function POST(
             status: 'ARCHIVED',
           },
         });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_ARCHIVED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
