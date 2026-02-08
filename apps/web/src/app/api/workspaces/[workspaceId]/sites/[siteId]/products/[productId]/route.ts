@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (!hasAccess) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { name, slug, description, price, compareAtPrice, currency, sku, barcode, inventory, weight, vendor, tags, images, isActive, isFeatured } = body;
+  const { name, slug, description, price, currency, sku, inventory, images, isActive } = body;
 
   // Check slug uniqueness if changing
   if (slug) {
@@ -51,17 +51,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       ...(slug !== undefined && { slug }),
       ...(description !== undefined && { description }),
       ...(price !== undefined && { price }),
-      ...(compareAtPrice !== undefined && { compareAtPrice }),
       ...(currency !== undefined && { currency }),
       ...(sku !== undefined && { sku }),
-      ...(barcode !== undefined && { barcode }),
       ...(inventory !== undefined && { inventory }),
-      ...(weight !== undefined && { weight }),
-      ...(vendor !== undefined && { vendor }),
-      ...(tags !== undefined && { tags }),
       ...(images !== undefined && { images }),
       ...(isActive !== undefined && { isActive }),
-      ...(isFeatured !== undefined && { isFeatured }),
     },
   });
 

@@ -11,7 +11,6 @@ import {
   Badge,
   Input,
   Label,
-  Checkbox,
 } from '@builderly/ui';
 import {
   Plus,
@@ -32,17 +31,11 @@ interface Product {
   slug: string;
   description?: string;
   price: number;
-  compareAtPrice?: number;
   currency: string;
   sku?: string;
-  barcode?: string;
   inventory: number;
-  weight?: number;
-  vendor?: string;
   images: string[];
-  tags: string[];
   isActive: boolean;
-  isFeatured: boolean;
   createdAt: string;
 }
 
@@ -107,26 +100,15 @@ export default function WorkspaceProductsPage() {
     e.preventDefault();
     if (!baseUrl) return;
     const form = new FormData(e.currentTarget);
-    
-    const compareAtPriceValue = form.get('compareAtPrice') as string;
-    const weightValue = form.get('weight') as string;
-    const tagsValue = form.get('tags') as string;
-    
     const body = {
       name: form.get('name') as string,
       slug: form.get('slug') as string,
       description: form.get('description') as string,
       price: Math.round(parseFloat(form.get('price') as string) * 100),
-      compareAtPrice: compareAtPriceValue ? Math.round(parseFloat(compareAtPriceValue) * 100) : undefined,
       currency: 'EUR',
       sku: form.get('sku') as string || undefined,
-      barcode: form.get('barcode') as string || undefined,
       inventory: parseInt(form.get('inventory') as string) || 0,
-      weight: weightValue ? parseFloat(weightValue) : undefined,
-      vendor: form.get('vendor') as string || undefined,
-      tags: tagsValue ? tagsValue.split(',').map(t => t.trim()).filter(t => t) : [],
       isActive: true,
-      isFeatured: form.get('isFeatured') === 'on',
     };
 
     if (editProduct) {
@@ -226,36 +208,12 @@ export default function WorkspaceProductsPage() {
                 <Input name="price" type="number" step="0.01" required defaultValue={editProduct ? (editProduct.price / 100).toFixed(2) : ''} />
               </div>
               <div>
-                <Label>Vergleichspreis (€)</Label>
-                <Input name="compareAtPrice" type="number" step="0.01" defaultValue={editProduct?.compareAtPrice ? (editProduct.compareAtPrice / 100).toFixed(2) : ''} placeholder="Optional" />
-              </div>
-              <div>
                 <Label>SKU</Label>
                 <Input name="sku" defaultValue={editProduct?.sku || ''} />
               </div>
               <div>
-                <Label>Barcode</Label>
-                <Input name="barcode" defaultValue={editProduct?.barcode || ''} placeholder="EAN/UPC/GTIN" />
-              </div>
-              <div>
                 <Label>Bestand</Label>
                 <Input name="inventory" type="number" defaultValue={editProduct?.inventory || 0} />
-              </div>
-              <div>
-                <Label>Gewicht (g)</Label>
-                <Input name="weight" type="number" step="0.01" defaultValue={editProduct?.weight || ''} placeholder="Optional" />
-              </div>
-              <div>
-                <Label>Hersteller/Marke</Label>
-                <Input name="vendor" defaultValue={editProduct?.vendor || ''} placeholder="Optional" />
-              </div>
-              <div>
-                <Label>Tags (kommagetrennt)</Label>
-                <Input name="tags" defaultValue={editProduct?.tags?.join(', ') || ''} placeholder="z.B. Sale, Neu, Featured" />
-              </div>
-              <div className="col-span-2 flex items-center space-x-2">
-                <Checkbox id="isFeatured" name="isFeatured" defaultChecked={editProduct?.isFeatured || false} />
-                <Label htmlFor="isFeatured" className="cursor-pointer">Als Featured-Produkt markieren</Label>
               </div>
               <div className="col-span-2 flex gap-2">
                 <Button type="submit">{editProduct ? 'Speichern' : 'Erstellen'}</Button>
@@ -283,17 +241,13 @@ export default function WorkspaceProductsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-lg border bg-card overflow-x-auto">
+        <div className="rounded-lg border bg-card">
           <table className="w-full text-sm">
             <thead className="border-b">
               <tr className="text-left text-muted-foreground">
                 <th className="p-3 font-medium">Produkt</th>
                 <th className="p-3 font-medium">Preis</th>
-                <th className="p-3 font-medium">SKU</th>
-                <th className="p-3 font-medium">Barcode</th>
                 <th className="p-3 font-medium">Bestand</th>
-                <th className="p-3 font-medium">Gewicht</th>
-                <th className="p-3 font-medium">Hersteller</th>
                 <th className="p-3 font-medium">Status</th>
                 <th className="p-3 font-medium text-right">Aktionen</th>
               </tr>
@@ -311,44 +265,13 @@ export default function WorkspaceProductsPage() {
                         </div>
                       )}
                       <div>
-                        <div className="font-medium flex items-center gap-2">
-                          {p.name}
-                          {p.isFeatured && (
-                            <Badge variant="default" className="text-xs">Featured</Badge>
-                          )}
-                        </div>
+                        <div className="font-medium">{p.name}</div>
                         <div className="text-xs text-muted-foreground">{p.slug}</div>
-                        {p.tags && p.tags.length > 0 && (
-                          <div className="flex gap-1 mt-1">
-                            {p.tags.map((tag, i) => (
-                              <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">
-                    <div className="font-mono">€{(p.price / 100).toFixed(2)}</div>
-                    {p.compareAtPrice && (
-                      <div className="text-xs text-muted-foreground line-through">
-                        €{(p.compareAtPrice / 100).toFixed(2)}
-                      </div>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <span className="text-muted-foreground">{p.sku || '—'}</span>
-                  </td>
-                  <td className="p-3">
-                    <span className="text-muted-foreground font-mono text-xs">{p.barcode || '—'}</span>
-                  </td>
+                  <td className="p-3 font-mono">€{(p.price / 100).toFixed(2)}</td>
                   <td className="p-3">{p.inventory}</td>
-                  <td className="p-3">
-                    <span className="text-muted-foreground">{p.weight ? `${p.weight}g` : '—'}</span>
-                  </td>
-                  <td className="p-3">
-                    <span className="text-muted-foreground">{p.vendor || '—'}</span>
-                  </td>
                   <td className="p-3">
                     <Badge variant={p.isActive ? 'default' : 'secondary'}>
                       {p.isActive ? 'Aktiv' : 'Inaktiv'}
