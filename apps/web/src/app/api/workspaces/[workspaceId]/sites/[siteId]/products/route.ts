@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
   if (!hasAccess) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await req.json();
-  const { name, slug, description, price, currency, sku, inventory, images, isActive } = body;
+  const { name, slug, description, price, compareAtPrice, currency, sku, barcode, inventory, weight, vendor, tags, images, isActive, isFeatured } = body;
 
   if (!name || !slug || typeof price !== 'number') {
     return NextResponse.json({ error: 'name, slug and price are required' }, { status: 400 });
@@ -70,11 +70,17 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       slug,
       description: description || null,
       price,
+      compareAtPrice: compareAtPrice || null,
       currency: currency || 'EUR',
       sku: sku || null,
+      barcode: barcode || null,
       inventory: inventory || 0,
+      weight: weight || null,
+      vendor: vendor || null,
+      tags: tags || [],
       images: images || [],
       isActive: isActive !== false,
+      isFeatured: isFeatured || false,
     },
   });
 
