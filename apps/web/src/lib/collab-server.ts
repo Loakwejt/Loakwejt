@@ -15,6 +15,7 @@
  *   Server → Client: { type: 'user-left', userId }
  */
 
+// @ts-ignore — ws types handled at runtime
 import { WebSocketServer, WebSocket } from 'ws';
 
 interface ConnectedUser {
@@ -55,7 +56,7 @@ export function createCollabServer(port = 3001) {
 
             // Assign color
             const usedColors = new Set([...room.values()].map(u => u.color));
-            const color = COLORS.find(c => !usedColors.has(c)) || COLORS[room.size % COLORS.length];
+            const color = COLORS.find(c => !usedColors.has(c)) || COLORS[room.size % COLORS.length] || '#3b82f6';
 
             currentUser = { ws, userId, userName: userName || 'Anonym', pageId, color };
             room.set(userId, currentUser);
@@ -126,7 +127,7 @@ export function createCollabServer(port = 3001) {
       }
     });
 
-    ws.on('error', (err) => {
+    ws.on('error', (err: Error) => {
       console.error('[Collab] WS error:', err);
       if (currentUser) {
         removeUser(currentUser);

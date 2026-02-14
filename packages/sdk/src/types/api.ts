@@ -116,35 +116,10 @@ export const InviteMemberSchema = z.object({
 export type InviteMemberRequest = z.infer<typeof InviteMemberSchema>;
 
 // ============================================================================
-// SITE TYPES
+// WORKSPACE SETTINGS TYPES (formerly Site)
 // ============================================================================
 
-export const SiteSchema = z.object({
-  id: z.string(),
-  workspaceId: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  description: z.string().nullable(),
-  faviconUrl: z.string().nullable(),
-  settings: z.record(z.unknown()),
-  customDomain: z.string().nullable(),
-  isPublished: z.boolean(),
-  publishedAt: z.string().nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export type Site = z.infer<typeof SiteSchema>;
-
-export const CreateSiteSchema = z.object({
-  name: z.string().min(1).max(100),
-  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
-  description: z.string().max(500).optional(),
-});
-
-export type CreateSiteRequest = z.infer<typeof CreateSiteSchema>;
-
-export const UpdateSiteSchema = z.object({
+export const UpdateWorkspaceSettingsSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   faviconUrl: z.string().url().optional().nullable(),
@@ -159,7 +134,7 @@ export const UpdateSiteSchema = z.object({
   settings: z.record(z.unknown()).optional(),
 });
 
-export type UpdateSiteRequest = z.infer<typeof UpdateSiteSchema>;
+export type UpdateWorkspaceSettingsRequest = z.infer<typeof UpdateWorkspaceSettingsSchema>;
 
 // ============================================================================
 // PAGE TYPES
@@ -167,7 +142,7 @@ export type UpdateSiteRequest = z.infer<typeof UpdateSiteSchema>;
 
 export const PageSchema = z.object({
   id: z.string(),
-  siteId: z.string(),
+  workspaceId: z.string(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
@@ -236,7 +211,6 @@ export type PublishPageRequest = z.infer<typeof PublishPageSchema>;
 export const CollectionSchema = z.object({
   id: z.string(),
   workspaceId: z.string(),
-  siteId: z.string().nullable(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
@@ -253,7 +227,6 @@ export const CreateCollectionSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
   description: z.string().max(500).optional(),
   schema: z.array(z.unknown()),
-  siteId: z.string().optional(),
 });
 
 export type CreateCollectionRequest = z.infer<typeof CreateCollectionSchema>;
@@ -299,7 +272,6 @@ export type UpdateRecordRequest = z.infer<typeof UpdateRecordSchema>;
 export const AssetSchema = z.object({
   id: z.string(),
   workspaceId: z.string(),
-  siteId: z.string().nullable(),
   name: z.string(),
   fileName: z.string(),
   mimeType: z.string(),
@@ -713,8 +685,7 @@ export const INTEGRATION_META: Record<string, { name: string; description: strin
 
 export const EntitlementsSchema = z.object({
   plan: z.enum(['FREE', 'PRO', 'BUSINESS', 'ENTERPRISE']),
-  maxSites: z.number(),
-  maxPagesPerSite: z.number(),
+  maxPages: z.number(),
   maxStorage: z.number(), // in bytes
   maxCustomDomains: z.number(),
   maxTeamMembers: z.number(),
@@ -737,8 +708,7 @@ export type Entitlements = z.infer<typeof EntitlementsSchema>;
 export const PLAN_ENTITLEMENTS: Record<string, Entitlements> = {
   FREE: {
     plan: 'FREE',
-    maxSites: 1,
-    maxPagesPerSite: 5,
+    maxPages: 5,
     maxStorage: 500 * 1024 * 1024, // 500MB
     maxCustomDomains: 0,
     maxTeamMembers: 1,
@@ -757,8 +727,7 @@ export const PLAN_ENTITLEMENTS: Record<string, Entitlements> = {
   },
   PRO: {
     plan: 'PRO',
-    maxSites: 3,
-    maxPagesPerSite: 25,
+    maxPages: 25,
     maxStorage: 2 * 1024 * 1024 * 1024, // 2GB
     maxCustomDomains: 1,
     maxTeamMembers: 3,
@@ -781,8 +750,7 @@ export const PLAN_ENTITLEMENTS: Record<string, Entitlements> = {
   },
   BUSINESS: {
     plan: 'BUSINESS',
-    maxSites: 10,
-    maxPagesPerSite: 100,
+    maxPages: 100,
     maxStorage: 10 * 1024 * 1024 * 1024, // 10GB
     maxCustomDomains: 3,
     maxTeamMembers: 10,
@@ -808,8 +776,7 @@ export const PLAN_ENTITLEMENTS: Record<string, Entitlements> = {
   },
   ENTERPRISE: {
     plan: 'ENTERPRISE',
-    maxSites: 999,
-    maxPagesPerSite: 999,
+    maxPages: 999,
     maxStorage: 50 * 1024 * 1024 * 1024, // 50GB
     maxCustomDomains: 999,
     maxTeamMembers: 999,
@@ -845,8 +812,7 @@ export const PlanConfigSchema = z.object({
   plan: z.enum(['FREE', 'PRO', 'BUSINESS', 'ENTERPRISE']),
   displayName: z.string(),
   description: z.string(),
-  maxSites: z.number().int().min(0),
-  maxPagesPerSite: z.number().int().min(0),
+  maxPages: z.number().int().min(0),
   maxStorage: z.number().int().min(0), // in bytes (BigInt → number in JSON)
   maxCustomDomains: z.number().int().min(0),
   maxTeamMembers: z.number().int().min(0),
@@ -872,8 +838,7 @@ export type PlanConfig = z.infer<typeof PlanConfigSchema>;
 export const UpdatePlanConfigSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  maxSites: z.number().int().min(0).optional(),
-  maxPagesPerSite: z.number().int().min(0).optional(),
+  maxPages: z.number().int().min(0).optional(),
   maxStorage: z.number().int().min(0).optional(),
   maxCustomDomains: z.number().int().min(0).optional(),
   maxTeamMembers: z.number().int().min(0).optional(),

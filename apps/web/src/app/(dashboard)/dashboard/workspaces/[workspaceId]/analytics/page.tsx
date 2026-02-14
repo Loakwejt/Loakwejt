@@ -18,10 +18,8 @@ import {
   Tablet,
   Globe,
   ArrowUp,
-  AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface AnalyticsData {
   totalViews: number;
@@ -41,17 +39,15 @@ const DEVICE_ICONS: Record<string, typeof Monitor> = {
 
 export default function WorkspaceAnalyticsPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
 
   async function loadAnalytics() {
-    if (!activeSiteId) return;
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/analytics?days=${days}`
+        `/api/workspaces/${params.workspaceId}/analytics?days=${days}`
       );
       const json = await res.json();
       setData(json);
@@ -61,37 +57,12 @@ export default function WorkspaceAnalyticsPage() {
   }
 
   useEffect(() => {
-    if (activeSiteId) loadAnalytics();
-  }, [activeSiteId, days]);
-
-  if (sitesLoading) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Analyse</h1>
-        <p className="text-muted-foreground mt-2">Laden...</p>
-      </div>
-    );
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Analyse</h1>
-        <Card className="mt-6">
-          <CardContent className="py-12 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-semibold mb-1">Keine Site vorhanden</h3>
-            <p className="text-sm text-muted-foreground">Erstelle zuerst eine Site, um Analytics zu sehen.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+    loadAnalytics();
+  }, [days]);
 
   if (loading || !data) {
     return (
       <div className="p-6 space-y-6">
-        <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
         <h1 className="text-2xl font-bold">Analyse</h1>
         <p className="text-muted-foreground">Laden...</p>
       </div>
@@ -102,8 +73,6 @@ export default function WorkspaceAnalyticsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Analyse</h1>

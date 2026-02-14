@@ -46,10 +46,8 @@ interface Collection {
   slug: string;
   description: string | null;
   schema: Record<string, unknown>;
-  siteId: string | null;
   createdAt: string;
   _count: { records: number };
-  site?: { id: string; name: string } | null;
 }
 
 export default function CollectionsPage() {
@@ -77,7 +75,7 @@ export default function CollectionsPage() {
         { credentials: 'include' }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch collections');
+      if (!response.ok) throw new Error('Fehler beim Laden der Sammlungen');
 
       const data = await response.json();
       setCollections(data.data || []);
@@ -116,7 +114,7 @@ export default function CollectionsPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        alert(error.error || 'Failed to create collection');
+        alert(error.error || 'Fehler beim Erstellen der Sammlung');
         return;
       }
 
@@ -129,14 +127,14 @@ export default function CollectionsPage() {
       router.push(`/dashboard/workspaces/${workspaceId}/collections/${collection.id}`);
     } catch (error) {
       console.error('Create error:', error);
-      alert('Failed to create collection');
+      alert('Fehler beim Erstellen der Sammlung');
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDelete = async (collectionId: string) => {
-    if (!confirm('Are you sure you want to delete this collection? All records will be permanently deleted.')) {
+    if (!confirm('Bist du sicher, dass du diese Sammlung löschen möchtest? Alle Einträge werden dauerhaft gelöscht.')) {
       return;
     }
 
@@ -149,12 +147,12 @@ export default function CollectionsPage() {
         }
       );
 
-      if (!response.ok) throw new Error('Failed to delete collection');
+      if (!response.ok) throw new Error('Fehler beim Löschen der Sammlung');
 
       fetchCollections();
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Failed to delete collection');
+      alert('Fehler beim Löschen der Sammlung');
     }
   };
 
@@ -176,14 +174,14 @@ export default function CollectionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Collections</h1>
+          <h1 className="text-2xl font-bold">Sammlungen</h1>
           <p className="text-muted-foreground">
-            Manage your CMS content collections
+            Verwalte deine CMS-Inhaltssammlungen
           </p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          New Collection
+          Neue Sammlung
         </Button>
       </div>
 
@@ -191,7 +189,7 @@ export default function CollectionsPage() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search collections..."
+          placeholder="Sammlungen durchsuchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -208,14 +206,14 @@ export default function CollectionsPage() {
       ) : filteredCollections.length === 0 ? (
         <div className="text-center py-12">
           <Database className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No collections found</h3>
+          <h3 className="mt-4 text-lg font-medium">Keine Sammlungen gefunden</h3>
           <p className="text-muted-foreground">
-            {search ? 'Try a different search term' : 'Create your first collection to get started'}
+            {search ? 'Probiere einen anderen Suchbegriff' : 'Erstelle deine erste Sammlung'}
           </p>
           {!search && (
             <Button onClick={() => setIsCreateOpen(true)} className="mt-4">
               <Plus className="mr-2 h-4 w-4" />
-              Create Collection
+              Sammlung erstellen
             </Button>
           )}
         </div>
@@ -247,15 +245,12 @@ export default function CollectionsPage() {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
-                      {collection._count.records} records
+                      {collection._count.records} Einträge
                     </span>
-                    {collection.site && (
-                      <Badge variant="secondary">{collection.site.name}</Badge>
-                    )}
                   </div>
                   <Button asChild size="sm">
                     <Link href={`/dashboard/workspaces/${workspaceId}/collections/${collection.id}`}>
-                      Manage
+                      Verwalten
                     </Link>
                   </Button>
                 </div>
@@ -269,21 +264,21 @@ export default function CollectionsPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Collection</DialogTitle>
+            <DialogTitle>Sammlung erstellen</DialogTitle>
             <DialogDescription>
-              Create a new content collection for your CMS
+              Erstelle eine neue Inhaltssammlung für dein CMS
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label>Template</Label>
+              <Label>Vorlage</Label>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a template" />
+                  <SelectValue placeholder="Vorlage auswählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="custom">Custom (Empty)</SelectItem>
+                  <SelectItem value="custom">Benutzerdefiniert (Leer)</SelectItem>
                   {Object.entries(COLLECTION_TEMPLATES).map(([key, template]) => (
                     <SelectItem key={key} value={key}>
                       {template.name}
@@ -309,7 +304,7 @@ export default function CollectionsPage() {
                     setNewSlug(generateSlug(e.target.value));
                   }
                 }}
-                placeholder="Blog Posts"
+                placeholder="Blog Beiträge"
               />
             </div>
 
@@ -319,20 +314,20 @@ export default function CollectionsPage() {
                 id="slug"
                 value={newSlug}
                 onChange={(e) => setNewSlug(e.target.value)}
-                placeholder="blog-posts"
+                placeholder="blog-beitraege"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Used in API endpoints: /api/collections/{newSlug || 'slug'}/records
+                Wird in API-Endpunkten verwendet: /api/collections/{newSlug || 'slug'}/records
               </p>
             </div>
 
             <div>
-              <Label htmlFor="description">Description (optional)</Label>
+              <Label htmlFor="description">Beschreibung (optional)</Label>
               <Textarea
                 id="description"
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="A collection for storing blog posts..."
+                placeholder="Eine Sammlung zum Speichern von Blog-Beiträgen..."
                 rows={2}
               />
             </div>
@@ -340,11 +335,11 @@ export default function CollectionsPage() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              Abbrechen
             </Button>
             <Button onClick={handleCreate} disabled={!newName || !newSlug || isCreating}>
               {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Collection
+              Sammlung erstellen
             </Button>
           </DialogFooter>
         </DialogContent>

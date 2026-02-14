@@ -19,8 +19,8 @@ import {
 // ============================================================================
 
 export interface ActionContext {
-  // Site & page context
-  siteId: string;
+  // Workspace & page context
+  workspaceId: string;
   pageId: string;
   
   // User context
@@ -283,7 +283,7 @@ export function createClientActionRunner(): ActionRunner {
 export interface ServerActionRequest {
   action: BuilderAction;
   context: {
-    siteId: string;
+    workspaceId: string;
     pageId?: string;
     formData?: Record<string, unknown>;
     urlParams?: Record<string, string>;

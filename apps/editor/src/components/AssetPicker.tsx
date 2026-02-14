@@ -32,7 +32,6 @@ interface AssetPickerProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (asset: Asset) => void;
   workspaceId: string;
-  siteId?: string;
   accept?: 'image' | 'video' | 'audio' | 'all';
 }
 
@@ -49,7 +48,6 @@ export function AssetPicker({
   onOpenChange,
   onSelect,
   workspaceId,
-  siteId,
   accept = 'all',
 }: AssetPickerProps) {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -68,7 +66,6 @@ export function AssetPicker({
     try {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
-      if (siteId) params.set('siteId', siteId);
       if (accept !== 'all') params.set('mimeType', accept);
       if (activeFolder === 'images') params.set('mimeType', 'image');
       else if (activeFolder === 'videos') params.set('mimeType', 'video');
@@ -90,7 +87,7 @@ export function AssetPicker({
     } finally {
       setLoading(false);
     }
-  }, [open, workspaceId, siteId, search, accept, apiBase, activeFolder]);
+  }, [open, workspaceId, search, accept, apiBase, activeFolder]);
 
   useEffect(() => {
     fetchAssets();
@@ -102,7 +99,6 @@ export function AssetPicker({
       for (const file of Array.from(files)) {
         const formData = new FormData();
         formData.append('file', file);
-        if (siteId) formData.append('siteId', siteId);
 
         const response = await fetch(
           `${apiBase}/api/workspaces/${workspaceId}/assets/upload`,

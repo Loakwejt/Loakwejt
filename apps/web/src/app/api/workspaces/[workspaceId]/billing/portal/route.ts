@@ -7,23 +7,24 @@ import { createAuditLog } from '@/lib/audit';
 // Erstellt eine Stripe Customer Portal Session
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
     const body = await request.json();
     const returnUrl =
       body.returnUrl ||
-      `${process.env.NEXTAUTH_URL}/dashboard/workspaces/${params.workspaceId}/settings`;
+      `${process.env.NEXTAUTH_URL}/dashboard/workspaces/${workspaceId}/settings`;
 
-    const session = await createPortalSession(params.workspaceId, returnUrl);
+    const session = await createPortalSession(workspaceId, returnUrl);
 
     await createAuditLog({
       userId,
       action: 'BILLING_PORTAL_OPENED',
       entity: 'Workspace',
-      entityId: params.workspaceId,
+      entityId: workspaceId,
     });
 
     return NextResponse.json({ url: session.url });

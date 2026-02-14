@@ -27,12 +27,13 @@ const VALID_PLANS = ['FREE', 'PRO', 'BUSINESS', 'ENTERPRISE'];
 // Einzelne PlanConfig abrufen
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { plan: string } }
+  { params }: { params: Promise<{ plan: string }> }
 ) {
   try {
     await requireAdmin();
+    const { plan } = await params;
 
-    const planKey = params.plan.toUpperCase();
+    const planKey = plan.toUpperCase();
     if (!VALID_PLANS.includes(planKey)) {
       return NextResponse.json({ error: 'Ungültiger Plan' }, { status: 400 });
     }
@@ -71,12 +72,13 @@ export async function GET(
 // Plan-Limits anpassen
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { plan: string } }
+  { params }: { params: Promise<{ plan: string }> }
 ) {
   try {
     const user = await requireAdmin();
+    const { plan } = await params;
 
-    const planKey = params.plan.toUpperCase();
+    const planKey = plan.toUpperCase();
     if (!VALID_PLANS.includes(planKey)) {
       return NextResponse.json({ error: 'Ungültiger Plan' }, { status: 400 });
     }
@@ -101,8 +103,7 @@ export async function PATCH(
 
     if (validated.displayName !== undefined) updateData.displayName = validated.displayName;
     if (validated.description !== undefined) updateData.description = validated.description;
-    if (validated.maxSites !== undefined) updateData.maxSites = validated.maxSites;
-    if (validated.maxPagesPerSite !== undefined) updateData.maxPagesPerSite = validated.maxPagesPerSite;
+    if (validated.maxPages !== undefined) updateData.maxPages = validated.maxPages;
     if (validated.maxStorage !== undefined) updateData.maxStorage = BigInt(validated.maxStorage);
     if (validated.maxCustomDomains !== undefined) updateData.maxCustomDomains = validated.maxCustomDomains;
     if (validated.maxTeamMembers !== undefined) updateData.maxTeamMembers = validated.maxTeamMembers;

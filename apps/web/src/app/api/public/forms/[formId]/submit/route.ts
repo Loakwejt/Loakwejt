@@ -63,11 +63,12 @@ function calculateSpamScore(data: Record<string, unknown>, userAgent: string | n
 // POST /api/public/forms/[formId]/submit
 export async function POST(
   request: NextRequest,
-  { params }: { params: { formId: string } }
+  { params }: { params: Promise<{ formId: string }> }
 ) {
   try {
+    const { formId } = await params;
     // Rate limiting for public submissions
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown';
     const rateLimitResult = await rateLimit(ip, {
       windowMs: 60 * 1000, // 1 minute
       maxRequests: 5,
@@ -86,10 +87,10 @@ export async function POST(
 
     // Get form
     const form = await prisma.form.findUnique({
-      where: { id: params.formId },
+      where: { id: formId },
       include: {
-        site: {
-          select: { id: true, isPublished: true, workspaceId: true, name: true },
+        workspace: {
+          select: { id: true, name: true },
         },
       },
     });
@@ -101,10 +102,6 @@ export async function POST(
     // Check if form and site are active
     if (!form.isActive) {
       return NextResponse.json({ error: 'Form is not accepting submissions' }, { status: 400 });
-    }
-
-    if (!form.site.isPublished) {
-      return NextResponse.json({ error: 'Site is not published' }, { status: 400 });
     }
 
     // Parse and sanitize submission data
@@ -183,7 +180,7 @@ export async function POST(
     // Create submission
     const submission = await prisma.formSubmission.create({
       data: {
-        formId: params.formId,
+        formId: formId,
         data: sanitizedData,
         ipAddress: ip.slice(0, 45), // Limit IP length
         userAgent: userAgent?.slice(0, 255),
@@ -209,15 +206,15 @@ export async function POST(
         form.notifyEmails,
         {
           formName: form.name,
-          siteName: form.site.name || 'Unbekannte Website',
+          siteName: form.workspace.name || 'Unbekannte Website',
           submittedAt: new Date().toLocaleString(),
           submissionData: submissionDataFormatted,
-          submissionUrl: `${process.env.NEXTAUTH_URL}/dashboard/workspaces/${form.site.workspaceId}/sites/${form.siteId}/forms/${form.id}/submissions/${submission.id}`,
+          submissionUrl: `${process.env.NEXTAUTH_URL}/dashboard/workspaces/${form.workspaceId}/forms/${form.id}/submissions/${submission.id}`,
         }
       ).catch(err => console.error('Failed to send notification email:', err));
     }
 
-    await createAuditLog({ action: 'FORM_SUBMISSION_CREATED', entity: 'FormSubmission', entityId: submission.id, details: { formId: params.formId, isSpam, spamScore } });
+    await createAuditLog({ action: 'FORM_SUBMISSION_CREATED', entity: 'FormSubmission', entityId: submission.id, details: { formId, isSpam, spamScore } });
 
     return NextResponse.json({
       success: true,
@@ -237,7 +234,7 @@ export async function POST(
 // Support for GET requests (for forms using GET method)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { formId: string } }
+  { params }: { params: Promise<{ formId: string }> }
 ) {
   // Convert query params to body and use POST handler
   const url = new URL(request.url);

@@ -3,20 +3,25 @@ import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { createAuditLog } from '@/lib/audit';
 
+interface RouteContext {
+  params: Promise<{ workspaceId: string }>;
+}
+
 // GET /api/workspaces/[workspaceId]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: RouteContext
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    const { workspaceId } = await params;
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const workspace = await prisma.workspace.findUnique({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
       include: {
         _count: {
           select: {
-            sites: true,
+            pages: true,
             members: true,
           },
         },
@@ -43,10 +48,11 @@ export async function GET(
 // PATCH /api/workspaces/[workspaceId]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: RouteContext
 ) {
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { workspaceId } = await params;
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
     const body = await request.json();
     const {
@@ -63,7 +69,7 @@ export async function PATCH(
     } = body;
 
     const workspace = await prisma.workspace.update({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
@@ -82,7 +88,7 @@ export async function PATCH(
       userId,
       action: 'WORKSPACE_UPDATED',
       entity: 'Workspace',
-      entityId: params.workspaceId,
+      entityId: workspaceId,
       details: { fields: Object.keys(body) },
     });
 
@@ -99,20 +105,21 @@ export async function PATCH(
 // DELETE /api/workspaces/[workspaceId]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: RouteContext
 ) {
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'owner');
+    const { workspaceId } = await params;
+    const { userId } = await requireWorkspacePermission(workspaceId, 'owner');
 
     await createAuditLog({
       userId,
       action: 'WORKSPACE_DELETED',
       entity: 'Workspace',
-      entityId: params.workspaceId,
+      entityId: workspaceId,
     });
 
     await prisma.workspace.delete({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
     });
 
     return new NextResponse(null, { status: 204 });

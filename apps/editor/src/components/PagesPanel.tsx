@@ -28,7 +28,7 @@ interface Page {
 }
 
 export function PagesPanel() {
-  const { workspaceId, siteId, pageId, isLoadingPage } = useEditorStore();
+  const { workspaceId, pageId, isLoadingPage } = useEditorStore();
   const [pages, setPages] = useState<Page[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -40,18 +40,18 @@ export function PagesPanel() {
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   useEffect(() => {
-    if (workspaceId && siteId) {
+    if (workspaceId) {
       loadPages();
     }
-  }, [workspaceId, siteId]);
+  }, [workspaceId]);
 
   const loadPages = async () => {
-    if (!workspaceId || !siteId) return;
+    if (!workspaceId) return;
     
     setIsLoading(true);
     try {
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages`,
         { credentials: 'include' }
       );
       if (response.ok) {
@@ -69,11 +69,11 @@ export function PagesPanel() {
   };
 
   const handleCreatePage = async () => {
-    if (!newPageName.trim() || !workspaceId || !siteId) return;
+    if (!newPageName.trim() || !workspaceId) return;
 
     try {
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -98,12 +98,12 @@ export function PagesPanel() {
   };
 
   const handleDeletePage = async (pageIdToDelete: string) => {
-    if (!workspaceId || !siteId) return;
+    if (!workspaceId) return;
     if (!confirm('Möchtest du diese Seite wirklich löschen?')) return;
 
     try {
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageIdToDelete}`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageIdToDelete}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -119,10 +119,10 @@ export function PagesPanel() {
   };
 
   const openPage = async (pageToOpen: Page) => {
-    if (!workspaceId || !siteId) return;
+    if (!workspaceId) return;
     // Smooth page switch using store's loadPage function
     const { loadPage } = useEditorStore.getState();
-    await loadPage(workspaceId, siteId, pageToOpen.id);
+    await loadPage(workspaceId, pageToOpen.id);
   };
 
   const handleNameChange = (value: string) => {
@@ -130,7 +130,7 @@ export function PagesPanel() {
     setNewPageSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
   };
 
-  if (!workspaceId || !siteId) {
+  if (!workspaceId) {
     return (
       <div className="h-full flex items-center justify-center p-3 bg-[hsl(220,10%,14%)]">
         <div className="text-center">

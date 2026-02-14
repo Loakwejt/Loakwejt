@@ -13,19 +13,19 @@ const UpdateCollectionSchema = z.object({
 // GET /api/workspaces/[workspaceId]/collections/[collectionId]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const collection = await prisma.collection.findFirst({
       where: {
-        id: params.collectionId,
-        workspaceId: params.workspaceId,
+        id: collectionId,
+        workspaceId,
       },
       include: {
         _count: { select: { records: true } },
-        site: { select: { id: true, name: true } },
       },
     });
 
@@ -46,10 +46,11 @@ export async function GET(
 // PATCH /api/workspaces/[workspaceId]/collections/[collectionId]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    await requireWorkspacePermission(workspaceId, 'edit');
 
     const body = await request.json();
     const validated = UpdateCollectionSchema.parse(body);
@@ -57,8 +58,8 @@ export async function PATCH(
     // Verify collection exists and belongs to workspace
     const existing = await prisma.collection.findFirst({
       where: {
-        id: params.collectionId,
-        workspaceId: params.workspaceId,
+        id: collectionId,
+        workspaceId,
       },
     });
 
@@ -67,7 +68,7 @@ export async function PATCH(
     }
 
     const collection = await prisma.collection.update({
-      where: { id: params.collectionId },
+      where: { id: collectionId },
       data: {
         ...(validated.name !== undefined && { name: validated.name }),
         ...(validated.description !== undefined && { description: validated.description }),
@@ -78,7 +79,7 @@ export async function PATCH(
     await createAuditLog({
       action: 'COLLECTION_UPDATED',
       entity: 'Collection',
-      entityId: params.collectionId,
+      entityId: collectionId,
     });
 
     return NextResponse.json(collection);
@@ -97,16 +98,17 @@ export async function PATCH(
 // DELETE /api/workspaces/[workspaceId]/collections/[collectionId]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    await requireWorkspacePermission(workspaceId, 'edit');
 
     // Verify collection exists and belongs to workspace
     const existing = await prisma.collection.findFirst({
       where: {
-        id: params.collectionId,
-        workspaceId: params.workspaceId,
+        id: collectionId,
+        workspaceId,
       },
     });
 
@@ -116,13 +118,13 @@ export async function DELETE(
 
     // Delete collection (records will be cascade deleted)
     await prisma.collection.delete({
-      where: { id: params.collectionId },
+      where: { id: collectionId },
     });
 
     await createAuditLog({
       action: 'COLLECTION_DELETED',
       entity: 'Collection',
-      entityId: params.collectionId,
+      entityId: collectionId,
       details: { name: existing.name },
     });
 

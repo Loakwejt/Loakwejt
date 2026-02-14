@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { TooltipProvider } from '@builderly/ui';
 import { Toolbar } from './components/Toolbar';
 import { Canvas } from './components/Canvas';
-import { Inspector } from './components/Inspector';
+import { RightSidebar } from './components/RightSidebar';
 import { LeftSidebar } from './components/LeftSidebar';
-import { FloatingPalette } from './components/FloatingPalette';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
 import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
@@ -23,20 +22,19 @@ function App() {
   const {
     isInspectorOpen,
     isPreviewMode,
-    isPaletteOpen,
     isLeftSidebarOpen,
     toggleLeftSidebar,
     setPageContext,
     setTree,
     setPageName,
     setSiteData,
+    setWorkspaceType,
   } = useEditorStore();
 
   // Load page data from URL params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const workspaceId = params.get('workspaceId');
-    const siteId = params.get('siteId');
     const pageId = params.get('pageId');
     const templateId = params.get('templateId');
 
@@ -59,27 +57,41 @@ function App() {
       return; // Wenn Template, laden wir keine Seite
     }
 
-    if (workspaceId && siteId && pageId) {
-      setPageContext(workspaceId, siteId, pageId);
-      loadPage(workspaceId, siteId, pageId);
+    if (workspaceId && pageId) {
+      setPageContext(workspaceId, pageId);
+      loadPage(workspaceId, pageId);
+      // Fetch workspace products for live data in Canvas
+      useEditorStore.getState().fetchWorkspaceProducts();
     }
 
   }, [setPageContext, setTree, setPageName, setSiteData]);
 
-  const loadPage = async (workspaceId: string, siteId: string, pageId: string) => {
+  const loadPage = async (workspaceId: string, pageId: string) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}`,
         { credentials: 'include' }
       );
 
+      if (response.status === 401) {
+        // Not authenticated — redirect to login with return URL
+        const returnUrl = encodeURIComponent(window.location.href);
+        window.location.href = `${apiUrl}/login?callbackUrl=${returnUrl}`;
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Failed to load page');
+        throw new Error(`Failed to load page (${response.status})`);
       }
 
       const page = await response.json();
       setPageName(page.name);
+      
+      // Set workspace type for template filtering
+      if (page.workspaceType) {
+        setWorkspaceType(page.workspaceType);
+      }
       
       if (page.builderTree) {
         setTree(page.builderTree);
@@ -185,14 +197,18 @@ function App() {
             {/* Center - Canvas with checkerboard */}
             <main className="flex-1 overflow-auto relative editor-canvas">
               <Canvas />
-              {/* Floating Palette */}
-              {isPaletteOpen && !isPreviewMode && <FloatingPalette />}
             </main>
 
-            {/* Right sidebar - Inspector */}
-            {isInspectorOpen && !isPreviewMode && (
-              <aside className="w-80 flex flex-col flex-shrink-0 overflow-hidden border-l border-border bg-[hsl(220,10%,14%)]">
-                <Inspector />
+            {/* Right sidebar - Components & Inspector */}
+            {!isPreviewMode && (
+              <aside 
+                className={`flex flex-col flex-shrink-0 overflow-hidden border-l border-border bg-[hsl(220,10%,14%)] transition-all duration-300 ease-in-out ${
+                  isInspectorOpen 
+                    ? 'w-80 translate-x-0 opacity-100' 
+                    : 'w-0 translate-x-full opacity-0 border-l-0 pointer-events-none'
+                }`}
+              >
+                <RightSidebar />
               </aside>
             )}
           </div>

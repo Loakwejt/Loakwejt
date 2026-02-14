@@ -11,17 +11,15 @@ import {
 
 interface SiteSidebarProps {
   workspaceId: string;
-  siteId: string;
   siteName: string;
 }
 
 export function SiteSidebar({
   workspaceId,
-  siteId,
   siteName,
 }: SiteSidebarProps) {
   const pathname = usePathname();
-  const basePath = `/dashboard/workspaces/${workspaceId}/sites/${siteId}`;
+  const basePath = `/dashboard/workspaces/${workspaceId}`;
 
   const links = [
     { href: basePath, label: 'Übersicht', icon: Globe, exact: true },
@@ -36,11 +34,11 @@ export function SiteSidebar({
     <aside className="w-56 border-r bg-muted/30 min-h-[calc(100vh-3.5rem)] flex flex-col">
       <div className="p-3 border-b">
         <Link
-          href={`/dashboard/workspaces/${workspaceId}/sites`}
+          href={`/dashboard/workspaces/${workspaceId}`}
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Zurück zu Sites
+          Zurück zum Workspace
         </Link>
         <h2 className="mt-2 font-semibold text-sm truncate">{siteName}</h2>
       </div>

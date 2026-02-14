@@ -528,27 +528,27 @@ const categoryPages: CategoryPageConfig[] = [
 async function main() {
   console.log('🚀 Creating NEXUS Shop Pages...\n');
 
-  // Find the site
-  const site = await prisma.site.findFirst({
+  // Find the workspace
+  const workspace = await prisma.workspace.findFirst({
     where: { slug: 'nexus-shop' },
-    include: { pages: true }
+    include: { pages: true, members: true }
   });
 
-  if (!site) {
-    // Try to find the demo site
-    const demoSite = await prisma.site.findFirst({
-      include: { pages: true, workspace: { include: { members: true } } }
+  if (!workspace) {
+    // Try to find the demo workspace
+    const demoWorkspace = await prisma.workspace.findFirst({
+      include: { pages: true, members: true }
     });
     
-    if (!demoSite) {
-      console.log('❌ No site found! Please create a site first.');
+    if (!demoWorkspace) {
+      console.log('❌ No workspace found! Please create a workspace first.');
       return;
     }
     
-    console.log(`📍 Using site: ${demoSite.name} (${demoSite.id})\n`);
+    console.log(`📍 Using workspace: ${demoWorkspace.name} (${demoWorkspace.id})\n`);
     
     // Get the creator from the workspace
-    const creator = demoSite.workspace.members[0];
+    const creator = demoWorkspace.members[0];
     if (!creator) {
       console.log('❌ No workspace member found!');
       return;
@@ -556,7 +556,7 @@ async function main() {
 
     // Create pages for each category
     for (const config of categoryPages) {
-      const existingPage = demoSite.pages.find(p => p.slug === config.slug);
+      const existingPage = demoWorkspace.pages.find(p => p.slug === config.slug);
       
       if (existingPage) {
         console.log(`📝 Updating page: ${config.name}`);
@@ -571,7 +571,7 @@ async function main() {
         console.log(`✨ Creating page: ${config.name}`);
         await prisma.page.create({
           data: {
-            siteId: demoSite.id,
+            workspaceId: demoWorkspace.id,
             name: config.name,
             slug: config.slug,
             description: config.description,
@@ -586,7 +586,7 @@ async function main() {
     
     // List all pages
     const allPages = await prisma.page.findMany({
-      where: { siteId: demoSite.id },
+      where: { workspaceId: demoWorkspace.id },
       select: { name: true, slug: true }
     });
     

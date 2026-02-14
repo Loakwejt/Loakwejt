@@ -25,9 +25,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Add all published sites and pages
+  // Add all published workspaces and pages
   try {
-    const sites = await prisma.site.findMany({
+    const workspaces = await prisma.workspace.findMany({
       where: { isPublished: true },
       select: {
         slug: true,
@@ -43,20 +43,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     });
 
-    for (const site of sites) {
-      // Site homepage
+    for (const ws of workspaces) {
+      // Workspace homepage
       entries.push({
-        url: `${BASE_URL}/s/${site.slug}`,
-        lastModified: site.updatedAt,
+        url: `${BASE_URL}/s/${ws.slug}`,
+        lastModified: ws.updatedAt,
         changeFrequency: 'daily',
         priority: 0.8,
       });
 
-      // Site subpages
-      for (const page of site.pages) {
+      // Workspace subpages
+      for (const page of ws.pages) {
         if (page.isHomepage) continue;
         entries.push({
-          url: `${BASE_URL}/s/${site.slug}/${page.slug}`,
+          url: `${BASE_URL}/s/${ws.slug}/${page.slug}`,
           lastModified: page.updatedAt,
           changeFrequency: 'weekly',
           priority: 0.6,

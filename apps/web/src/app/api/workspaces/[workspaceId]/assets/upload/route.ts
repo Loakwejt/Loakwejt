@@ -44,14 +44,14 @@ function getFileCategory(mimeType: string): string {
 // POST /api/workspaces/[workspaceId]/assets/upload
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'edit');
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const siteId = formData.get('siteId') as string | null;
     const folder = formData.get('folder') as string | null;
 
     if (!file) {
@@ -77,7 +77,7 @@ export async function POST(
     }
 
     // Check entitlements
-    const canUpload = await canUploadAsset(params.workspaceId, file.size);
+    const canUpload = await canUploadAsset(workspaceId, file.size);
     if (!canUpload.allowed) {
       return NextResponse.json({ error: canUpload.reason }, { status: 403 });
     }
@@ -106,9 +106,8 @@ export async function POST(
         // Upload thumbnail if generated
         if (processed.thumbnailBuffer) {
           const thumbKey = generateAssetKey(
-            params.workspaceId,
+            workspaceId,
             `thumb_${file.name.replace(/\.[^/.]+$/, '.jpg')}`,
-            siteId || undefined,
             folder || undefined
           );
           const thumbResult = await uploadFile(thumbKey, processed.thumbnailBuffer, 'image/jpeg');
@@ -121,7 +120,7 @@ export async function POST(
     }
 
     // Generate storage key
-    const key = generateAssetKey(params.workspaceId, file.name, siteId || undefined, folder || undefined);
+    const key = generateAssetKey(workspaceId, file.name, folder || undefined);
 
     // Upload to S3/MinIO
     const { url } = await uploadFile(key, buffer, optimizedMimeType);
@@ -129,8 +128,7 @@ export async function POST(
     // Create asset record
     const asset = await prisma.asset.create({
       data: {
-        workspaceId: params.workspaceId,
-        siteId: siteId || null,
+        workspaceId,
         name: file.name.split('.').slice(0, -1).join('.') || file.name,
         fileName: file.name,
         mimeType: optimizedMimeType,

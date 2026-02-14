@@ -4,9 +4,7 @@ import type {
   CreateWorkspaceRequest,
   WorkspaceMember,
   InviteMemberRequest,
-  Site,
-  CreateSiteRequest,
-  UpdateSiteRequest,
+  UpdateWorkspaceSettingsRequest,
   Page,
   CreatePageRequest,
   UpdatePageRequest,
@@ -150,6 +148,10 @@ export class ApiClient {
     delete: (id: string) => 
       this.delete<void>(`/api/workspaces/${id}`),
 
+    // Settings (formerly Site settings)
+    updateSettings: (workspaceId: string, data: UpdateWorkspaceSettingsRequest) =>
+      this.patch<Workspace>(`/api/workspaces/${workspaceId}/settings`, data),
+
     // Members
     getMembers: (workspaceId: string) =>
       this.get<ApiResponse<WorkspaceMember[]>>(`/api/workspaces/${workspaceId}/members`),
@@ -165,64 +167,40 @@ export class ApiClient {
   };
 
   // ============================================================================
-  // SITE ENDPOINTS
-  // ============================================================================
-
-  sites = {
-    list: (workspaceId: string) =>
-      this.get<ApiResponse<Site[]>>(`/api/workspaces/${workspaceId}/sites`),
-
-    get: (workspaceId: string, siteId: string) =>
-      this.get<Site>(`/api/workspaces/${workspaceId}/sites/${siteId}`),
-
-    create: (workspaceId: string, data: CreateSiteRequest) =>
-      this.post<Site>(`/api/workspaces/${workspaceId}/sites`, data),
-
-    update: (workspaceId: string, siteId: string, data: UpdateSiteRequest) =>
-      this.patch<Site>(`/api/workspaces/${workspaceId}/sites/${siteId}`, data),
-
-    delete: (workspaceId: string, siteId: string) =>
-      this.delete<void>(`/api/workspaces/${workspaceId}/sites/${siteId}`),
-
-    publish: (workspaceId: string, siteId: string) =>
-      this.post<Site>(`/api/workspaces/${workspaceId}/sites/${siteId}/publish`),
-  };
-
-  // ============================================================================
   // PAGE ENDPOINTS
   // ============================================================================
 
   pages = {
-    list: (workspaceId: string, siteId: string) =>
-      this.get<ApiResponse<Page[]>>(`/api/workspaces/${workspaceId}/sites/${siteId}/pages`),
+    list: (workspaceId: string) =>
+      this.get<ApiResponse<Page[]>>(`/api/workspaces/${workspaceId}/pages`),
 
-    get: (workspaceId: string, siteId: string, pageId: string) =>
-      this.get<Page>(`/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`),
+    get: (workspaceId: string, pageId: string) =>
+      this.get<Page>(`/api/workspaces/${workspaceId}/pages/${pageId}`),
 
-    create: (workspaceId: string, siteId: string, data: CreatePageRequest) =>
-      this.post<Page>(`/api/workspaces/${workspaceId}/sites/${siteId}/pages`, data),
+    create: (workspaceId: string, data: CreatePageRequest) =>
+      this.post<Page>(`/api/workspaces/${workspaceId}/pages`, data),
 
-    update: (workspaceId: string, siteId: string, pageId: string, data: UpdatePageRequest) =>
-      this.patch<Page>(`/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`, data),
+    update: (workspaceId: string, pageId: string, data: UpdatePageRequest) =>
+      this.patch<Page>(`/api/workspaces/${workspaceId}/pages/${pageId}`, data),
 
-    delete: (workspaceId: string, siteId: string, pageId: string) =>
-      this.delete<void>(`/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`),
+    delete: (workspaceId: string, pageId: string) =>
+      this.delete<void>(`/api/workspaces/${workspaceId}/pages/${pageId}`),
 
     // Revisions
-    getRevisions: (workspaceId: string, siteId: string, pageId: string) =>
+    getRevisions: (workspaceId: string, pageId: string) =>
       this.get<ApiResponse<PageRevision[]>>(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/revisions`
+        `/api/workspaces/${workspaceId}/pages/${pageId}/revisions`
       ),
 
-    publish: (workspaceId: string, siteId: string, pageId: string, data?: PublishPageRequest) =>
+    publish: (workspaceId: string, pageId: string, data?: PublishPageRequest) =>
       this.post<PageRevision>(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/publish`,
+        `/api/workspaces/${workspaceId}/pages/${pageId}/publish`,
         data
       ),
 
-    rollback: (workspaceId: string, siteId: string, pageId: string, revisionId: string) =>
+    rollback: (workspaceId: string, pageId: string, revisionId: string) =>
       this.post<Page>(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/rollback`,
+        `/api/workspaces/${workspaceId}/pages/${pageId}/rollback`,
         { revisionId }
       ),
   };
@@ -232,9 +210,8 @@ export class ApiClient {
   // ============================================================================
 
   collections = {
-    list: (workspaceId: string, siteId?: string) => {
-      const query = siteId ? `?siteId=${siteId}` : '';
-      return this.get<ApiResponse<Collection[]>>(`/api/workspaces/${workspaceId}/collections${query}`);
+    list: (workspaceId: string) => {
+      return this.get<ApiResponse<Collection[]>>(`/api/workspaces/${workspaceId}/collections`);
     },
 
     get: (workspaceId: string, collectionId: string) =>
@@ -302,18 +279,16 @@ export class ApiClient {
   // ============================================================================
 
   assets = {
-    list: (workspaceId: string, siteId?: string) => {
-      const query = siteId ? `?siteId=${siteId}` : '';
-      return this.get<ApiResponse<Asset[]>>(`/api/workspaces/${workspaceId}/assets${query}`);
+    list: (workspaceId: string) => {
+      return this.get<ApiResponse<Asset[]>>(`/api/workspaces/${workspaceId}/assets`);
     },
 
     get: (workspaceId: string, assetId: string) =>
       this.get<Asset>(`/api/workspaces/${workspaceId}/assets/${assetId}`),
 
-    upload: async (workspaceId: string, file: File, siteId?: string) => {
+    upload: async (workspaceId: string, file: File) => {
       const formData = new FormData();
       formData.append('file', file);
-      if (siteId) formData.append('siteId', siteId);
 
       const token = this.getToken?.();
       const headers: HeadersInit = {};
@@ -366,17 +341,17 @@ export class ApiClient {
   // ============================================================================
 
   runtime = {
-    getSite: (siteSlug: string) =>
-      this.get<Site>(`/api/runtime/sites/${siteSlug}`),
+    getWorkspace: (workspaceSlug: string) =>
+      this.get<Workspace>(`/api/runtime/workspaces/${workspaceSlug}`),
 
-    getPage: (siteSlug: string, pageSlug?: string) => {
+    getPage: (workspaceSlug: string, pageSlug?: string) => {
       const path = pageSlug 
-        ? `/api/runtime/sites/${siteSlug}/pages/${pageSlug}`
-        : `/api/runtime/sites/${siteSlug}/pages`;
+        ? `/api/runtime/workspaces/${workspaceSlug}/pages/${pageSlug}`
+        : `/api/runtime/workspaces/${workspaceSlug}/pages`;
       return this.get<{ page: Page; revision: PageRevision }>(path);
     },
 
-    getRecords: (siteSlug: string, collectionSlug: string, params?: {
+    getRecords: (workspaceSlug: string, collectionSlug: string, params?: {
       page?: number;
       pageSize?: number;
       filter?: Record<string, unknown>;
@@ -387,7 +362,7 @@ export class ApiClient {
       if (params?.filter) query.set('filter', JSON.stringify(params.filter));
       const queryStr = query.toString() ? `?${query.toString()}` : '';
       return this.get<ApiResponse<CollectionRecord[]>>(
-        `/api/runtime/sites/${siteSlug}/collections/${collectionSlug}/records${queryStr}`
+        `/api/runtime/workspaces/${workspaceSlug}/collections/${collectionSlug}/records${queryStr}`
       );
     },
   };

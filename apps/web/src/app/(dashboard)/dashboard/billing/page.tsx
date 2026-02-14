@@ -19,7 +19,7 @@ import {
   CheckCircle, 
   Clock, 
   Zap, 
-  Globe, 
+  Globe,
   Users, 
   HardDrive,
   ArrowUpRight,
@@ -74,7 +74,7 @@ export default async function BillingPage() {
     include: {
       workspace: {
         include: {
-          _count: { select: { sites: true, members: true, assets: true } },
+          _count: { select: { pages: true, members: true, assets: true } },
         },
       },
     },
@@ -84,10 +84,10 @@ export default async function BillingPage() {
 
   // Plan limits
   const planLimits = {
-    FREE: { sites: 1, members: 1, storage: 500, pages: 5 },
-    PRO: { sites: 3, members: 3, storage: 2000, pages: 25 },
-    BUSINESS: { sites: 10, members: 10, storage: 10000, pages: 100 },
-    ENTERPRISE: { sites: 999, members: 999, storage: 50000, pages: 999 },
+    FREE: { members: 1, storage: 500, pages: 5 },
+    PRO: { members: 3, storage: 2000, pages: 25 },
+    BUSINESS: { members: 10, storage: 10000, pages: 100 },
+    ENTERPRISE: { members: 999, storage: 50000, pages: 999 },
   };
 
   const planPrices: Record<string, number> = {
@@ -244,7 +244,7 @@ export default async function BillingPage() {
           <div className="grid gap-6">
             {workspaces.map((workspace) => {
               const limits = planLimits[workspace.plan as keyof typeof planLimits];
-              const sitesUsed = workspace._count.sites;
+              const pagesUsed = workspace._count.pages;
               const membersUsed = workspace._count.members;
               
               return (
@@ -286,11 +286,11 @@ export default async function BillingPage() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground flex items-center gap-1">
-                            <Globe className="h-4 w-4" /> Sites
+                            <FileText className="h-4 w-4" /> Seiten
                           </span>
-                          <span>{sitesUsed}/{limits.sites === 999 ? '∞' : limits.sites}</span>
+                          <span>{pagesUsed}/{limits.pages === 999 ? '∞' : limits.pages}</span>
                         </div>
-                        <Progress value={limits.sites === 999 ? Math.min(sitesUsed, 5) : (sitesUsed / limits.sites) * 100} className="h-2" />
+                        <Progress value={limits.pages === 999 ? Math.min(pagesUsed, 5) : (pagesUsed / limits.pages) * 100} className="h-2" />
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
@@ -377,7 +377,7 @@ export default async function BillingPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
-                    {planFeatures[plan].map((feature) => (
+                    {(planFeatures[plan] ?? []).map((feature) => (
                       <li key={feature.label} className="flex items-start gap-2 text-sm">
                         {feature.included ? (
                           <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />

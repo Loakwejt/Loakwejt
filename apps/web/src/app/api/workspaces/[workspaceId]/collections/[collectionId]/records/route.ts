@@ -7,10 +7,11 @@ import { CreateRecordSchema } from '@builderly/sdk';
 // GET /api/workspaces/[workspaceId]/collections/[collectionId]/records
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -20,7 +21,7 @@ export async function GET(
     const order = searchParams.get('order') === 'asc' ? 'asc' : 'desc';
 
     const where = {
-      collectionId: params.collectionId,
+      collectionId,
       ...(status && { status: status as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' }),
     };
 
@@ -55,10 +56,11 @@ export async function GET(
 // POST /api/workspaces/[workspaceId]/collections/[collectionId]/records
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'edit');
 
     const body = await request.json();
     const validated = CreateRecordSchema.parse(body);
@@ -67,7 +69,7 @@ export async function POST(
     if (validated.slug) {
       const existing = await prisma.record.findFirst({
         where: {
-          collectionId: params.collectionId,
+          collectionId,
           slug: validated.slug,
         },
       });
@@ -82,7 +84,7 @@ export async function POST(
 
     const record = await prisma.record.create({
       data: {
-        collectionId: params.collectionId,
+        collectionId,
         data: validated.data as Prisma.InputJsonValue,
         slug: validated.slug,
         status: validated.status || 'DRAFT',
@@ -90,7 +92,7 @@ export async function POST(
       },
     });
 
-    await createAuditLog({ userId, action: 'RECORD_CREATED', entity: 'Record', entityId: record.id, details: { collectionId: params.collectionId, slug: validated.slug } });
+    await createAuditLog({ userId, action: 'RECORD_CREATED', entity: 'Record', entityId: record.id, details: { collectionId, slug: validated.slug } });
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {

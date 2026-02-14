@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
           createdAt: true,
           stripeSubscriptionId: true,
           _count: {
-            select: { sites: true, members: true },
+            select: { pages: true, members: true },
           },
         },
         orderBy: { createdAt: 'desc' },

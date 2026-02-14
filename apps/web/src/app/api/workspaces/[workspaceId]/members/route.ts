@@ -14,13 +14,14 @@ const InviteMemberSchema = z.object({
 // Alle Mitglieder eines Workspace auflisten
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const members = await prisma.workspaceMember.findMany({
-      where: { workspaceId: params.workspaceId },
+      where: { workspaceId },
       include: {
         user: {
           select: {
@@ -48,16 +49,17 @@ export async function GET(
 // Neues Mitglied einladen (mit Plan-Limit Check)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'admin');
+    await requireWorkspacePermission(workspaceId, 'admin');
 
     const body = await request.json();
     const { email, role } = InviteMemberSchema.parse(body);
 
     // ── Plan-Limit prüfen ──
-    const limitCheck = await canAddTeamMember(params.workspaceId);
+    const limitCheck = await canAddTeamMember(workspaceId);
     if (!limitCheck.allowed) {
       return NextResponse.json(
         { error: limitCheck.reason },
@@ -83,7 +85,7 @@ export async function POST(
     const existing = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
-          workspaceId: params.workspaceId,
+          workspaceId,
           userId: user.id,
         },
       },
@@ -99,7 +101,7 @@ export async function POST(
     // Mitglied erstellen
     const member = await prisma.workspaceMember.create({
       data: {
-        workspaceId: params.workspaceId,
+        workspaceId,
         userId: user.id,
         role,
       },
@@ -120,7 +122,7 @@ export async function POST(
       action: 'MEMBER_INVITED',
       entity: 'WorkspaceMember',
       entityId: member.id,
-      details: { workspaceId: params.workspaceId, email, role },
+      details: { workspaceId, email, role },
     });
 
     return NextResponse.json(member, { status: 201 });

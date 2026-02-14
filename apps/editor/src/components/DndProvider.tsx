@@ -12,14 +12,17 @@ import {
   pointerWithin,
   rectIntersection,
 } from '@dnd-kit/core';
-import { componentRegistry } from '@builderly/core';
+import { componentRegistry, type BuilderNode } from '@builderly/core';
 import { useEditorStore } from '../store/editor-store';
 
 // Types for drag data
 export interface DragData {
-  type: 'new-component' | 'existing-node';
+  type: 'new-component' | 'existing-node' | 'section-template';
   componentType?: string;
   nodeId?: string;
+  // For section templates
+  templateId?: string;
+  node?: BuilderNode;
 }
 
 interface DndState {
@@ -47,7 +50,7 @@ export function DndProvider({ children }: DndProviderProps) {
   const [activeData, setActiveData] = useState<DragData | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  const { addNode, moveNode, tree } = useEditorStore();
+  const { addNode, moveNode, insertNodeTree, tree } = useEditorStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -123,12 +126,24 @@ export function DndProvider({ children }: DndProviderProps) {
 
         moveNode(dragData.nodeId, parentId, index);
       }
+    } else if (dragData.type === 'section-template' && dragData.node) {
+      // Adding a section template
+      const clonedNode = cloneNodeWithNewIds(dragData.node);
+      
+      let parentId = targetNodeId;
+      const targetDef = componentRegistry.get(getNodeType(tree.root, targetNodeId));
+      
+      if (targetDef && !targetDef.canHaveChildren) {
+        parentId = findParentId(tree.root, targetNodeId) || 'root';
+      }
+      
+      insertNodeTree(parentId, clonedNode);
     }
 
     setActiveId(null);
     setActiveData(null);
     setOverId(null);
-  }, [addNode, moveNode, tree]);
+  }, [addNode, moveNode, insertNodeTree, tree]);
 
   return (
     <DndContext
@@ -156,6 +171,15 @@ function DragOverlayContent({ data }: { data: DragData }) {
     return (
       <div className="bg-background border shadow-lg rounded-lg px-3 py-2 text-sm font-medium">
         {definition?.displayName || data.componentType}
+      </div>
+    );
+  }
+
+  if (data.type === 'section-template' && data.templateId) {
+    return (
+      <div className="bg-background border shadow-lg rounded-lg px-3 py-2 text-sm font-medium flex items-center gap-2">
+        <span>📦</span>
+        <span>Sektion einfügen</span>
       </div>
     );
   }
@@ -193,4 +217,17 @@ function findNodeIndex(root: any, nodeId: string): number {
     if (found >= 0) return found;
   }
   return -1;
+}
+
+// Clone a node with new unique IDs
+function cloneNodeWithNewIds(node: BuilderNode): BuilderNode {
+  const generateId = () => `${node.type.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  
+  const cloneRecursive = (n: BuilderNode): BuilderNode => ({
+    ...n,
+    id: generateId(),
+    children: n.children.map((child: BuilderNode) => cloneRecursive(child)),
+  });
+  
+  return cloneRecursive(node);
 }

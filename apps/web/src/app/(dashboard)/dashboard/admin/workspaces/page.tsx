@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Globe,
   Users,
+  FileText,
   CreditCard,
   ExternalLink,
 } from 'lucide-react';
@@ -39,7 +40,7 @@ interface AdminWorkspace {
   plan: string;
   createdAt: string;
   stripeSubscriptionId: string | null;
-  _count: { sites: number; members: number };
+  _count: { pages: number; members: number };
 }
 
 interface Pagination {
@@ -189,8 +190,8 @@ export default function AdminWorkspacesPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
-                        <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-sm">{ws._count.sites}</span>
+                        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-sm">{ws._count.pages}</span>
                       </div>
                     </TableCell>
                     <TableCell>

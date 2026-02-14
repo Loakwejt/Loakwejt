@@ -122,9 +122,9 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
       {...listeners}
     >
       {/* Selection label */}
-      {isSelected && !isRoot && (
+      {isSelected && (
         <div className="absolute -top-6 left-0 z-20 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded shadow-sm flex items-center gap-1">
-          <span>{definition?.displayName || node.type}</span>
+          <span>{isRoot ? 'Seite (Root)' : definition?.displayName || node.type}</span>
         </div>
       )}
 
@@ -262,22 +262,33 @@ function renderComponent(
     }
 
     case 'Container': {
-      const maxWidth = (node.props.maxWidth as string) || 'lg';
+      // Default to '7xl' (1280px) which is appropriate for most desktop content
+      const maxWidth = (node.props.maxWidth as string) || '7xl';
       const centered = (node.props.centered as boolean) ?? true;
       const minHeight = (node.props.minHeight as string) || 'auto';
       
       // Check if explicit width is set in styles
       const hasExplicitWidth = node.style?.base?.width && node.style.base.width !== '100%';
       
+      // Map maxWidth tokens to Tailwind classes - consistent with safe-renderer
       const maxWidthMap: Record<string, string> = {
-        xs: 'max-w-xs',
-        sm: 'max-w-screen-sm',
-        md: 'max-w-screen-md',
-        lg: 'max-w-screen-lg',
-        xl: 'max-w-screen-xl',
-        '2xl': 'max-w-[1536px]',
-        '3xl': 'max-w-[1920px]',
-        full: 'max-w-full',
+        'sm': 'max-w-sm',      // 384px
+        'md': 'max-w-md',      // 448px
+        'lg': 'max-w-lg',      // 512px
+        'xl': 'max-w-xl',      // 576px
+        '2xl': 'max-w-2xl',    // 672px
+        '3xl': 'max-w-3xl',    // 768px
+        '4xl': 'max-w-4xl',    // 896px
+        '5xl': 'max-w-5xl',    // 1024px
+        '6xl': 'max-w-6xl',    // 1152px
+        '7xl': 'max-w-7xl',    // 1280px - Good default for most content
+        'full': 'max-w-full',
+        'none': 'max-w-none',
+        'screen-sm': 'max-w-screen-sm',   // 640px
+        'screen-md': 'max-w-screen-md',   // 768px
+        'screen-lg': 'max-w-screen-lg',   // 1024px
+        'screen-xl': 'max-w-screen-xl',   // 1280px
+        'screen-2xl': 'max-w-screen-2xl', // 1536px
       };
       const minHeightMap: Record<string, string> = {
         auto: '',
@@ -297,7 +308,7 @@ function renderComponent(
             // Only use w-full if no explicit width is set
             !hasExplicitWidth && 'w-full',
             centered && !hasExplicitWidth && 'mx-auto',
-            !hasExplicitWidth && (maxWidthMap[maxWidth] || 'max-w-screen-lg'),
+            !hasExplicitWidth && (maxWidthMap[maxWidth] || 'max-w-7xl'),
             minHeightMap[minHeight],
             styleClasses // Always apply styleClasses here for flex/align to work
           )}
@@ -331,6 +342,17 @@ function renderComponent(
       let direction = (node.props.direction as string) || 'column';
       if (cssFlexDirection) {
         direction = cssFlexDirection; // Use CSS value directly (row, column, row-reverse, column-reverse)
+      }
+      
+      // Check if mobile-specific direction is set in styles
+      const hasMobileDirection = node.style?.mobile?.flexDirection;
+      
+      // Responsive: convert row to column on mobile if no mobile-specific style is set
+      // This helps Header actions, navigation, etc. to stack vertically on small screens
+      const responsiveStack = (node.props.responsiveStack as boolean) !== false; // default true
+      let effectiveDirection = direction;
+      if (breakpoint === 'mobile' && !hasMobileDirection && responsiveStack && (direction === 'row' || direction === 'row-reverse')) {
+        effectiveDirection = 'column';
       }
       
       // Map CSS justifyContent values
@@ -407,7 +429,7 @@ function renderComponent(
         <div 
           className={cn(
             'flex',
-            directionMap[direction],
+            directionMap[effectiveDirection],
             gapClass,
             justifyMap[justify],
             alignMap[align],
@@ -428,7 +450,9 @@ function renderComponent(
       // Check if gridTemplateColumns is set in styles (responsive)
       const hasResponsiveColumns = 
         inlineStyles.gridTemplateColumns || 
-        styleBase.gridTemplateColumns;
+        styleBase.gridTemplateColumns ||
+        node.style?.mobile?.gridTemplateColumns ||
+        node.style?.tablet?.gridTemplateColumns;
       
       // Columns from props (Grid-specific, not a general CSS property)
       const columns = (node.props.columns as number) || 3;
@@ -465,9 +489,22 @@ function renderComponent(
       const gapStyle = isCssGap ? { gap: gridGap } : {};
       const gapClass = isCssGap ? '' : `gap-${mapSpacing(gridGap)}`;
       
+      // Responsive grid columns - automatically adjust for breakpoints
+      // Mobile: max 1 column (for 2+ columns) or original (for 1 column)
+      // Tablet: max 2 columns (for 3+ columns) or original (for 1-2 columns)
+      // Desktop: original columns
+      let effectiveCols = columns;
+      if (!hasResponsiveColumns) {
+        if (breakpoint === 'mobile') {
+          effectiveCols = columns >= 2 ? 1 : columns;
+        } else if (breakpoint === 'tablet') {
+          effectiveCols = columns >= 3 ? 2 : columns;
+        }
+      }
+      
       // If responsive gridTemplateColumns is set, use CSS grid directly
-      // Otherwise use Tailwind classes
-      const gridColsClass = hasResponsiveColumns ? '' : `grid-cols-${Math.min(columns, 12)}`;
+      // Otherwise use Tailwind classes with responsive adjustments
+      const gridColsClass = hasResponsiveColumns ? '' : `grid-cols-${Math.min(effectiveCols, 12)}`;
       
       return (
         <div 
@@ -1170,6 +1207,321 @@ function renderComponent(
             <li key={i}>{item}</li>
           ))}
         </ListTag>
+      );
+    }
+
+    // ========================================================================
+    // COMMERCE / SHOP COMPONENTS
+    // ========================================================================
+
+    case 'ProductList': {
+      const plLayout = (node.props.layout as string) || 'grid';
+      const plColumns = (node.props.columns as number) || 4;
+      const plLimit = (node.props.limit as number) || 12;
+      // Responsive: reduce columns on mobile/tablet
+      const plEffectiveCols = breakpoint === 'mobile' 
+        ? Math.min(plColumns, 1) 
+        : breakpoint === 'tablet' 
+          ? Math.min(plColumns, 2) 
+          : plColumns;
+      const plColsClass = `grid-cols-${plEffectiveCols}`;
+
+      // Use real workspace products when available and no manual children
+      const wsProducts = useEditorStore.getState().workspaceProducts;
+      const hasManualChildren = node.children.length > 0;
+      const showRealProducts = !hasManualChildren && wsProducts.length > 0;
+
+      // Sort + filter + limit
+      const plSortBy = (node.props.sortBy as string) || 'createdAt';
+      const plSortOrder = (node.props.sortOrder as string) || 'desc';
+      let displayProducts = [...wsProducts];
+      if (plSortBy === 'price') {
+        displayProducts.sort((a, b) => plSortOrder === 'asc' ? a.price - b.price : b.price - a.price);
+      } else if (plSortBy === 'name') {
+        displayProducts.sort((a, b) => plSortOrder === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+      }
+      displayProducts = displayProducts.slice(0, plLimit);
+
+      const formatPrice = (cents: number) => {
+        return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(cents / 100);
+      };
+
+      return (
+        <div className={cn(
+          plLayout === 'grid' ? `grid ${plColsClass} gap-4` : 'space-y-4',
+          styleClasses
+        )} style={inlineStyles}>
+          {hasManualChildren ? children : showRealProducts ? (
+            displayProducts.map((product) => (
+              <div key={product.id} className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div className="aspect-square bg-muted overflow-hidden relative">
+                  {product.images.length > 0 ? (
+                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                    </div>
+                  )}
+                  {product.isFeatured && (
+                    <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded">Beliebt</span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-sm mb-1 truncate">{product.name}</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-bold">{formatPrice(product.price)}</span>
+                    {product.compareAtPrice && product.compareAtPrice > product.price && (
+                      <span className="text-sm text-muted-foreground line-through">{formatPrice(product.compareAtPrice)}</span>
+                    )}
+                  </div>
+                  <button className="w-full px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md cursor-default">
+                    In den Warenkorb
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            // Skeleton placeholders when no products loaded
+            Array.from({ length: Math.min(plColumns, 4) }).map((_, i) => (
+              <div key={i} className="rounded-lg border bg-card shadow-sm overflow-hidden">
+                <div className="aspect-square bg-muted flex items-center justify-center text-muted-foreground">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                </div>
+                <div className="p-3">
+                  <div className="h-3 bg-muted rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-muted rounded w-1/3 mb-2" />
+                  <div className="h-8 bg-primary/10 rounded w-full" />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      );
+    }
+
+    case 'ProductCard': {
+      const pcShowPrice = node.props.showPrice !== false;
+      const pcShowAddToCart = node.props.showAddToCart !== false;
+      const pcShowDescription = node.props.showDescription === true;
+      const pcShowBadge = node.props.showBadge !== false;
+      const pcImageAspect = (node.props.imageAspect as string) || 'square';
+      const pcAspectClass = pcImageAspect === '16:9' ? 'aspect-video' : pcImageAspect === '4:3' ? 'aspect-[4/3]' : pcImageAspect === '3:4' ? 'aspect-[3/4]' : 'aspect-square';
+
+      // Check if bound to a real product via productId
+      const pcProductId = node.props.productId as string | undefined;
+      const pcBoundProduct = pcProductId
+        ? useEditorStore.getState().workspaceProducts.find((p) => p.id === pcProductId)
+        : undefined;
+
+      const formatCents = (cents: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(cents / 100);
+
+      // Use bound product data if available, otherwise fall back to manual props
+      const pcName = pcBoundProduct?.name || (node.props.productName as string) || 'Beispielprodukt';
+      const pcPrice = pcBoundProduct ? pcBoundProduct.price : ((node.props.productPrice as number) ?? 29.99);
+      const pcComparePrice = pcBoundProduct ? pcBoundProduct.compareAtPrice : (node.props.productComparePrice as number | undefined);
+      const pcImage = pcBoundProduct?.images?.[0] || (node.props.productImage as string) || '';
+      const pcDescription = pcBoundProduct?.description || (node.props.productDescription as string) || '';
+      const pcBadge = pcBoundProduct?.isFeatured ? 'Beliebt' : (node.props.productBadge as string) || '';
+      // Price display: bound products are in cents, manual props are in euros
+      const priceDisplay = pcBoundProduct ? formatCents(pcPrice) : `€${pcPrice.toFixed(2)}`;
+      const comparePriceDisplay = pcComparePrice
+        ? (pcBoundProduct ? formatCents(pcComparePrice) : `€${pcComparePrice.toFixed(2)}`)
+        : null;
+
+      return (
+        <div className={cn('group rounded-lg border bg-card shadow-sm overflow-hidden', styleClasses)} style={inlineStyles}>
+          {pcBoundProduct && (
+            <div className="absolute top-0 right-0 z-10 bg-green-500/90 text-white text-[9px] px-1.5 py-0.5 rounded-bl font-medium">
+              Live
+            </div>
+          )}
+          <div className={cn(pcAspectClass, 'overflow-hidden bg-muted relative')}>
+            {pcImage ? (
+              <img src={pcImage} alt={pcName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+              </div>
+            )}
+            {pcShowBadge && pcBadge && (
+              <span className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded">{pcBadge}</span>
+            )}
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold text-sm mb-1 truncate">{pcName}</h3>
+            {pcShowDescription && pcDescription && (
+              <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{pcDescription}</p>
+            )}
+            {pcShowPrice && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-bold">{priceDisplay}</span>
+                {comparePriceDisplay && pcComparePrice && pcComparePrice > pcPrice && (
+                  <span className="text-sm text-muted-foreground line-through">{comparePriceDisplay}</span>
+                )}
+              </div>
+            )}
+            {pcShowAddToCart && (
+              <button className="w-full px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md cursor-default">
+                In den Warenkorb
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    case 'ProductDetail': {
+      const pdShowGallery = node.props.showGallery !== false;
+      const pdShowDesc = node.props.showDescription !== false;
+      const pdShowSku = node.props.showSku === true;
+      const pdShowInventory = node.props.showInventory === true;
+      const pdShowCart = node.props.showAddToCart !== false;
+      const pdName = (node.props.productName as string) || 'Beispielprodukt';
+      const pdPrice = (node.props.productPrice as number) ?? 49.99;
+      const pdCompare = node.props.productComparePrice as number | undefined;
+      const pdDesc = (node.props.productDescription as string) || '';
+      const pdImages = (node.props.productImages as string[]) || [];
+      const pdSku = (node.props.productSku as string) || '';
+      const pdInventory = node.props.productInventory as number | undefined;
+
+      // Responsive: single column on mobile, 2 columns on tablet/desktop
+      const pdGridCols = breakpoint === 'mobile' ? 'grid-cols-1' : 'grid-cols-2';
+
+      return (
+        <div className={cn(`grid ${pdGridCols} gap-8`, styleClasses)} style={inlineStyles}>
+          {pdShowGallery && (
+            <div className="space-y-2">
+              {pdImages.length > 0 ? (
+                <>
+                  <img src={pdImages[0]} alt={pdName} className="w-full rounded-lg" />
+                  {pdImages.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {pdImages.slice(1, 5).map((img, i) => (
+                        <img key={i} src={img} alt="" className="w-full aspect-square object-cover rounded" />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="aspect-square bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
+                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold">{pdName}</h1>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold">€{pdPrice.toFixed(2)}</span>
+              {pdCompare && pdCompare > pdPrice && (
+                <span className="text-lg text-muted-foreground line-through">€{pdCompare.toFixed(2)}</span>
+              )}
+            </div>
+            {pdShowDesc && pdDesc && <p className="text-muted-foreground">{pdDesc}</p>}
+            {pdShowSku && pdSku && <p className="text-sm text-muted-foreground">SKU: {pdSku}</p>}
+            {pdShowInventory && pdInventory !== undefined && (
+              <p className={cn('text-sm', pdInventory > 0 ? 'text-green-600' : 'text-red-600')}>
+                {pdInventory > 0 ? `${pdInventory} auf Lager` : 'Nicht auf Lager'}
+              </p>
+            )}
+            {pdShowCart && (
+              <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium cursor-default">
+                In den Warenkorb
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    case 'AddToCartButton': {
+      const atcText = (node.props.text as string) || 'In den Warenkorb';
+      const atcVariant = (node.props.variant as string) || 'primary';
+      const atcFull = node.props.fullWidth === true;
+      const atcVariantClasses: Record<string, string> = {
+        primary: 'bg-primary text-primary-foreground',
+        secondary: 'bg-secondary text-secondary-foreground',
+        outline: 'border border-input bg-background',
+      };
+      return (
+        <button className={cn(
+          'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
+          atcVariantClasses[atcVariant] || atcVariantClasses.primary,
+          atcFull && 'w-full',
+          styleClasses
+        )} style={inlineStyles}>
+          🛒 {atcText}
+        </button>
+      );
+    }
+
+    case 'CartSummary': {
+      const csShowCheckout = node.props.showCheckoutButton !== false;
+      const csShowTax = node.props.showTax !== false;
+      const csShowShipping = node.props.showShipping !== false;
+      return (
+        <div className={cn('rounded-lg border bg-card p-6 space-y-4', styleClasses)} style={inlineStyles}>
+          <h3 className="font-semibold text-lg">Warenkorb</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span>Zwischensumme</span><span>€0,00</span></div>
+            {csShowTax && <div className="flex justify-between"><span>MwSt. (19%)</span><span>€0,00</span></div>}
+            {csShowShipping && <div className="flex justify-between"><span>Versand</span><span>€0,00</span></div>}
+            <div className="border-t pt-2 flex justify-between font-bold"><span>Gesamt</span><span>€0,00</span></div>
+          </div>
+          {csShowCheckout && (
+            <button className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium cursor-default">
+              Zur Kasse
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    case 'CartItems': {
+      return (
+        <div className={cn('space-y-4', styleClasses)} style={inlineStyles}>
+          <p className="text-muted-foreground text-center py-8">🛒 Dein Warenkorb ist leer.</p>
+        </div>
+      );
+    }
+
+    case 'CheckoutButton': {
+      const cbText = (node.props.text as string) || 'Zur Kasse';
+      const cbVariant = (node.props.variant as string) || 'primary';
+      const cbFull = node.props.fullWidth !== false;
+      const cbVariantClasses: Record<string, string> = {
+        primary: 'bg-primary text-primary-foreground',
+        secondary: 'bg-secondary text-secondary-foreground',
+        outline: 'border border-input bg-background',
+      };
+      return (
+        <button className={cn(
+          'inline-flex items-center justify-center rounded-md px-6 py-2 text-sm font-medium',
+          cbVariantClasses[cbVariant] || cbVariantClasses.primary,
+          cbFull && 'w-full',
+          styleClasses
+        )} style={inlineStyles}>
+          💳 {cbText}
+        </button>
+      );
+    }
+
+    case 'PriceDisplay': {
+      const prCurrency = (node.props.currency as string) || '€';
+      const prShowCurrency = node.props.showCurrency !== false;
+      const prShowOriginal = node.props.showOriginalPrice !== false;
+      const prPriceVal = (node.props.price as number) ?? 29.99;
+      const prCompareVal = (node.props.comparePrice as number) || 0;
+      const prSz = (node.props.size as string) || 'md';
+      const prSizeClasses: Record<string, string> = { sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-2xl' };
+      const prCurr = prShowCurrency ? prCurrency : '';
+      return (
+        <span className={cn('inline-flex items-center gap-2 font-bold', prSizeClasses[prSz], styleClasses)} style={inlineStyles}>
+          <span>{prCurr}{prPriceVal.toFixed(2)}</span>
+          {prShowOriginal && prCompareVal > 0 && prCompareVal > prPriceVal && (
+            <span className="text-muted-foreground line-through font-normal text-sm">{prCurr}{prCompareVal.toFixed(2)}</span>
+          )}
+        </span>
       );
     }
 

@@ -7,15 +7,16 @@ import { createAuditLog } from '@/lib/audit';
 // GET /api/workspaces/[workspaceId]/assets/[assetId]
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; assetId: string } }
+  { params }: { params: Promise<{ workspaceId: string; assetId: string }> }
 ) {
+  const { workspaceId, assetId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const asset = await prisma.asset.findFirst({
       where: {
-        id: params.assetId,
-        workspaceId: params.workspaceId,
+        id: assetId,
+        workspaceId,
       },
       include: {
         uploadedBy: {
@@ -41,10 +42,11 @@ export async function GET(
 // PATCH /api/workspaces/[workspaceId]/assets/[assetId]
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; assetId: string } }
+  { params }: { params: Promise<{ workspaceId: string; assetId: string }> }
 ) {
+  const { workspaceId, assetId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    await requireWorkspacePermission(workspaceId, 'edit');
 
     const body = await request.json();
     const { name, alt, caption, folder, tags } = body;
@@ -52,8 +54,8 @@ export async function PATCH(
     // Verify asset exists and belongs to workspace
     const existing = await prisma.asset.findFirst({
       where: {
-        id: params.assetId,
-        workspaceId: params.workspaceId,
+        id: assetId,
+        workspaceId,
       },
     });
 
@@ -62,7 +64,7 @@ export async function PATCH(
     }
 
     const asset = await prisma.asset.update({
-      where: { id: params.assetId },
+      where: { id: assetId },
       data: {
         ...(name !== undefined && { name }),
         ...(alt !== undefined && { alt }),
@@ -75,7 +77,7 @@ export async function PATCH(
     await createAuditLog({
       action: 'ASSET_UPDATED',
       entity: 'Asset',
-      entityId: params.assetId,
+      entityId: assetId,
       details: { fields: Object.keys({ name, alt, caption, folder, tags }).filter(k => (({ name, alt, caption, folder, tags }) as any)[k] !== undefined) },
     });
 
@@ -92,16 +94,17 @@ export async function PATCH(
 // DELETE /api/workspaces/[workspaceId]/assets/[assetId]
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; assetId: string } }
+  { params }: { params: Promise<{ workspaceId: string; assetId: string }> }
 ) {
+  const { workspaceId, assetId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    await requireWorkspacePermission(workspaceId, 'edit');
 
     // Get asset to find the storage key
     const asset = await prisma.asset.findFirst({
       where: {
-        id: params.assetId,
-        workspaceId: params.workspaceId,
+        id: assetId,
+        workspaceId,
       },
     });
 
@@ -130,13 +133,13 @@ export async function DELETE(
 
     // Delete from database
     await prisma.asset.delete({
-      where: { id: params.assetId },
+      where: { id: assetId },
     });
 
     await createAuditLog({
       action: 'ASSET_DELETED',
       entity: 'Asset',
-      entityId: params.assetId,
+      entityId: assetId,
       details: { fileName: asset.fileName },
     });
 

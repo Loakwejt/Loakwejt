@@ -53,6 +53,14 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   circle: { icon: '⚪', color: 'from-gray-500/20 to-gray-600/10 border-gray-500/30' },
   clock: { icon: '⏰', color: 'from-red-500/20 to-red-600/10 border-red-500/30' },
   'arrow-right': { icon: '→', color: 'from-blue-500/20 to-blue-600/10 border-blue-500/30' },
+  // Commerce / Shop
+  'shopping-cart': { icon: '🛒', color: 'from-green-500/20 to-green-600/10 border-green-500/30' },
+  'shopping-bag': { icon: '🛍️', color: 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/30' },
+  package: { icon: '📦', color: 'from-amber-500/20 to-amber-600/10 border-amber-500/30' },
+  'plus-circle': { icon: '➕', color: 'from-green-500/20 to-green-600/10 border-green-500/30' },
+  receipt: { icon: '🧾', color: 'from-stone-500/20 to-stone-600/10 border-stone-500/30' },
+  'list-ordered': { icon: '📋', color: 'from-teal-500/20 to-teal-600/10 border-teal-500/30' },
+  'badge-euro': { icon: '💰', color: 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/30' },
 };
 
 // Component descriptions for tooltips
@@ -123,6 +131,16 @@ const COMPONENT_DESCRIPTIONS: Record<string, string> = {
   Select: 'Dropdown-Auswahlfeld für Optionen.',
   Checkbox: 'Ankreuzfeld für Ja/Nein-Optionen.',
   Form: 'Formular-Container der Eingaben gruppiert.',
+
+  // Commerce / Shop
+  ProductList: 'Produktliste als Raster oder Liste. Zeigt mehrere Produkte an und kann mit Daten gebunden werden.',
+  ProductCard: 'Einzelne Produktkarte mit Bild, Name, Preis und Warenkorb-Button. Ideal für Shop-Seiten.',
+  ProductDetail: 'Detailansicht eines Produkts mit Galerie, Beschreibung, Preis und Warenkorb.',
+  AddToCartButton: 'Button zum Hinzufügen eines Produkts in den Warenkorb.',
+  CartSummary: 'Warenkorbübersicht mit Summen, MwSt. und Versandkosten.',
+  CartItems: 'Liste aller Artikel im Warenkorb mit Mengensteuerung.',
+  CheckoutButton: 'Button zur Kasse / Checkout-Seite.',
+  PriceDisplay: 'Preisanzeige mit optionalem Vergleichspreis und Währung.',
 };
 
 interface DraggableComponentProps {
@@ -209,6 +227,7 @@ const CATEGORY_STYLES: Record<string, { icon: string; color: string }> = {
   cards: { icon: '🃏', color: 'text-emerald-400' },
   marketing: { icon: '📢', color: 'text-amber-400' },
   social: { icon: '📱', color: 'text-sky-400' },
+  commerce: { icon: '🛒', color: 'text-green-400' },
 };
 
 export function Palette() {
@@ -262,12 +281,6 @@ export function Palette() {
 
   return (
     <div className="flex flex-col h-full bg-[hsl(220,10%,14%)]">
-      {/* Header - Photoshop style */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-[hsl(220,10%,12%)] border-b border-border flex-shrink-0">
-        <span className="text-sm">🧩</span>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/80">Komponenten</span>
-      </div>
-      
       {/* Search - compact */}
       <div className="p-2 border-b border-border">
         <div className="relative">

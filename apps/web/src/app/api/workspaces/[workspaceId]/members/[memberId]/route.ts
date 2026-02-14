@@ -12,10 +12,11 @@ const UpdateMemberSchema = z.object({
 // Rolle eines Mitglieds ändern
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; memberId: string } }
+  { params }: { params: Promise<{ workspaceId: string; memberId: string }> }
 ) {
+  const { workspaceId, memberId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
     const body = await request.json();
     const { role } = UpdateMemberSchema.parse(body);
@@ -23,8 +24,8 @@ export async function PATCH(
     // Prüfen ob das Mitglied existiert
     const member = await prisma.workspaceMember.findFirst({
       where: {
-        id: params.memberId,
-        workspaceId: params.workspaceId,
+        id: memberId,
+        workspaceId,
       },
     });
 
@@ -41,7 +42,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.workspaceMember.update({
-      where: { id: params.memberId },
+      where: { id: memberId },
       data: { role },
       include: {
         user: {
@@ -54,8 +55,8 @@ export async function PATCH(
       userId,
       action: 'MEMBER_ROLE_CHANGED',
       entity: 'WorkspaceMember',
-      entityId: params.memberId,
-      details: { workspaceId: params.workspaceId, oldRole: member.role, newRole: role },
+      entityId: memberId,
+      details: { workspaceId, oldRole: member.role, newRole: role },
     });
 
     return NextResponse.json(updated);
@@ -81,15 +82,16 @@ export async function PATCH(
 // Mitglied entfernen
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { workspaceId: string; memberId: string } }
+  { params }: { params: Promise<{ workspaceId: string; memberId: string }> }
 ) {
+  const { workspaceId, memberId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
     const member = await prisma.workspaceMember.findFirst({
       where: {
-        id: params.memberId,
-        workspaceId: params.workspaceId,
+        id: memberId,
+        workspaceId,
       },
     });
 
@@ -106,15 +108,15 @@ export async function DELETE(
     }
 
     await prisma.workspaceMember.delete({
-      where: { id: params.memberId },
+      where: { id: memberId },
     });
 
     await createAuditLog({
       userId,
       action: 'MEMBER_REMOVED',
       entity: 'WorkspaceMember',
-      entityId: params.memberId,
-      details: { workspaceId: params.workspaceId, removedUserId: member.userId, role: member.role },
+      entityId: memberId,
+      details: { workspaceId, removedUserId: member.userId, role: member.role },
     });
 
     return NextResponse.json({ success: true });

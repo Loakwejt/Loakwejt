@@ -126,11 +126,10 @@ interface UserDetail extends SiteUser {
 
 interface SiteUsersClientProps {
   workspaceId: string;
-  siteId: string;
   siteName: string;
 }
 
-export function SiteUsersClient({ workspaceId, siteId, siteName }: SiteUsersClientProps) {
+export function SiteUsersClient({ workspaceId, siteName }: SiteUsersClientProps) {
   const [users, setUsers] = useState<SiteUser[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,7 +150,7 @@ export function SiteUsersClient({ workspaceId, siteId, siteName }: SiteUsersClie
   }>({ open: false, type: 'ban', userId: '', userName: '' });
   const [banReason, setBanReason] = useState('');
 
-  const baseUrl = `/api/workspaces/${workspaceId}/sites/${siteId}/users`;
+  const baseUrl = `/api/workspaces/${workspaceId}/users`;
 
   // Fetch users
   const fetchUsers = useCallback(async () => {
@@ -461,7 +460,7 @@ export function SiteUsersClient({ workspaceId, siteId, siteName }: SiteUsersClie
                               {user.avatar ? (
                                 <img src={user.avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
                               ) : (
-                                (user.name?.[0] || user.email[0]).toUpperCase()
+                                (user.name?.[0] || user.email?.[0] || '?').toUpperCase()
                               )}
                             </div>
                             <div>
@@ -731,7 +730,7 @@ export function SiteUsersClient({ workspaceId, siteId, siteName }: SiteUsersClie
                     {selectedUser.avatar ? (
                       <img src={selectedUser.avatar} alt="" className="h-12 w-12 rounded-full object-cover" />
                     ) : (
-                      (selectedUser.name?.[0] || selectedUser.email[0]).toUpperCase()
+                      (selectedUser.name?.[0] || selectedUser.email?.[0] || '?').toUpperCase()
                     )}
                   </div>
                   <div>

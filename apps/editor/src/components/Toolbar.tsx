@@ -34,7 +34,6 @@ export function Toolbar() {
     pageName,
     siteName,
     workspaceId,
-    siteId,
     pageId,
     tree,
     siteSettings,
@@ -77,7 +76,7 @@ export function Toolbar() {
   ];
 
   const handleSave = async () => {
-    if (!workspaceId || !siteId || !pageId) return;
+    if (!workspaceId || !pageId) return;
 
     setSaving(true);
     try {
@@ -85,7 +84,7 @@ export function Toolbar() {
       
       // Save page
       const pageResponse = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -93,6 +92,12 @@ export function Toolbar() {
           body: JSON.stringify({ builderTree: tree }),
         }
       );
+
+      if (pageResponse.status === 401) {
+        const returnUrl = encodeURIComponent(window.location.href);
+        window.location.href = `${apiUrl}/login?callbackUrl=${returnUrl}`;
+        return;
+      }
 
       if (!pageResponse.ok) {
         const errorData = await pageResponse.json().catch(() => ({}));
@@ -102,7 +107,7 @@ export function Toolbar() {
 
       // Save site settings
       const settingsResponse = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/settings`,
+        `${apiUrl}/api/workspaces/${workspaceId}/settings`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -127,7 +132,7 @@ export function Toolbar() {
   };
 
   const handlePublish = async (schedule?: boolean) => {
-    if (!workspaceId || !siteId || !pageId) return;
+    if (!workspaceId || !pageId) return;
 
     // Save first
     await handleSave();
@@ -141,7 +146,7 @@ export function Toolbar() {
       }
 
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/publish`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}/publish`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

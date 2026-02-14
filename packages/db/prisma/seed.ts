@@ -40,26 +40,6 @@ async function main() {
   });
   console.log('✅ Created demo workspace:', workspace.slug);
 
-  // Create demo site
-  const site = await prisma.site.upsert({
-    where: {
-      workspaceId_slug: {
-        workspaceId: workspace.id,
-        slug: 'demo-site',
-      },
-    },
-    update: {},
-    create: {
-      workspaceId: workspace.id,
-      name: 'Demo Site',
-      slug: 'demo-site',
-      description: 'A demo website',
-      isPublished: true,
-      publishedAt: new Date(),
-    },
-  });
-  console.log('✅ Created demo site:', site.slug);
-
   // Create demo page with builder tree
   const demoBuilderTree = {
     builderVersion: 1,
@@ -259,8 +239,8 @@ async function main() {
 
   const page = await prisma.page.upsert({
     where: {
-      siteId_slug: {
-        siteId: site.id,
+      workspaceId_slug: {
+        workspaceId: workspace.id,
         slug: 'home',
       },
     },
@@ -268,7 +248,7 @@ async function main() {
       builderTree: demoBuilderTree,
     },
     create: {
-      siteId: site.id,
+      workspaceId: workspace.id,
       name: 'Home',
       slug: 'home',
       builderTree: demoBuilderTree,
@@ -299,15 +279,14 @@ async function main() {
   // Create blog collection
   const blogCollection = await prisma.collection.upsert({
     where: {
-      siteId_slug: {
-        siteId: site.id,
+      workspaceId_slug: {
+        workspaceId: workspace.id,
         slug: 'posts',
       },
     },
     update: {},
     create: {
       workspaceId: workspace.id,
-      siteId: site.id,
       name: 'Blog Posts',
       slug: 'posts',
       description: 'Blog posts for the site',
@@ -352,14 +331,14 @@ async function main() {
   // Create products collection
   await prisma.product.upsert({
     where: {
-      siteId_slug: {
-        siteId: site.id,
+      workspaceId_slug: {
+        workspaceId: workspace.id,
         slug: 'demo-product',
       },
     },
     update: {},
     create: {
-      siteId: site.id,
+      workspaceId: workspace.id,
       name: 'Demo Product',
       slug: 'demo-product',
       description: 'This is a demo product for testing the shop functionality.',
@@ -2089,3 +2068,13 @@ function createShopTemplate() {
     },
   };
 }
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error('Seed error:', e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

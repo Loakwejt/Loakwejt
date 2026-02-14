@@ -94,24 +94,4 @@ export async function getUserWorkspaces(userId: string) {
   }));
 }
 
-export async function canAccessSite(siteId: string, userId: string) {
-  const site = await prisma.site.findUnique({
-    where: { id: siteId },
-    select: { workspaceId: true },
-  });
-
-  if (!site) return false;
-
-  return checkWorkspacePermission(site.workspaceId, userId, 'view');
-}
-
-export async function canEditSite(siteId: string, userId: string) {
-  const site = await prisma.site.findUnique({
-    where: { id: siteId },
-    select: { workspaceId: true },
-  });
-
-  if (!site) return false;
-
-  return checkWorkspacePermission(site.workspaceId, userId, 'edit');
-}
+// canAccessSite and canEditSite removed – use requireWorkspacePermission() directly

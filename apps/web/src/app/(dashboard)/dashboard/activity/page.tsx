@@ -32,19 +32,15 @@ export default async function ActivityPage() {
     include: {
       workspace: {
         include: {
-          sites: {
-            include: {
-              pages: {
-                orderBy: { updatedAt: 'desc' },
-                take: 10,
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                  updatedAt: true,
-                  createdAt: true,
-                },
-              },
+          pages: {
+            orderBy: { updatedAt: 'desc' },
+            take: 10,
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              updatedAt: true,
+              createdAt: true,
             },
           },
         },
@@ -54,16 +50,11 @@ export default async function ActivityPage() {
 
   // Flatten all pages with context
   const allPages = memberships.flatMap(m =>
-    m.workspace.sites.flatMap(site =>
-      site.pages.map(page => ({
-        ...page,
-        siteName: site.name,
-        siteSlug: site.slug,
-        workspaceName: m.workspace.name,
-        workspaceId: m.workspace.id,
-        siteId: site.id,
-      }))
-    )
+    m.workspace.pages.map(page => ({
+      ...page,
+      workspaceName: m.workspace.name,
+      workspaceId: m.workspace.id,
+    }))
   ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
   // Group by date
@@ -222,7 +213,7 @@ export default async function ActivityPage() {
                           <div>
                             <p className="font-medium text-sm">{page.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {page.siteName} · /{page.slug}
+                              {page.workspaceName} · /{page.slug}
                             </p>
                           </div>
                         </div>

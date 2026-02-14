@@ -18,10 +18,8 @@ import {
   Truck,
   Edit,
   Trash2,
-  AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface ShippingMethodItem {
   id: string;
@@ -39,15 +37,12 @@ interface ShippingMethodItem {
 
 export default function WorkspaceShippingPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [methods, setMethods] = useState<ShippingMethodItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editMethod, setEditMethod] = useState<ShippingMethodItem | null>(null);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/shipping-methods`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/shipping-methods`;
 
   const loadMethods = useCallback(async () => {
     if (!baseUrl) return;
@@ -67,8 +62,8 @@ export default function WorkspaceShippingPage() {
   }, [baseUrl]);
 
   useEffect(() => {
-    if (activeSiteId) loadMethods();
-  }, [activeSiteId, loadMethods]);
+    loadMethods();
+  }, [loadMethods]);
 
   async function handleDelete(id: string) {
     if (!baseUrl || !confirm('Versandmethode wirklich löschen?')) return;
@@ -118,24 +113,6 @@ export default function WorkspaceShippingPage() {
     loadMethods();
   }
 
-  if (sitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Lade…</div>;
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">Keine Site vorhanden</p>
-            <p className="text-sm text-muted-foreground mt-1">Erstelle zunächst eine Site, um Versandoptionen zu verwalten.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -146,9 +123,6 @@ export default function WorkspaceShippingPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {sites.length > 1 && (
-            <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-          )}
           <Button onClick={() => { setEditMethod(null); setShowForm(true); }} className="gap-2">
             <Plus className="h-4 w-4" /> Versandmethode hinzufügen
           </Button>

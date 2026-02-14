@@ -1,0 +1,3239 @@
+﻿{
+  "root": {
+    "id": "node_1770677789059_5iy6jx4i5",
+    "meta": {
+      "name": "Shop Seite"
+    },
+    "type": "Section",
+    "props": {
+      "minHeight": "auto"
+    },
+    "style": {
+      "base": {
+        "color": "#1a1a1a",
+        "padding": "none",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "actions": [],
+    "children": [
+      {
+        "id": "node_1770677789059_m3xfkpy4t",
+        "meta": {
+          "name": "Header"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "top": "0",
+            "zIndex": 100,
+            "position": "sticky",
+            "borderBottom": "1px solid #e5e5e5",
+            "backgroundColor": "#ffffff"
+          },
+          "mobile": {
+            "position": "relative"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_r5z9a5own",
+            "meta": {
+              "name": "Top Bar"
+            },
+            "type": "Container",
+            "props": {
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "8px 0",
+                "backgroundColor": "#1a1a1a"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_xcklda4at",
+                "meta": {
+                  "name": "Top Bar Content"
+                },
+                "type": "Container",
+                "props": {
+                  "centered": true,
+                  "maxWidth": "full"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "justifyContent": "center"
+                  },
+                  "mobile": {
+                    "maxWidth": "full"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_dx8qolian",
+                    "meta": {
+                      "name": "Promo Text"
+                    },
+                    "type": "Text",
+                    "props": {
+                      "text": "Kostenloser Versand ab 29Ôé¼  ┬À  Express-Lieferung verf├╝gbar"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#ffffff",
+                        "fontSize": "12px",
+                        "textAlign": "center",
+                        "letterSpacing": "0.02em"
+                      },
+                      "mobile": {
+                        "fontSize": "10px"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "node_1770677789059_yaq6b1qm0",
+            "meta": {
+              "name": "Main Header"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "16px 24px"
+              },
+              "mobile": {
+                "padding": "12px 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_kkrz7y6pm",
+                "meta": {
+                  "name": "Header Row"
+                },
+                "type": "Stack",
+                "props": {
+                  "align": "center",
+                  "justify": "between",
+                  "direction": "row",
+                  "responsiveStack": false
+                },
+                "style": {
+                  "base": {
+                    "width": "100%",
+                    "display": "flex",
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_f6ifq6t71",
+                    "meta": {
+                      "name": "Menu Button"
+                    },
+                    "type": "Button",
+                    "props": {
+                      "text": "Ôÿ░",
+                      "variant": "ghost"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "none"
+                      },
+                      "mobile": {
+                        "border": "none",
+                        "display": "flex",
+                        "padding": "4px 8px",
+                        "fontSize": "24px",
+                        "minWidth": "auto",
+                        "backgroundColor": "transparent"
+                      }
+                    },
+                    "actions": [
+                      {
+                        "event": "onClick",
+                        "action": {
+                          "type": "toggleMobileSidebar"
+                        }
+                      }
+                    ],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_vzn4mc5gg",
+                    "meta": {
+                      "name": "Logo"
+                    },
+                    "type": "Heading",
+                    "props": {
+                      "text": "NEXUS",
+                      "level": 1
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "letterSpacing": "-0.02em"
+                      },
+                      "mobile": {
+                        "flex": "1",
+                        "fontSize": "22px",
+                        "textAlign": "center"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_tsxa1ldpw",
+                    "meta": {
+                      "name": "Search Container"
+                    },
+                    "type": "Container",
+                    "props": {
+                      "maxWidth": "full"
+                    },
+                    "style": {
+                      "base": {
+                        "flex": "1",
+                        "margin": "0 40px",
+                        "display": "flex"
+                      },
+                      "mobile": {
+                        "display": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_3w3zvvuqs",
+                        "meta": {
+                          "name": "Suchfeld"
+                        },
+                        "type": "Input",
+                        "props": {
+                          "placeholder": "Produkte, Marken und mehr suchen..."
+                        },
+                        "style": {
+                          "base": {
+                            "width": "100%",
+                            "border": "2px solid #e5e5e5",
+                            "padding": "12px 16px",
+                            "fontSize": "14px",
+                            "borderRadius": "8px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789059_wd6jnsum1",
+                    "meta": {
+                      "name": "Header Actions"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "md",
+                      "align": "center",
+                      "direction": "row",
+                      "responsiveStack": false
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "24px",
+                        "display": "flex",
+                        "alignItems": "center",
+                        "flexDirection": "row"
+                      },
+                      "mobile": {
+                        "gap": "16px"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_6x4kg4wm9",
+                        "meta": {
+                          "name": "Login Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "/login",
+                          "text": "Anmelden"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#1a1a1a",
+                            "fontSize": "14px",
+                            "fontWeight": "500",
+                            "textDecoration": "none"
+                          },
+                          "mobile": {
+                            "display": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_4vdcvtpkz",
+                        "meta": {
+                          "name": "Wishlist"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "/wishlist",
+                          "text": "ÔÖí"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#1a1a1a",
+                            "fontSize": "20px",
+                            "textDecoration": "none"
+                          },
+                          "mobile": {
+                            "fontSize": "22px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_hgdxwrnny",
+                        "meta": {
+                          "name": "Warenkorb Desktop"
+                        },
+                        "type": "Button",
+                        "props": {
+                          "text": "Warenkorb (0)",
+                          "variant": "outline"
+                        },
+                        "style": {
+                          "base": {
+                            "border": "2px solid #1a1a1a",
+                            "padding": "10px 20px",
+                            "fontSize": "14px",
+                            "fontWeight": "600",
+                            "borderRadius": "8px"
+                          },
+                          "mobile": {
+                            "display": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_opbsniutm",
+                        "meta": {
+                          "name": "Warenkorb Mobile"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "/cart",
+                          "text": "­ƒøÆ"
+                        },
+                        "style": {
+                          "base": {
+                            "display": "none"
+                          },
+                          "mobile": {
+                            "color": "#1a1a1a",
+                            "display": "flex",
+                            "fontSize": "22px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "node_1770677789059_3sur05gjp",
+            "meta": {
+              "name": "Category Navigation"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px",
+                "borderTop": "1px solid #f0f0f0"
+              },
+              "mobile": {
+                "display": "none",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_xg1h2fcuf",
+                "meta": {
+                  "name": "Navigation Links"
+                },
+                "type": "Stack",
+                "props": {
+                  "gap": "lg",
+                  "justify": "center",
+                  "direction": "row"
+                },
+                "style": {
+                  "base": {
+                    "gap": "32px",
+                    "display": "flex",
+                    "padding": "16px 0",
+                    "flexDirection": "row",
+                    "justifyContent": "center"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_557bd2nzd",
+                    "meta": {
+                      "name": "Nav: Elektronik"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#elektronik",
+                      "text": "Elektronik"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_jbuuvqenh",
+                    "meta": {
+                      "name": "Nav: Haushalt"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#haushalt",
+                      "text": "Haus & Garten"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_7uoipjhlu",
+                    "meta": {
+                      "name": "Nav: Sport"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#sport",
+                      "text": "Sport & Outdoor"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_jdyh71cl9",
+                    "meta": {
+                      "name": "Nav: Beauty"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#beauty",
+                      "text": "Beauty & Gesundheit"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_eyrfk8qht",
+                    "meta": {
+                      "name": "Nav: Baby"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#baby",
+                      "text": "Baby & Kind"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_z5sqg8025",
+                    "meta": {
+                      "name": "Nav: Marken"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#marken",
+                      "text": "Marken"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#1a1a1a",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_bfdvpzz6w",
+                    "meta": {
+                      "name": "Nav: Sale"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#sale",
+                      "text": "SALE"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#ef4444",
+                        "fontSize": "14px",
+                        "fontWeight": "700",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_bnd0mzciq",
+        "meta": {
+          "name": "Hero Banner"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "backgroundColor": "#f8f9fa"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_2biwrazfx",
+            "meta": {
+              "name": "Hero Container"
+            },
+            "type": "Container",
+            "props": {
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_d7760cwg9",
+                "meta": {
+                  "name": "Hero Banner"
+                },
+                "type": "Container",
+                "props": {
+                  "maxWidth": "full"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "position": "relative",
+                    "minHeight": "400px",
+                    "alignItems": "center",
+                    "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    "justifyContent": "center"
+                  },
+                  "mobile": {
+                    "minHeight": "300px"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_7sjjy2bs0",
+                    "meta": {
+                      "name": "Hero Content"
+                    },
+                    "type": "Container",
+                    "props": {
+                      "centered": true,
+                      "maxWidth": "full"
+                    },
+                    "style": {
+                      "base": {
+                        "padding": "60px 24px",
+                        "textAlign": "center"
+                      },
+                      "mobile": {
+                        "padding": "32px 16px",
+                        "maxWidth": "full"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_us0l5ujik",
+                        "meta": {
+                          "name": "Hero Badge"
+                        },
+                        "type": "Badge",
+                        "props": {
+                          "text": "TECH WEEK",
+                          "variant": "secondary"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "padding": "6px 16px",
+                            "fontSize": "11px",
+                            "fontWeight": "700",
+                            "marginBottom": "16px",
+                            "letterSpacing": "0.1em",
+                            "backgroundColor": "rgba(255, 255, 255, 0.2)"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_yw93ckj0i",
+                        "meta": {
+                          "name": "Hero Title"
+                        },
+                        "type": "Heading",
+                        "props": {
+                          "text": "Bis zu 40% Rabatt auf Elektronik",
+                          "level": 1
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "48px",
+                            "fontWeight": "700",
+                            "lineHeight": "1.2",
+                            "marginBottom": "16px"
+                          },
+                          "mobile": {
+                            "fontSize": "24px",
+                            "marginBottom": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_cedkqez9k",
+                        "meta": {
+                          "name": "Hero Subtitle"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Smartphones, Laptops, Gaming & mehr. Nur noch 3 Tage!"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.9)",
+                            "fontSize": "18px",
+                            "marginBottom": "32px"
+                          },
+                          "mobile": {
+                            "fontSize": "14px",
+                            "marginBottom": "20px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_4jx5omxfl",
+                        "meta": {
+                          "name": "Hero CTA"
+                        },
+                        "type": "Button",
+                        "props": {
+                          "text": "Jetzt Deals entdecken",
+                          "variant": "primary"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#764ba2",
+                            "padding": "16px 32px",
+                            "fontSize": "15px",
+                            "fontWeight": "600",
+                            "borderRadius": "8px",
+                            "backgroundColor": "#ffffff"
+                          },
+                          "mobile": {
+                            "padding": "12px 20px",
+                            "fontSize": "13px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_0m1mpunvf",
+        "meta": {
+          "name": "Kategorien"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0",
+            "backgroundColor": "#ffffff"
+          },
+          "mobile": {
+            "padding": "32px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_gwsayfoh9",
+            "meta": {
+              "name": "Categories Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_1g58ro4hj",
+                "meta": {
+                  "name": "Kategorien Titel"
+                },
+                "type": "Heading",
+                "props": {
+                  "text": "Shop nach Kategorie",
+                  "level": 2
+                },
+                "style": {
+                  "base": {
+                    "fontSize": "28px",
+                    "textAlign": "center",
+                    "fontWeight": "700",
+                    "marginBottom": "40px"
+                  },
+                  "mobile": {
+                    "fontSize": "20px",
+                    "marginBottom": "24px"
+                  }
+                },
+                "actions": [],
+                "children": []
+              },
+              {
+                "id": "node_1770677789059_7g68rlqe3",
+                "meta": {
+                  "name": "Category Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "lg",
+                  "columns": 4
+                },
+                "style": {
+                  "base": {}
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_divy7xs6d",
+                    "meta": {
+                      "name": "Cat: Elektronik"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Elektronik",
+                      "description": "Smartphones, Tablets & mehr"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_2hnxevl3m",
+                    "meta": {
+                      "name": "Cat: Haushalt"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Haus & Garten",
+                      "description": "M├Âbel, Dekoration, Werkzeug"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_b2t3n4v62",
+                    "meta": {
+                      "name": "Cat: Sport"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Sport & Outdoor",
+                      "description": "Fitness, Camping, Fahrr├ñder"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_03rva96k1",
+                    "meta": {
+                      "name": "Cat: Beauty"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Beauty",
+                      "description": "Pflege, D├╝fte, Wellness"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_84zrcxbbq",
+                    "meta": {
+                      "name": "Cat: Baby"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Baby & Kind",
+                      "description": "Spielzeug, Kleidung, Zubeh├Âr"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_2568kp8uw",
+                    "meta": {
+                      "name": "Cat: Tiere"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Tierbedarf",
+                      "description": "Futter, Spielzeug, Pflege"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_k4j5aqt0a",
+                    "meta": {
+                      "name": "Cat: Auto"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "Auto & Motor",
+                      "description": "Zubeh├Âr, Ersatzteile, Pflege"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_sot823obz",
+                    "meta": {
+                      "name": "Cat: B├╝cher"
+                    },
+                    "type": "Card",
+                    "props": {
+                      "title": "B├╝cher & Medien",
+                      "description": "B├╝cher, Filme, Musik"
+                    },
+                    "style": {
+                      "base": {
+                        "cursor": "pointer",
+                        "padding": "24px",
+                        "textAlign": "center",
+                        "borderRadius": "12px",
+                        "backgroundColor": "#f8f9fa"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_mg1ggaydq",
+        "meta": {
+          "name": "Flash Deals"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0",
+            "backgroundColor": "#fef2f2"
+          },
+          "mobile": {
+            "padding": "32px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_qn1gtco4s",
+            "meta": {
+              "name": "Deals Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_yoar8pj5a",
+                "meta": {
+                  "name": "Deals Header"
+                },
+                "type": "Stack",
+                "props": {
+                  "align": "center",
+                  "justify": "between",
+                  "direction": "row"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "alignItems": "center",
+                    "marginBottom": "32px",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between"
+                  },
+                  "mobile": {
+                    "gap": "12px",
+                    "marginBottom": "20px",
+                    "flexDirection": "column"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_bsyltm55v",
+                    "meta": {
+                      "name": "Deals Title"
+                    },
+                    "type": "Heading",
+                    "props": {
+                      "text": "Tagesangebote",
+                      "level": 2
+                    },
+                    "style": {
+                      "base": {
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "letterSpacing": "-0.5px"
+                      },
+                      "mobile": {
+                        "fontSize": "20px"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_9s0bi8z7h",
+                    "meta": {
+                      "name": "Countdown"
+                    },
+                    "type": "Text",
+                    "props": {
+                      "text": "Endet in 05:32:17"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#ffffff",
+                        "padding": "10px 20px",
+                        "fontSize": "13px",
+                        "fontWeight": "600",
+                        "borderRadius": "6px",
+                        "letterSpacing": "0.5px",
+                        "backgroundColor": "#1f2937"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "node_1770677789059_60ks2vaa4",
+                "meta": {
+                  "name": "Deals Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "md",
+                  "columns": 4
+                },
+                "style": {
+                  "base": {},
+                  "mobile": {
+                    "gridColumns": 2
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_psvbr7ckz",
+                    "meta": {
+                      "name": "Deal 1"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "cmlfrfddz000c5krwssjd0hr3",
+                      "showBadge": true,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Test1",
+                      "productSlug": "test1",
+                      "productBadge": "",
+                      "productImage": "",
+                      "productPrice": 1664,
+                      "showAddToCart": true,
+                      "productDescription": "retetete",
+                      "productComparePrice": 41241
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_0wha61866",
+                    "meta": {
+                      "name": "Deal 2"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": true,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Smart Watch Ultra",
+                      "productBadge": "-40%",
+                      "productImage": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop",
+                      "productPrice": 179,
+                      "showAddToCart": true,
+                      "productComparePrice": 299
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_b16atfyzr",
+                    "meta": {
+                      "name": "Deal 3"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": true,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Gaming Headset RGB",
+                      "productBadge": "-45%",
+                      "productImage": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop",
+                      "productPrice": 49,
+                      "showAddToCart": true,
+                      "productComparePrice": 89
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_phhlxozs1",
+                    "meta": {
+                      "name": "Deal 4"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": true,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Bluetooth Speaker",
+                      "productBadge": "-50%",
+                      "productImage": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop",
+                      "productPrice": 39,
+                      "showAddToCart": true,
+                      "productComparePrice": 79
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_m86fqndo9",
+        "meta": {
+          "name": "Bestseller"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0",
+            "backgroundColor": "#ffffff"
+          },
+          "mobile": {
+            "padding": "32px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_vbybxv0lk",
+            "meta": {
+              "name": "Bestseller Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_rssqdjg60",
+                "meta": {
+                  "name": "Bestseller Header"
+                },
+                "type": "Stack",
+                "props": {
+                  "align": "center",
+                  "justify": "between",
+                  "direction": "row"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "alignItems": "center",
+                    "marginBottom": "32px",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between"
+                  },
+                  "mobile": {
+                    "gap": "12px",
+                    "marginBottom": "20px",
+                    "flexDirection": "column"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_y0v0act7d",
+                    "meta": {
+                      "name": "Bestseller Title"
+                    },
+                    "type": "Heading",
+                    "props": {
+                      "text": "Bestseller",
+                      "level": 2
+                    },
+                    "style": {
+                      "base": {
+                        "fontSize": "28px",
+                        "fontWeight": "700",
+                        "letterSpacing": "-0.5px"
+                      },
+                      "mobile": {
+                        "fontSize": "20px"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_mvyqx6w1c",
+                    "meta": {
+                      "name": "Mehr Link"
+                    },
+                    "type": "Link",
+                    "props": {
+                      "href": "#",
+                      "text": "Alle anzeigen"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#111827",
+                        "fontSize": "14px",
+                        "fontWeight": "500",
+                        "textDecoration": "none"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "node_1770677789059_ma9h2fuo8",
+                "meta": {
+                  "name": "Bestseller Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "md",
+                  "columns": 5
+                },
+                "style": {
+                  "base": {},
+                  "mobile": {
+                    "gridColumns": 2
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_iey377y76",
+                    "meta": {
+                      "name": "Produkt 1"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": true,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "MacBook Pro 14\"",
+                      "productBadge": "Beliebt",
+                      "productImage": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=300&h=300&fit=crop",
+                      "productPrice": 1999,
+                      "showAddToCart": true
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_0n54qe9j7",
+                    "meta": {
+                      "name": "Produkt 2"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": false,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "iPhone 15 Pro",
+                      "productBadge": "",
+                      "productImage": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=300&h=300&fit=crop",
+                      "productPrice": 1199,
+                      "showAddToCart": true
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_rg49qvpy6",
+                    "meta": {
+                      "name": "Produkt 3"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": false,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Sony Alpha 7 IV",
+                      "productBadge": "",
+                      "productImage": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=300&h=300&fit=crop",
+                      "productPrice": 2499,
+                      "showAddToCart": true
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_9jiww0xl4",
+                    "meta": {
+                      "name": "Produkt 4"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": false,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "PlayStation 5",
+                      "productBadge": "",
+                      "productImage": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=300&h=300&fit=crop",
+                      "productPrice": 549,
+                      "showAddToCart": true
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789059_ohzvs43nk",
+                    "meta": {
+                      "name": "Produkt 5"
+                    },
+                    "type": "ProductCard",
+                    "props": {
+                      "productId": "",
+                      "showBadge": false,
+                      "showPrice": true,
+                      "imageAspect": "square",
+                      "productName": "Dyson V15",
+                      "productBadge": "",
+                      "productImage": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop",
+                      "productPrice": 699,
+                      "showAddToCart": true
+                    },
+                    "style": {
+                      "base": {}
+                    },
+                    "actions": [],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_nfayn7w8e",
+        "meta": {
+          "name": "Promo Banner"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0",
+            "backgroundColor": "#f8f9fa"
+          },
+          "mobile": {
+            "padding": "32px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_6g881f910",
+            "meta": {
+              "name": "Promo Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_ct7od3ewo",
+                "meta": {
+                  "name": "Promo Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "lg",
+                  "columns": 2
+                },
+                "style": {
+                  "base": {}
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_kc1e8qume",
+                    "meta": {
+                      "name": "Gaming Zone"
+                    },
+                    "type": "Container",
+                    "props": {
+                      "maxWidth": "full"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#ffffff",
+                        "padding": "40px",
+                        "overflow": "hidden",
+                        "position": "relative",
+                        "background": "linear-gradient(135deg, #1a1a1a 0%, #333 100%)",
+                        "borderRadius": "16px"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_3plq5d0nt",
+                        "meta": {
+                          "name": "Label"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "GAMING"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.5)",
+                            "fontSize": "11px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "0.15em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_k23j59zn4",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Heading",
+                        "props": {
+                          "text": "Gaming Zone",
+                          "level": 3
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "26px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "-0.5px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_a22htw1at",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "PS5, Xbox, Gaming PCs & Zubeh├Âr"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.7)",
+                            "fontSize": "14px",
+                            "marginBottom": "24px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_1esuexhqx",
+                        "meta": {
+                          "name": "CTA"
+                        },
+                        "type": "Button",
+                        "props": {
+                          "text": "Entdecken",
+                          "variant": "secondary"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#1a1a1a",
+                            "padding": "10px 20px",
+                            "fontSize": "13px",
+                            "fontWeight": "600",
+                            "backgroundColor": "#ffffff"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789059_tu0nhycl8",
+                    "meta": {
+                      "name": "Fitness Zone"
+                    },
+                    "type": "Container",
+                    "props": {
+                      "maxWidth": "full"
+                    },
+                    "style": {
+                      "base": {
+                        "color": "#ffffff",
+                        "padding": "40px",
+                        "overflow": "hidden",
+                        "position": "relative",
+                        "background": "linear-gradient(135deg, #059669 0%, #22c55e 100%)",
+                        "borderRadius": "16px"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_mluk4jbm9",
+                        "meta": {
+                          "name": "Label"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "FITNESS"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.5)",
+                            "fontSize": "11px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "0.15em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_6ddlgro17",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Heading",
+                        "props": {
+                          "text": "Fitness Essentials",
+                          "level": 3
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "26px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "-0.5px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_1ehjqpj1p",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Alles f├╝r dein Home Workout"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.7)",
+                            "fontSize": "14px",
+                            "marginBottom": "24px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_02ogbwt9k",
+                        "meta": {
+                          "name": "CTA"
+                        },
+                        "type": "Button",
+                        "props": {
+                          "text": "Jetzt shoppen",
+                          "variant": "secondary"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#059669",
+                            "padding": "10px 20px",
+                            "fontSize": "13px",
+                            "fontWeight": "600",
+                            "backgroundColor": "#ffffff"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789059_8x3unc6mb",
+        "meta": {
+          "name": "Trust Badges"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0",
+            "borderTop": "1px solid #e5e5e5",
+            "borderBottom": "1px solid #e5e5e5",
+            "backgroundColor": "#ffffff"
+          },
+          "mobile": {
+            "padding": "32px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789059_73aqt7lh7",
+            "meta": {
+              "name": "Trust Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789059_bhyqrjwxc",
+                "meta": {
+                  "name": "Trust Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "lg",
+                  "columns": 5
+                },
+                "style": {
+                  "base": {}
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789059_362bwu28b",
+                    "meta": {
+                      "name": "Versand"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "flex",
+                        "textAlign": "center",
+                        "alignItems": "center",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_koo05sh6y",
+                        "meta": {
+                          "name": "Icon Container"
+                        },
+                        "type": "Container",
+                        "props": {
+                          "maxWidth": "full"
+                        },
+                        "style": {
+                          "base": {
+                            "width": "48px",
+                            "height": "48px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "borderRadius": "50%",
+                            "marginBottom": "8px",
+                            "justifyContent": "center",
+                            "backgroundColor": "#f3f4f6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_lm5btskm9",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Gratis Versand"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#111827",
+                            "fontSize": "14px",
+                            "fontWeight": "600"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789059_hghaj2lnb",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Ab 29Ôé¼ Bestellwert"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#64748b",
+                            "fontSize": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789059_y5b558usn",
+                    "meta": {
+                      "name": "R├╝ckgabe"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "flex",
+                        "textAlign": "center",
+                        "alignItems": "center",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789059_a1fcqihsh",
+                        "meta": {
+                          "name": "Icon Container"
+                        },
+                        "type": "Container",
+                        "props": {
+                          "maxWidth": "full"
+                        },
+                        "style": {
+                          "base": {
+                            "width": "48px",
+                            "height": "48px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "borderRadius": "50%",
+                            "marginBottom": "8px",
+                            "justifyContent": "center",
+                            "backgroundColor": "#f3f4f6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_mkp581gtk",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "30 Tage R├╝ckgabe"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#111827",
+                            "fontSize": "14px",
+                            "fontWeight": "600"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_7j3lmc345",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Kostenlos & unkompliziert"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#64748b",
+                            "fontSize": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_1ges7zq4c",
+                    "meta": {
+                      "name": "Sicherheit"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "flex",
+                        "textAlign": "center",
+                        "alignItems": "center",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_3lweono8z",
+                        "meta": {
+                          "name": "Icon Container"
+                        },
+                        "type": "Container",
+                        "props": {
+                          "maxWidth": "full"
+                        },
+                        "style": {
+                          "base": {
+                            "width": "48px",
+                            "height": "48px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "borderRadius": "50%",
+                            "marginBottom": "8px",
+                            "justifyContent": "center",
+                            "backgroundColor": "#f3f4f6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_4w1mh7716",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Sichere Zahlung"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#111827",
+                            "fontSize": "14px",
+                            "fontWeight": "600"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_0cugiuexz",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "SSL-verschl├╝sselt"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#64748b",
+                            "fontSize": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_4rmwafjac",
+                    "meta": {
+                      "name": "Rechnung"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "flex",
+                        "textAlign": "center",
+                        "alignItems": "center",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_eff0xegw0",
+                        "meta": {
+                          "name": "Icon Container"
+                        },
+                        "type": "Container",
+                        "props": {
+                          "maxWidth": "full"
+                        },
+                        "style": {
+                          "base": {
+                            "width": "48px",
+                            "height": "48px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "borderRadius": "50%",
+                            "marginBottom": "8px",
+                            "justifyContent": "center",
+                            "backgroundColor": "#f3f4f6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_a670zdv1i",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Kauf auf Rechnung"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#111827",
+                            "fontSize": "14px",
+                            "fontWeight": "600"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_jjoyf96rb",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Mit Klarna"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#64748b",
+                            "fontSize": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_sx5yss7dx",
+                    "meta": {
+                      "name": "Support"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "align": "center",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "display": "flex",
+                        "textAlign": "center",
+                        "alignItems": "center",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_bx7bbbl8u",
+                        "meta": {
+                          "name": "Icon Container"
+                        },
+                        "type": "Container",
+                        "props": {
+                          "maxWidth": "full"
+                        },
+                        "style": {
+                          "base": {
+                            "width": "48px",
+                            "height": "48px",
+                            "display": "flex",
+                            "alignItems": "center",
+                            "borderRadius": "50%",
+                            "marginBottom": "8px",
+                            "justifyContent": "center",
+                            "backgroundColor": "#f3f4f6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_788ca2hbu",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "24/7 Support"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#111827",
+                            "fontSize": "14px",
+                            "fontWeight": "600"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_zk4dkospl",
+                        "meta": {
+                          "name": "Desc"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Wir sind f├╝r dich da"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#64748b",
+                            "fontSize": "12px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789060_d1lzjpros",
+        "meta": {
+          "name": "Newsletter"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "80px 0",
+            "background": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+          },
+          "mobile": {
+            "padding": "48px 0"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789060_fd0eqzpta",
+            "meta": {
+              "name": "Newsletter Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px",
+                "textAlign": "center"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789060_3foytn7c7",
+                "meta": {
+                  "name": "Label"
+                },
+                "type": "Text",
+                "props": {
+                  "text": "NEWSLETTER"
+                },
+                "style": {
+                  "base": {
+                    "color": "rgba(255, 255, 255, 0.5)",
+                    "fontSize": "11px",
+                    "fontWeight": "700",
+                    "marginBottom": "12px",
+                    "letterSpacing": "0.15em"
+                  }
+                },
+                "actions": [],
+                "children": []
+              },
+              {
+                "id": "node_1770677789060_o45bq4btf",
+                "meta": {
+                  "name": "Title"
+                },
+                "type": "Heading",
+                "props": {
+                  "text": "10Ôé¼ Geschenkt",
+                  "level": 2
+                },
+                "style": {
+                  "base": {
+                    "color": "#ffffff",
+                    "fontSize": "32px",
+                    "fontWeight": "700",
+                    "marginBottom": "12px",
+                    "letterSpacing": "-0.5px"
+                  },
+                  "mobile": {
+                    "fontSize": "24px"
+                  }
+                },
+                "actions": [],
+                "children": []
+              },
+              {
+                "id": "node_1770677789060_ltykk69u3",
+                "meta": {
+                  "name": "Description"
+                },
+                "type": "Text",
+                "props": {
+                  "text": "Melde dich an und erhalte 10Ôé¼ Rabatt auf deine erste Bestellung ab 50Ôé¼"
+                },
+                "style": {
+                  "base": {
+                    "color": "rgba(255, 255, 255, 0.85)",
+                    "fontSize": "15px",
+                    "lineHeight": "1.6",
+                    "marginBottom": "32px"
+                  },
+                  "mobile": {
+                    "fontSize": "14px",
+                    "marginBottom": "24px"
+                  }
+                },
+                "actions": [],
+                "children": []
+              },
+              {
+                "id": "node_1770677789060_0n3bj12je",
+                "meta": {
+                  "name": "Form Wrapper"
+                },
+                "type": "Container",
+                "props": {
+                  "centered": true,
+                  "maxWidth": "full"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "justifyContent": "center"
+                  },
+                  "mobile": {
+                    "maxWidth": "full"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789060_wr1t8z708",
+                    "meta": {
+                      "name": "Newsletter Form"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "direction": "row"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "12px",
+                        "width": "100%",
+                        "display": "flex",
+                        "flexDirection": "row"
+                      },
+                      "mobile": {
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_9ppjo2ef0",
+                        "meta": {
+                          "name": "Email Input"
+                        },
+                        "type": "Input",
+                        "props": {
+                          "placeholder": "Deine E-Mail Adresse"
+                        },
+                        "style": {
+                          "base": {
+                            "flex": "1",
+                            "border": "none",
+                            "padding": "14px 20px",
+                            "fontSize": "16px",
+                            "borderRadius": "8px"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_ciih56gys",
+                        "meta": {
+                          "name": "Submit"
+                        },
+                        "type": "Button",
+                        "props": {
+                          "text": "Anmelden",
+                          "variant": "primary"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "padding": "14px 28px",
+                            "fontWeight": "600",
+                            "whiteSpace": "nowrap",
+                            "borderRadius": "8px",
+                            "backgroundColor": "#1a1a1a"
+                          },
+                          "mobile": {
+                            "width": "100%"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "node_1770677789060_ifk0pekpl",
+                "meta": {
+                  "name": "Privacy Note"
+                },
+                "type": "Text",
+                "props": {
+                  "text": "Mit der Anmeldung akzeptierst du unsere Datenschutzbestimmungen"
+                },
+                "style": {
+                  "base": {
+                    "color": "rgba(255, 255, 255, 0.5)",
+                    "fontSize": "11px",
+                    "marginTop": "16px"
+                  }
+                },
+                "actions": [],
+                "children": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "node_1770677789060_4m9ohbu9k",
+        "meta": {
+          "name": "Footer"
+        },
+        "type": "Section",
+        "props": {},
+        "style": {
+          "base": {
+            "padding": "60px 0 30px",
+            "backgroundColor": "#1a1a1a"
+          },
+          "mobile": {
+            "padding": "40px 0 24px"
+          }
+        },
+        "actions": [],
+        "children": [
+          {
+            "id": "node_1770677789060_ab5ij9w8v",
+            "meta": {
+              "name": "Footer Container"
+            },
+            "type": "Container",
+            "props": {
+              "centered": true,
+              "maxWidth": "full"
+            },
+            "style": {
+              "base": {
+                "padding": "0 24px"
+              },
+              "mobile": {
+                "padding": "0 16px",
+                "maxWidth": "full"
+              }
+            },
+            "actions": [],
+            "children": [
+              {
+                "id": "node_1770677789060_u3ba2uyz2",
+                "meta": {
+                  "name": "Footer Grid"
+                },
+                "type": "Grid",
+                "props": {
+                  "gap": "lg",
+                  "columns": 5
+                },
+                "style": {
+                  "base": {
+                    "marginBottom": "48px"
+                  },
+                  "mobile": {
+                    "marginBottom": "32px"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789060_h3p31o87k",
+                    "meta": {
+                      "name": "Footer Brand"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "md",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "16px",
+                        "display": "flex",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_qawqt33no",
+                        "meta": {
+                          "name": "Logo"
+                        },
+                        "type": "Heading",
+                        "props": {
+                          "text": "NEXUS",
+                          "level": 3
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "24px",
+                            "fontWeight": "700"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_ca8zvqfak",
+                        "meta": {
+                          "name": "Beschreibung"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Dein Online-Marktplatz f├╝r alles. Millionen Produkte, beste Preise."
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "lineHeight": "1.6"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_fr8xgj8ky",
+                    "meta": {
+                      "name": "Footer Shop"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "12px",
+                        "display": "flex",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_xvfwf3f62",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "SHOP"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "12px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "0.1em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_wyp2f0ew6",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Alle Kategorien"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_cg71fik51",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Bestseller"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_8sbldoq58",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Neuheiten"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_ghpemihgo",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Sale"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_60t4hj6j1",
+                    "meta": {
+                      "name": "Footer Service"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "12px",
+                        "display": "flex",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_n6mz130jg",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "SERVICE"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "12px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "0.1em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_l5pnn063u",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Hilfe & FAQ"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_vhlz5ultq",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Versand & Lieferung"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_67z0bgi56",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "R├╝ckgabe"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_4q26y5850",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Kontakt"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_v8nzqiwfi",
+                    "meta": {
+                      "name": "Footer Company"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "12px",
+                        "display": "flex",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_esmc6rozk",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "UNTERNEHMEN"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "12px",
+                            "fontWeight": "700",
+                            "marginBottom": "8px",
+                            "letterSpacing": "0.1em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_e6k8nfz8d",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "├£ber uns"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_b2ej1jutt",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Karriere"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_oiqpqwwa2",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Presse"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_td4jcywoe",
+                        "meta": {
+                          "name": "Link"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Partner werden"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "14px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "node_1770677789060_zby80ubtd",
+                    "meta": {
+                      "name": "Footer Payment"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "sm",
+                      "direction": "column"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "12px",
+                        "display": "flex",
+                        "flexDirection": "column"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_i1pvtgn0x",
+                        "meta": {
+                          "name": "Title"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "ZAHLARTEN"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "#ffffff",
+                            "fontSize": "12px",
+                            "fontWeight": "700",
+                            "marginBottom": "12px",
+                            "letterSpacing": "0.1em"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_mfay2kspt",
+                        "meta": {
+                          "name": "Icons"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Visa ┬À Mastercard ┬À PayPal"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "13px",
+                            "lineHeight": "1.8"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_lkziwk1f3",
+                        "meta": {
+                          "name": "Icons 2"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Apple Pay ┬À Google Pay"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "13px",
+                            "lineHeight": "1.8"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_5qpwjy14r",
+                        "meta": {
+                          "name": "Icons 3"
+                        },
+                        "type": "Text",
+                        "props": {
+                          "text": "Klarna ┬À SOFORT"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.6)",
+                            "fontSize": "13px",
+                            "lineHeight": "1.8"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "node_1770677789060_tz51m0aw0",
+                "meta": {
+                  "name": "Footer Bottom"
+                },
+                "type": "Stack",
+                "props": {
+                  "align": "center",
+                  "justify": "between",
+                  "direction": "row"
+                },
+                "style": {
+                  "base": {
+                    "display": "flex",
+                    "borderTop": "1px solid rgba(255,255,255,0.1)",
+                    "alignItems": "center",
+                    "paddingTop": "24px",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between"
+                  },
+                  "mobile": {
+                    "gap": "16px",
+                    "textAlign": "center",
+                    "flexDirection": "column"
+                  }
+                },
+                "actions": [],
+                "children": [
+                  {
+                    "id": "node_1770677789060_qa1jfcb6e",
+                    "meta": {
+                      "name": "Copyright"
+                    },
+                    "type": "Text",
+                    "props": {
+                      "text": "┬® 2026 NEXUS. Alle Rechte vorbehalten."
+                    },
+                    "style": {
+                      "base": {
+                        "color": "rgba(255, 255, 255, 0.4)",
+                        "fontSize": "13px"
+                      }
+                    },
+                    "actions": [],
+                    "children": []
+                  },
+                  {
+                    "id": "node_1770677789060_wbl4hu1ls",
+                    "meta": {
+                      "name": "Legal Links"
+                    },
+                    "type": "Stack",
+                    "props": {
+                      "gap": "lg",
+                      "direction": "row"
+                    },
+                    "style": {
+                      "base": {
+                        "gap": "24px",
+                        "display": "flex",
+                        "flexDirection": "row"
+                      },
+                      "mobile": {
+                        "gap": "16px",
+                        "flexWrap": "wrap",
+                        "justifyContent": "center"
+                      }
+                    },
+                    "actions": [],
+                    "children": [
+                      {
+                        "id": "node_1770677789060_bqw84zgfe",
+                        "meta": {
+                          "name": "Impressum"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Impressum"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.4)",
+                            "fontSize": "13px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_3l2hxfx55",
+                        "meta": {
+                          "name": "Datenschutz"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Datenschutz"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.4)",
+                            "fontSize": "13px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_o2ldfe0yt",
+                        "meta": {
+                          "name": "AGB"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "AGB"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.4)",
+                            "fontSize": "13px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      },
+                      {
+                        "id": "node_1770677789060_vt0g7eu9i",
+                        "meta": {
+                          "name": "Cookies"
+                        },
+                        "type": "Link",
+                        "props": {
+                          "href": "#",
+                          "text": "Cookies"
+                        },
+                        "style": {
+                          "base": {
+                            "color": "rgba(255, 255, 255, 0.4)",
+                            "fontSize": "13px",
+                            "textDecoration": "none"
+                          }
+                        },
+                        "actions": [],
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "builderVersion": 1
+}

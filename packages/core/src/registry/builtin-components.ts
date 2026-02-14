@@ -39,11 +39,11 @@ const ContainerComponent: ComponentDefinition = {
   category: 'layout',
   canHaveChildren: true,
   defaultProps: {
-    maxWidth: 'lg',
+    maxWidth: '7xl',
     centered: true,
   },
   propsSchema: z.object({
-    maxWidth: z.enum(['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'full']).default('lg'),
+    maxWidth: z.enum(['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', 'full']).default('7xl'),
     centered: z.boolean().default(true),
     minHeight: z.enum(['auto', 'full', 'screen']).default('auto'),
   }),
@@ -138,15 +138,15 @@ const SpacerComponent: ComponentDefinition = {
 const TextComponent: ComponentDefinition = {
   type: 'Text',
   displayName: 'Text',
-  description: 'Paragraph text',
+  description: 'Absatztext',
   icon: 'type',
   category: 'content',
   canHaveChildren: false,
   defaultProps: {
-    text: 'Enter your text here',
+    text: 'Text hier eingeben',
   },
   propsSchema: z.object({
-    text: z.string().default('Enter your text here'),
+    text: z.string().default('Text hier eingeben'),
   }),
   tags: ['content', 'text', 'paragraph', 'p'],
 };
@@ -154,17 +154,17 @@ const TextComponent: ComponentDefinition = {
 const HeadingComponent: ComponentDefinition = {
   type: 'Heading',
   displayName: 'Überschrift',
-  description: 'Heading text (h1-h6)',
+  description: 'Überschrift (h1-h6)',
   icon: 'heading',
   category: 'content',
   canHaveChildren: false,
   defaultProps: {
     level: 2,
-    text: 'Heading',
+    text: 'Überschrift',
   },
   propsSchema: z.object({
     level: z.number().min(1).max(6).default(2),
-    text: z.string().default('Heading'),
+    text: z.string().default('Überschrift'),
   }),
   tags: ['content', 'heading', 'title', 'h1', 'h2', 'h3'],
 };
@@ -172,18 +172,18 @@ const HeadingComponent: ComponentDefinition = {
 const ImageComponent: ComponentDefinition = {
   type: 'Image',
   displayName: 'Bild',
-  description: 'Display an image',
+  description: 'Bild anzeigen',
   icon: 'image',
   category: 'content',
   canHaveChildren: false,
   defaultProps: {
     src: 'https://placehold.co/600x400',
-    alt: 'Image description',
+    alt: 'Bildbeschreibung',
     objectFit: 'cover',
   },
   propsSchema: z.object({
     src: z.string().default('https://placehold.co/600x400'),
-    alt: z.string().default('Image description'),
+    alt: z.string().default('Bildbeschreibung'),
     objectFit: z.enum(['cover', 'contain', 'fill', 'none', 'scale-down']).default('cover'),
     width: z.string().optional(),
     height: z.string().optional(),
@@ -216,17 +216,17 @@ const IconComponent: ComponentDefinition = {
 const ButtonComponent: ComponentDefinition = {
   type: 'Button',
   displayName: 'Button',
-  description: 'Clickable button',
+  description: 'Klickbarer Button',
   icon: 'square',
   category: 'ui',
   canHaveChildren: false,
   defaultProps: {
-    text: 'Click me',
+    text: 'Klick mich',
     variant: 'primary',
     size: 'md',
   },
   propsSchema: z.object({
-    text: z.string().default('Click me'),
+    text: z.string().default('Klick mich'),
     variant: z.enum(['primary', 'secondary', 'outline', 'ghost', 'destructive']).default('primary'),
     size: z.enum(['sm', 'md', 'lg']).default('md'),
     disabled: z.boolean().default(false),
@@ -1418,6 +1418,690 @@ const ProtectedContentComponent: ComponentDefinition = {
 };
 
 // ============================================================================
+// COMMERCE / SHOP COMPONENTS
+// ============================================================================
+
+const ProductListComponent: ComponentDefinition = {
+  type: 'ProductList',
+  displayName: 'Produktliste',
+  description: 'A grid/list of shop products, dynamically loaded from the site',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: true,
+  allowedChildrenTypes: ['ProductCard'],
+  defaultProps: {
+    layout: 'grid',
+    columns: 4,
+    limit: 12,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    categoryFilter: '',
+  },
+  propsSchema: z.object({
+    layout: z.enum(['grid', 'list']).default('grid'),
+    columns: z.number().min(1).max(6).default(4),
+    limit: z.number().min(1).max(100).default(12),
+    sortBy: z.enum(['createdAt', 'price', 'name', 'updatedAt']).default('createdAt'),
+    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+    categoryFilter: z.string().default(''),
+  }),
+  dataBindings: [
+    { name: 'products', description: 'Product data source', type: 'listRecords', collection: 'products' },
+  ],
+  tags: ['shop', 'products', 'list', 'grid', 'catalog', 'produkte', 'shop'],
+};
+
+const ProductCardComponent: ComponentDefinition = {
+  type: 'ProductCard',
+  displayName: 'Produktkarte',
+  description: 'Displays a single product with image, name, price and add-to-cart',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showPrice: true,
+    showAddToCart: true,
+    showDescription: false,
+    showBadge: true,
+    imageAspect: 'square',
+    productName: 'Beispielprodukt',
+    productPrice: 29.99,
+    productImage: '',
+    productDescription: 'Kurze Produktbeschreibung',
+    productBadge: '',
+    productSlug: '',
+  },
+  propsSchema: z.object({
+    showPrice: z.boolean().default(true),
+    showAddToCart: z.boolean().default(true),
+    showDescription: z.boolean().default(false),
+    showBadge: z.boolean().default(true),
+    imageAspect: z.enum(['square', '4:3', '16:9', '3:4']).default('square'),
+    productName: z.string().default('Beispielprodukt'),
+    productPrice: z.number().default(29.99),
+    productComparePrice: z.number().optional(),
+    productImage: z.string().default(''),
+    productDescription: z.string().default(''),
+    productBadge: z.string().default(''),
+    productSlug: z.string().default(''),
+    productId: z.string().default(''),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Bound product record', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['shop', 'product', 'card', 'item', 'produkt', 'karte'],
+};
+
+const ProductDetailComponent: ComponentDefinition = {
+  type: 'ProductDetail',
+  displayName: 'Produktdetail',
+  description: 'Full product detail view with gallery, description and purchase',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showGallery: true,
+    showDescription: true,
+    showSku: false,
+    showInventory: false,
+    showAddToCart: true,
+    showTax: true,
+    productName: 'Beispielprodukt',
+    productPrice: 49.99,
+    productDescription: 'Ausführliche Produktbeschreibung mit allen Details.',
+    productImages: [],
+    productSku: '',
+  },
+  propsSchema: z.object({
+    showGallery: z.boolean().default(true),
+    showDescription: z.boolean().default(true),
+    showSku: z.boolean().default(false),
+    showInventory: z.boolean().default(false),
+    showAddToCart: z.boolean().default(true),
+    showTax: z.boolean().default(true),
+    productName: z.string().default('Beispielprodukt'),
+    productPrice: z.number().default(49.99),
+    productComparePrice: z.number().optional(),
+    productDescription: z.string().default(''),
+    productImages: z.array(z.string()).default([]),
+    productSku: z.string().default(''),
+    productInventory: z.number().optional(),
+    productId: z.string().default(''),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Bound product record', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['shop', 'product', 'detail', 'page', 'produkt', 'einzelansicht'],
+};
+
+const AddToCartButtonComponent: ComponentDefinition = {
+  type: 'AddToCartButton',
+  displayName: 'Warenkorb-Button',
+  description: 'Button to add a product to the shopping cart',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    text: 'In den Warenkorb',
+    variant: 'primary',
+    fullWidth: false,
+    productId: '',
+  },
+  propsSchema: z.object({
+    text: z.string().default('In den Warenkorb'),
+    variant: z.enum(['primary', 'secondary', 'outline']).default('primary'),
+    fullWidth: z.boolean().default(false),
+    productId: z.string().default(''),
+  }),
+  tags: ['shop', 'cart', 'button', 'warenkorb', 'kaufen'],
+};
+
+const CartSummaryComponent: ComponentDefinition = {
+  type: 'CartSummary',
+  displayName: 'Warenkorb-Zusammenfassung',
+  description: 'Shows cart totals, tax and shipping with checkout button',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showTax: true,
+    showShipping: true,
+    showCheckoutButton: true,
+    checkoutUrl: '/checkout',
+  },
+  propsSchema: z.object({
+    showTax: z.boolean().default(true),
+    showShipping: z.boolean().default(true),
+    showCheckoutButton: z.boolean().default(true),
+    checkoutUrl: z.string().default('/checkout'),
+  }),
+  tags: ['shop', 'cart', 'summary', 'warenkorb', 'zusammenfassung', 'kasse'],
+};
+
+const CartItemsComponent: ComponentDefinition = {
+  type: 'CartItems',
+  displayName: 'Warenkorb-Artikel',
+  description: 'Displays the list of items currently in the shopping cart',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showQuantityControls: true,
+    showRemoveButton: true,
+    showImage: true,
+  },
+  propsSchema: z.object({
+    showQuantityControls: z.boolean().default(true),
+    showRemoveButton: z.boolean().default(true),
+    showImage: z.boolean().default(true),
+  }),
+  tags: ['shop', 'cart', 'items', 'warenkorb', 'artikel'],
+};
+
+const CheckoutButtonComponent: ComponentDefinition = {
+  type: 'CheckoutButton',
+  displayName: 'Kasse-Button',
+  description: 'Button to proceed to checkout',
+  icon: 'credit-card',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    text: 'Zur Kasse',
+    variant: 'primary',
+    fullWidth: true,
+  },
+  propsSchema: z.object({
+    text: z.string().default('Zur Kasse'),
+    variant: z.enum(['primary', 'secondary', 'outline']).default('primary'),
+    fullWidth: z.boolean().default(true),
+  }),
+  tags: ['shop', 'checkout', 'button', 'kasse', 'bezahlen'],
+};
+
+const PriceDisplayComponent: ComponentDefinition = {
+  type: 'PriceDisplay',
+  displayName: 'Preisanzeige',
+  description: 'Displays product price with optional compare/sale price',
+  icon: 'tag',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showCurrency: true,
+    showOriginalPrice: true,
+    size: 'md',
+    price: 29.99,
+    comparePrice: 0,
+    currency: '€',
+  },
+  propsSchema: z.object({
+    showCurrency: z.boolean().default(true),
+    showOriginalPrice: z.boolean().default(true),
+    size: z.enum(['sm', 'md', 'lg', 'xl']).default('md'),
+    price: z.number().default(29.99),
+    comparePrice: z.number().default(0),
+    currency: z.string().default('€'),
+    productId: z.string().default(''),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Bound product for price', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['shop', 'price', 'money', 'preis', 'betrag'],
+};
+
+// ============================================================================
+// WISHLIST & FAVORITES
+// ============================================================================
+
+const WishlistButtonComponent: ComponentDefinition = {
+  type: 'WishlistButton',
+  displayName: 'Wunschliste-Button',
+  description: 'Button to add/remove products from wishlist',
+  icon: 'heart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    variant: 'icon',
+    showCount: false,
+    addText: 'Zur Wunschliste',
+    removeText: 'Von Wunschliste entfernen',
+  },
+  propsSchema: z.object({
+    variant: z.enum(['icon', 'button', 'text']).default('icon'),
+    showCount: z.boolean().default(false),
+    addText: z.string().default('Zur Wunschliste'),
+    removeText: z.string().default('Von Wunschliste entfernen'),
+    productId: z.string().optional(),
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product to add/remove', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['shop', 'wishlist', 'favorites', 'heart', 'wunschliste', 'merken'],
+};
+
+const WishlistDisplayComponent: ComponentDefinition = {
+  type: 'WishlistDisplay',
+  displayName: 'Wunschliste-Anzeige',
+  description: 'Display wishlist items',
+  icon: 'heart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'grid',
+    columns: 4,
+    showRemoveButton: true,
+    showAddToCart: true,
+    emptyText: 'Deine Wunschliste ist leer',
+  },
+  propsSchema: z.object({
+    layout: z.enum(['grid', 'list']).default('grid'),
+    columns: z.number().min(1).max(6).default(4),
+    showRemoveButton: z.boolean().default(true),
+    showAddToCart: z.boolean().default(true),
+    emptyText: z.string().default('Deine Wunschliste ist leer'),
+  }),
+  tags: ['shop', 'wishlist', 'favorites', 'wunschliste', 'liste'],
+};
+
+// ============================================================================
+// SEARCH COMPONENTS
+// ============================================================================
+
+const SearchBoxComponent: ComponentDefinition = {
+  type: 'SearchBox',
+  displayName: 'Suchfeld',
+  description: 'Search input for products or content',
+  icon: 'search',
+  category: 'ui',
+  canHaveChildren: false,
+  defaultProps: {
+    placeholder: 'Suchen...',
+    variant: 'default',
+    size: 'md',
+    searchType: 'products',
+    showIcon: true,
+    showButton: false,
+    buttonText: 'Suchen',
+    instantSearch: true,
+  },
+  propsSchema: z.object({
+    placeholder: z.string().default('Suchen...'),
+    variant: z.enum(['default', 'outlined', 'filled', 'minimal']).default('default'),
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+    searchType: z.enum(['products', 'content', 'all']).default('products'),
+    showIcon: z.boolean().default(true),
+    showButton: z.boolean().default(false),
+    buttonText: z.string().default('Suchen'),
+    instantSearch: z.boolean().default(true),
+    minChars: z.number().min(1).max(10).default(2),
+    resultsLimit: z.number().min(1).max(50).default(10),
+  }),
+  tags: ['search', 'suche', 'find', 'query', 'products'],
+};
+
+const SearchResultsComponent: ComponentDefinition = {
+  type: 'SearchResults',
+  displayName: 'Suchergebnisse',
+  description: 'Display search results',
+  icon: 'list',
+  category: 'ui',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'grid',
+    columns: 4,
+    showNoResults: true,
+    noResultsText: 'Keine Ergebnisse gefunden',
+    showFilters: true,
+  },
+  propsSchema: z.object({
+    layout: z.enum(['grid', 'list']).default('grid'),
+    columns: z.number().min(1).max(6).default(4),
+    showNoResults: z.boolean().default(true),
+    noResultsText: z.string().default('Keine Ergebnisse gefunden'),
+    showFilters: z.boolean().default(true),
+    showSortOptions: z.boolean().default(true),
+    showPagination: z.boolean().default(true),
+    pageSize: z.number().min(1).max(100).default(20),
+  }),
+  tags: ['search', 'results', 'find', 'ergebnisse', 'suche'],
+};
+
+// ============================================================================
+// COOKIE CONSENT / GDPR
+// ============================================================================
+
+const CookieBannerComponent: ComponentDefinition = {
+  type: 'CookieBanner',
+  displayName: 'Cookie-Banner',
+  description: 'GDPR-compliant cookie consent banner',
+  icon: 'cookie',
+  category: 'ui',
+  canHaveChildren: false,
+  defaultProps: {
+    position: 'bottom',
+    variant: 'bar',
+    title: 'Cookie-Einstellungen',
+    description: 'Wir verwenden Cookies, um deine Erfahrung auf unserer Website zu verbessern.',
+    acceptAllText: 'Alle akzeptieren',
+    acceptNecessaryText: 'Nur notwendige',
+    settingsText: 'Einstellungen',
+    privacyLinkText: 'Datenschutzerklärung',
+    privacyLinkUrl: '/datenschutz',
+    showCategories: true,
+  },
+  propsSchema: z.object({
+    position: z.enum(['top', 'bottom', 'center']).default('bottom'),
+    variant: z.enum(['bar', 'modal', 'compact']).default('bar'),
+    title: z.string().default('Cookie-Einstellungen'),
+    description: z.string().default('Wir verwenden Cookies, um deine Erfahrung auf unserer Website zu verbessern.'),
+    acceptAllText: z.string().default('Alle akzeptieren'),
+    acceptNecessaryText: z.string().default('Nur notwendige'),
+    settingsText: z.string().default('Einstellungen'),
+    privacyLinkText: z.string().default('Datenschutzerklärung'),
+    privacyLinkUrl: z.string().default('/datenschutz'),
+    showCategories: z.boolean().default(true),
+    categories: z.array(z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      required: z.boolean(),
+    })).optional(),
+  }),
+  tags: ['cookie', 'gdpr', 'dsgvo', 'consent', 'privacy', 'datenschutz'],
+};
+
+// ============================================================================
+// PRODUCT REVIEWS
+// ============================================================================
+
+const ProductReviewsComponent: ComponentDefinition = {
+  type: 'ProductReviews',
+  displayName: 'Produktbewertungen',
+  description: 'Display product reviews and ratings',
+  icon: 'star',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showSummary: true,
+    showWriteReview: true,
+    showAvatar: true,
+    sortBy: 'newest',
+    limit: 10,
+  },
+  propsSchema: z.object({
+    showSummary: z.boolean().default(true),
+    showWriteReview: z.boolean().default(true),
+    showAvatar: z.boolean().default(true),
+    sortBy: z.enum(['newest', 'oldest', 'highest', 'lowest', 'helpful']).default('newest'),
+    limit: z.number().min(1).max(100).default(10),
+    productId: z.string().optional(),
+    emptyText: z.string().default('Noch keine Bewertungen vorhanden'),
+    writeReviewText: z.string().default('Bewertung schreiben'),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product to show reviews for', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['reviews', 'rating', 'bewertungen', 'sterne', 'feedback'],
+};
+
+const ReviewFormComponent: ComponentDefinition = {
+  type: 'ReviewForm',
+  displayName: 'Bewertungsformular',
+  description: 'Form to submit a product review',
+  icon: 'edit',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showRating: true,
+    showTitle: true,
+    showContent: true,
+    showImages: false,
+    submitText: 'Bewertung absenden',
+    titlePlaceholder: 'Titel deiner Bewertung',
+    contentPlaceholder: 'Teile deine Erfahrung mit diesem Produkt...',
+    successMessage: 'Vielen Dank für deine Bewertung!',
+  },
+  propsSchema: z.object({
+    showRating: z.boolean().default(true),
+    showTitle: z.boolean().default(true),
+    showContent: z.boolean().default(true),
+    showImages: z.boolean().default(false),
+    submitText: z.string().default('Bewertung absenden'),
+    titlePlaceholder: z.string().default('Titel deiner Bewertung'),
+    contentPlaceholder: z.string().default('Teile deine Erfahrung mit diesem Produkt...'),
+    successMessage: z.string().default('Vielen Dank für deine Bewertung!'),
+    productId: z.string().optional(),
+    requirePurchase: z.boolean().default(false),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product to review', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['review', 'form', 'bewertung', 'schreiben', 'feedback'],
+};
+
+// ============================================================================
+// CATEGORY FILTER
+// ============================================================================
+
+const CategoryFilterComponent: ComponentDefinition = {
+  type: 'CategoryFilter',
+  displayName: 'Kategorie-Filter',
+  description: 'Filter products by category',
+  icon: 'filter',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'horizontal',
+    showCount: true,
+    showAllOption: true,
+    allText: 'Alle Kategorien',
+  },
+  propsSchema: z.object({
+    layout: z.enum(['horizontal', 'vertical', 'dropdown']).default('horizontal'),
+    showCount: z.boolean().default(true),
+    showAllOption: z.boolean().default(true),
+    allText: z.string().default('Alle Kategorien'),
+    showIcons: z.boolean().default(false),
+    collapsible: z.boolean().default(false),
+    multiSelect: z.boolean().default(false),
+  }),
+  tags: ['filter', 'category', 'kategorie', 'shop', 'navigation'],
+};
+
+// ============================================================================
+// CHECKOUT FORM
+// ============================================================================
+
+const CheckoutFormComponent: ComponentDefinition = {
+  type: 'CheckoutForm',
+  displayName: 'Checkout-Formular',
+  description: 'Complete checkout form with address and payment',
+  icon: 'shopping-cart',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showBillingAddress: true,
+    showShippingAddress: true,
+    showPaymentMethods: true,
+    showOrderSummary: true,
+    showCouponField: true,
+    showTermsCheckbox: true,
+    submitText: 'Jetzt kaufen',
+    termsText: 'Ich akzeptiere die AGB und Datenschutzbestimmungen',
+    termsLinkUrl: '/terms',
+  },
+  propsSchema: z.object({
+    showBillingAddress: z.boolean().default(true),
+    showShippingAddress: z.boolean().default(true),
+    showPaymentMethods: z.boolean().default(true),
+    showOrderSummary: z.boolean().default(true),
+    showCouponField: z.boolean().default(true),
+    showTermsCheckbox: z.boolean().default(true),
+    submitText: z.string().default('Jetzt kaufen'),
+    termsText: z.string().default('Ich akzeptiere die AGB und Datenschutzbestimmungen'),
+    termsLinkUrl: z.string().default('/terms'),
+    successRedirect: z.string().default('/order-confirmation'),
+    guestCheckout: z.boolean().default(true),
+  }),
+  tags: ['checkout', 'form', 'payment', 'kasse', 'bezahlung', 'address'],
+};
+
+const AddressFormComponent: ComponentDefinition = {
+  type: 'AddressForm',
+  displayName: 'Adressformular',
+  description: 'Reusable address input form',
+  icon: 'map-pin',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    type: 'billing',
+    showCompanyField: false,
+    showPhoneField: true,
+    countries: ['DE', 'AT', 'CH'],
+    defaultCountry: 'DE',
+  },
+  propsSchema: z.object({
+    type: z.enum(['billing', 'shipping']).default('billing'),
+    showCompanyField: z.boolean().default(false),
+    showPhoneField: z.boolean().default(true),
+    countries: z.array(z.string()).default(['DE', 'AT', 'CH']),
+    defaultCountry: z.string().default('DE'),
+    required: z.boolean().default(true),
+  }),
+  tags: ['address', 'form', 'adresse', 'billing', 'shipping'],
+};
+
+// ============================================================================
+// PRODUCT VARIANTS
+// ============================================================================
+
+const ProductVariantSelectorComponent: ComponentDefinition = {
+  type: 'ProductVariantSelector',
+  displayName: 'Varianten-Auswahl',
+  description: 'Select product variants like size, color, etc.',
+  icon: 'sliders',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'buttons',
+    showLabel: true,
+    showStock: true,
+    showPrice: true,
+    outOfStockBehavior: 'disable',
+  },
+  propsSchema: z.object({
+    layout: z.enum(['buttons', 'dropdown', 'swatches']).default('buttons'),
+    showLabel: z.boolean().default(true),
+    showStock: z.boolean().default(true),
+    showPrice: z.boolean().default(true),
+    outOfStockBehavior: z.enum(['disable', 'hide', 'show']).default('disable'),
+    optionType: z.enum(['size', 'color', 'material', 'custom']).optional(),
+    productId: z.string().optional(),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product with variants', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['variants', 'size', 'color', 'options', 'varianten', 'größe', 'farbe'],
+};
+
+const ColorSwatchComponent: ComponentDefinition = {
+  type: 'ColorSwatch',
+  displayName: 'Farbauswahl',
+  description: 'Color selector with visual swatches',
+  icon: 'palette',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    size: 'md',
+    shape: 'circle',
+    showLabel: false,
+    showSelected: true,
+  },
+  propsSchema: z.object({
+    size: z.enum(['sm', 'md', 'lg']).default('md'),
+    shape: z.enum(['circle', 'square', 'rounded']).default('circle'),
+    showLabel: z.boolean().default(false),
+    showSelected: z.boolean().default(true),
+    colors: z.array(z.object({
+      value: z.string(),
+      label: z.string(),
+      hex: z.string(),
+    })).optional(),
+    productId: z.string().optional(),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product with color options', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['color', 'swatch', 'farbe', 'auswahl', 'variant'],
+};
+
+const SizeSelectorComponent: ComponentDefinition = {
+  type: 'SizeSelector',
+  displayName: 'Größenauswahl',
+  description: 'Size selector with availability display',
+  icon: 'ruler',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    layout: 'buttons',
+    showSizeGuide: true,
+    sizeGuideText: 'Größentabelle',
+    showStock: true,
+  },
+  propsSchema: z.object({
+    layout: z.enum(['buttons', 'dropdown']).default('buttons'),
+    showSizeGuide: z.boolean().default(true),
+    sizeGuideText: z.string().default('Größentabelle'),
+    sizeGuideUrl: z.string().optional(),
+    showStock: z.boolean().default(true),
+    sizes: z.array(z.object({
+      value: z.string(),
+      label: z.string(),
+      inStock: z.boolean(),
+    })).optional(),
+    productId: z.string().optional(),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product with size options', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['size', 'größe', 'auswahl', 'variant', 'clothing'],
+};
+
+// ============================================================================
+// STOCK & AVAILABILITY
+// ============================================================================
+
+const StockIndicatorComponent: ComponentDefinition = {
+  type: 'StockIndicator',
+  displayName: 'Lagerbestand-Anzeige',
+  description: 'Show product stock status',
+  icon: 'box',
+  category: 'commerce',
+  canHaveChildren: false,
+  defaultProps: {
+    showExactCount: false,
+    lowStockThreshold: 5,
+    inStockText: 'Auf Lager',
+    lowStockText: 'Nur noch wenige verfügbar',
+    outOfStockText: 'Ausverkauft',
+    showIcon: true,
+  },
+  propsSchema: z.object({
+    showExactCount: z.boolean().default(false),
+    lowStockThreshold: z.number().default(5),
+    inStockText: z.string().default('Auf Lager'),
+    lowStockText: z.string().default('Nur noch wenige verfügbar'),
+    outOfStockText: z.string().default('Ausverkauft'),
+    showIcon: z.boolean().default(true),
+    productId: z.string().optional(),
+  }),
+  dataBindings: [
+    { name: 'product', description: 'Product to show stock for', type: 'currentRecord', collection: 'products' },
+  ],
+  tags: ['stock', 'inventory', 'lager', 'bestand', 'verfügbarkeit'],
+};
+
+// ============================================================================
 // SYMBOL INSTANCE - For Global Symbols
 // ============================================================================
 
@@ -1526,6 +2210,34 @@ export function registerBuiltinComponents(): void {
   
   // Symbols
   componentRegistry.register(SymbolInstanceComponent);
+  
+  // Commerce / Shop
+  componentRegistry.register(ProductListComponent);
+  componentRegistry.register(ProductCardComponent);
+  componentRegistry.register(ProductDetailComponent);
+  componentRegistry.register(AddToCartButtonComponent);
+  componentRegistry.register(CartSummaryComponent);
+  componentRegistry.register(CartItemsComponent);
+  componentRegistry.register(CheckoutButtonComponent);
+  componentRegistry.register(PriceDisplayComponent);
+  componentRegistry.register(WishlistButtonComponent);
+  componentRegistry.register(WishlistDisplayComponent);
+  componentRegistry.register(ProductReviewsComponent);
+  componentRegistry.register(ReviewFormComponent);
+  componentRegistry.register(CategoryFilterComponent);
+  componentRegistry.register(CheckoutFormComponent);
+  componentRegistry.register(AddressFormComponent);
+  componentRegistry.register(ProductVariantSelectorComponent);
+  componentRegistry.register(ColorSwatchComponent);
+  componentRegistry.register(SizeSelectorComponent);
+  componentRegistry.register(StockIndicatorComponent);
+  
+  // Search
+  componentRegistry.register(SearchBoxComponent);
+  componentRegistry.register(SearchResultsComponent);
+  
+  // GDPR / Cookie Consent
+  componentRegistry.register(CookieBannerComponent);
 }
 
 // Initialize on import

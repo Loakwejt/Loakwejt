@@ -32,6 +32,10 @@ const shopTemplate = {
             paddingY: 'md',
             paddingX: 'lg',
             borderBottom: '1px solid #e5e5e5',
+          },
+          mobile: {
+            paddingX: 'sm',
+            paddingY: 'sm',
           }
         },
         actions: [],
@@ -48,8 +52,11 @@ const shopTemplate = {
               {
                 id: generateId(),
                 type: 'Stack',
-                props: { direction: 'row', justify: 'between', align: 'center', gap: 'lg' },
-                style: { base: {} },
+                props: { direction: 'row', justify: 'between', align: 'center', gap: 'lg', responsiveStack: false },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'sm' }
+                },
                 actions: [],
                 meta: { name: 'Header Layout' },
                 children: [
@@ -58,17 +65,23 @@ const shopTemplate = {
                     id: generateId(),
                     type: 'Heading',
                     props: { level: 4, text: 'STUDIO' },
-                    style: { base: { fontWeight: 'bold', letterSpacing: '0.2em', fontSize: 'lg' } },
+                    style: { 
+                      base: { fontWeight: 'bold', letterSpacing: '0.2em', fontSize: 'lg' },
+                      mobile: { fontSize: 'md' }
+                    },
                     actions: [],
                     meta: { name: 'Logo' },
                     children: [],
                   },
-                  // Navigation
+                  // Navigation - hidden on mobile
                   {
                     id: generateId(),
                     type: 'Stack',
-                    props: { direction: 'row', align: 'center', gap: 'xl' },
-                    style: { base: {} },
+                    props: { direction: 'row', align: 'center', gap: 'xl', responsiveStack: false },
+                    style: { 
+                      base: {},
+                      mobile: { display: 'none' }
+                    },
                     actions: [],
                     meta: { name: 'Hauptnavigation' },
                     children: [
@@ -82,14 +95,17 @@ const shopTemplate = {
                   {
                     id: generateId(),
                     type: 'Stack',
-                    props: { direction: 'row', align: 'center', gap: 'md' },
-                    style: { base: {} },
+                    props: { direction: 'row', align: 'center', gap: 'md', responsiveStack: false },
+                    style: { 
+                      base: {},
+                      mobile: { gap: 'xs' }
+                    },
                     actions: [],
                     meta: { name: 'Header Aktionen' },
                     children: [
                       { id: generateId(), type: 'Button', props: { text: '🔍', variant: 'ghost', size: 'sm' }, style: { base: {} }, actions: [], meta: { name: 'Suche Button' }, children: [] },
-                      { id: generateId(), type: 'Button', props: { text: '♡', variant: 'ghost', size: 'sm' }, style: { base: {} }, actions: [], meta: { name: 'Wunschliste Button' }, children: [] },
-                      { id: generateId(), type: 'Button', props: { text: 'Warenkorb (0)', variant: 'outline', size: 'sm' }, style: { base: { borderColor: '#171717', textColor: '#171717' } }, actions: [], meta: { name: 'Warenkorb Button' }, children: [] },
+                      { id: generateId(), type: 'Button', props: { text: '♡', variant: 'ghost', size: 'sm' }, style: { base: {}, mobile: { display: 'none' } }, actions: [], meta: { name: 'Wunschliste Button' }, children: [] },
+                      { id: generateId(), type: 'Button', props: { text: 'Warenkorb (0)', variant: 'outline', size: 'sm' }, style: { base: { borderColor: '#171717', textColor: '#171717' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Warenkorb Button' }, children: [] },
                     ],
                   },
                 ],
@@ -108,6 +124,9 @@ const shopTemplate = {
           base: { 
             bgColor: '#f5f5f5',
             paddingY: '3xl',
+          },
+          mobile: {
+            paddingY: 'lg',
           }
         },
         actions: [],
@@ -117,7 +136,10 @@ const shopTemplate = {
             id: generateId(),
             type: 'Container',
             props: { maxWidth: 'xl' },
-            style: { base: {} },
+            style: { 
+              base: {},
+              mobile: { paddingX: 'md' }
+            },
             actions: [],
             meta: { name: 'Hero Container' },
             children: [
@@ -125,7 +147,10 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Grid',
                 props: { columns: 2, gap: 'xl' },
-                style: { base: {} },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'lg' }
+                },
                 actions: [],
                 meta: { name: 'Hero 2-Spalten' },
                 children: [
@@ -134,7 +159,10 @@ const shopTemplate = {
                     id: generateId(),
                     type: 'Stack',
                     props: { direction: 'column', gap: 'lg', justify: 'center' },
-                    style: { base: {} },
+                    style: { 
+                      base: {},
+                      mobile: { gap: 'md', textAlign: 'center' }
+                    },
                     actions: [],
                     meta: { name: 'Hero Text' },
                     children: [
@@ -151,7 +179,10 @@ const shopTemplate = {
                         id: generateId(),
                         type: 'Heading',
                         props: { level: 1, text: 'Neue Kollektion' },
-                        style: { base: { fontSize: '4xl', fontWeight: 'light', lineHeight: 'tight' } },
+                        style: { 
+                          base: { fontSize: '4xl', fontWeight: 'light', lineHeight: 'tight' },
+                          mobile: { fontSize: '2xl' }
+                        },
                         actions: [],
                         meta: { name: 'Hero Überschrift' },
                         children: [],
@@ -160,7 +191,10 @@ const shopTemplate = {
                         id: generateId(),
                         type: 'Text',
                         props: { text: 'Zeitlose Designs für den modernen Alltag. Handgefertigt mit Liebe zum Detail.' },
-                        style: { base: { fontSize: 'lg', textColor: '#525252', lineHeight: 'relaxed' } },
+                        style: { 
+                          base: { fontSize: 'lg', textColor: '#525252', lineHeight: 'relaxed' },
+                          mobile: { fontSize: 'base' }
+                        },
                         actions: [],
                         meta: { name: 'Hero Beschreibung' },
                         children: [],
@@ -169,7 +203,10 @@ const shopTemplate = {
                         id: generateId(),
                         type: 'Stack',
                         props: { direction: 'row', gap: 'md' },
-                        style: { base: { marginTop: 'md' } },
+                        style: { 
+                          base: { marginTop: 'md' },
+                          mobile: { justifyContent: 'center' }
+                        },
                         actions: [],
                         meta: { name: 'Hero Buttons' },
                         children: [
@@ -177,7 +214,10 @@ const shopTemplate = {
                             id: generateId(),
                             type: 'Button',
                             props: { text: 'Jetzt entdecken', variant: 'primary', size: 'lg' },
-                            style: { base: { bgColor: '#171717', textColor: '#ffffff', paddingX: 'xl' } },
+                            style: { 
+                              base: { bgColor: '#171717', textColor: '#ffffff', paddingX: 'xl' },
+                              mobile: { paddingX: 'md' }
+                            },
                             actions: [],
                             meta: { name: 'CTA: Jetzt entdecken' },
                             children: [],
@@ -186,7 +226,10 @@ const shopTemplate = {
                             id: generateId(),
                             type: 'Button',
                             props: { text: 'Lookbook ansehen', variant: 'ghost', size: 'lg' },
-                            style: { base: { textColor: '#171717' } },
+                            style: { 
+                              base: { textColor: '#171717' },
+                              mobile: { display: 'none' }
+                            },
                             actions: [],
                             meta: { name: 'CTA: Lookbook' },
                             children: [],
@@ -225,6 +268,9 @@ const shopTemplate = {
           base: { 
             bgColor: '#ffffff',
             paddingY: '2xl',
+          },
+          mobile: {
+            paddingY: 'lg',
           }
         },
         actions: [],
@@ -234,7 +280,10 @@ const shopTemplate = {
             id: generateId(),
             type: 'Container',
             props: { maxWidth: 'xl' },
-            style: { base: {} },
+            style: { 
+              base: {},
+              mobile: { paddingX: 'md' }
+            },
             actions: [],
             meta: { name: 'Kategorien Container' },
             children: [
@@ -242,7 +291,10 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Grid',
                 props: { columns: 4, gap: 'lg' },
-                style: { base: {} },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Kategorien Grid' },
                 children: [
@@ -256,7 +308,7 @@ const shopTemplate = {
                     meta: { name: 'Kategorie: Oberteile' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400&q=80', alt: 'Oberteile', aspectRatio: '1/1' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Bild: Oberteile' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Oberteile' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Label: Oberteile' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Oberteile' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Label: Oberteile' }, children: [] },
                     ],
                   },
                   // Kategorie 2
@@ -269,7 +321,7 @@ const shopTemplate = {
                     meta: { name: 'Kategorie: Hosen' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&q=80', alt: 'Hosen', aspectRatio: '1/1' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Bild: Hosen' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Hosen' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Label: Hosen' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Hosen' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Label: Hosen' }, children: [] },
                     ],
                   },
                   // Kategorie 3
@@ -282,7 +334,7 @@ const shopTemplate = {
                     meta: { name: 'Kategorie: Kleider' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&q=80', alt: 'Kleider', aspectRatio: '1/1' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Bild: Kleider' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Kleider' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Label: Kleider' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Kleider' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Label: Kleider' }, children: [] },
                     ],
                   },
                   // Kategorie 4
@@ -295,7 +347,7 @@ const shopTemplate = {
                     meta: { name: 'Kategorie: Accessoires' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=400&q=80', alt: 'Accessoires', aspectRatio: '1/1' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Bild: Accessoires' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Accessoires' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Label: Accessoires' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Accessoires' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Label: Accessoires' }, children: [] },
                     ],
                   },
                 ],
@@ -314,6 +366,9 @@ const shopTemplate = {
           base: { 
             bgColor: '#fafafa',
             paddingY: '2xl',
+          },
+          mobile: {
+            paddingY: 'lg',
           }
         },
         actions: [],
@@ -323,7 +378,10 @@ const shopTemplate = {
             id: generateId(),
             type: 'Container',
             props: { maxWidth: 'xl' },
-            style: { base: {} },
+            style: { 
+              base: {},
+              mobile: { paddingX: 'md' }
+            },
             actions: [],
             meta: { name: 'Produkte Container' },
             children: [
@@ -331,13 +389,16 @@ const shopTemplate = {
               {
                 id: generateId(),
                 type: 'Stack',
-                props: { direction: 'row', justify: 'between', align: 'center' },
-                style: { base: { marginBottom: 'xl' } },
+                props: { direction: 'row', justify: 'between', align: 'center', responsiveStack: false },
+                style: { 
+                  base: { marginBottom: 'xl' },
+                  mobile: { marginBottom: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Produkte Header' },
                 children: [
-                  { id: generateId(), type: 'Heading', props: { level: 2, text: 'Bestseller' }, style: { base: { fontSize: '2xl', fontWeight: 'light' } }, actions: [], meta: { name: 'Produkte Überschrift' }, children: [] },
-                  { id: generateId(), type: 'Link', props: { text: 'Alle ansehen →', href: '#all' }, style: { base: { textColor: '#171717', fontSize: 'sm' } }, actions: [], meta: { name: 'Link: Alle ansehen' }, children: [] },
+                  { id: generateId(), type: 'Heading', props: { level: 2, text: 'Bestseller' }, style: { base: { fontSize: '2xl', fontWeight: 'light' }, mobile: { fontSize: 'lg' } }, actions: [], meta: { name: 'Produkte Überschrift' }, children: [] },
+                  { id: generateId(), type: 'Link', props: { text: 'Alle ansehen →', href: '#all' }, style: { base: { textColor: '#171717', fontSize: 'sm' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Alle ansehen' }, children: [] },
                 ],
               },
               // Produkt Grid
@@ -345,7 +406,10 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Grid',
                 props: { columns: 4, gap: 'lg' },
-                style: { base: {} },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Produkt Grid' },
                 children: [
@@ -359,8 +423,8 @@ const shopTemplate = {
                     meta: { name: 'Produkt: Leinenhemd' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&q=80', alt: 'Leinenhemd', aspectRatio: '3/4' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Produktbild' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Leinenhemd Classic' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: '89,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Preis' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Leinenhemd Classic' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: '89,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Preis' }, children: [] },
                     ],
                   },
                   // Produkt 2
@@ -373,8 +437,8 @@ const shopTemplate = {
                     meta: { name: 'Produkt: Wollpullover' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&q=80', alt: 'Wollpullover', aspectRatio: '3/4' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Produktbild' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Wollpullover Merino' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: '149,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Preis' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Wollpullover Merino' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: '149,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Preis' }, children: [] },
                     ],
                   },
                   // Produkt 3
@@ -387,8 +451,8 @@ const shopTemplate = {
                     meta: { name: 'Produkt: Chinohose' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&q=80', alt: 'Chinohose', aspectRatio: '3/4' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Produktbild' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Chinohose Slim' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: '79,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Preis' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Chinohose Slim' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: '79,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Preis' }, children: [] },
                     ],
                   },
                   // Produkt 4
@@ -401,8 +465,8 @@ const shopTemplate = {
                     meta: { name: 'Produkt: Seidenbluse' },
                     children: [
                       { id: generateId(), type: 'Image', props: { src: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=400&q=80', alt: 'Seidenbluse', aspectRatio: '3/4' }, style: { base: { borderRadius: 'sm' } }, actions: [], meta: { name: 'Produktbild' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Seidenbluse Elegance' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: '129,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Preis' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Seidenbluse Elegance' }, style: { base: { fontSize: 'sm', fontWeight: 'medium' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Produktname' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: '129,00 €' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Preis' }, children: [] },
                     ],
                   },
                 ],
@@ -422,6 +486,9 @@ const shopTemplate = {
             bgColor: '#171717',
             textColor: '#ffffff',
             paddingY: 'xl',
+          },
+          mobile: {
+            paddingY: 'lg',
           }
         },
         actions: [],
@@ -431,7 +498,10 @@ const shopTemplate = {
             id: generateId(),
             type: 'Container',
             props: { maxWidth: 'xl' },
-            style: { base: {} },
+            style: { 
+              base: {},
+              mobile: { paddingX: 'md' }
+            },
             actions: [],
             meta: { name: 'Vorteile Container' },
             children: [
@@ -439,7 +509,10 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Grid',
                 props: { columns: 4, gap: 'xl' },
-                style: { base: {} },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Vorteile Grid' },
                 children: [
@@ -511,6 +584,10 @@ const shopTemplate = {
           base: { 
             bgColor: '#f5f5f5',
             paddingY: '2xl',
+          },
+          mobile: {
+            paddingY: 'lg',
+            paddingX: 'md',
           }
         },
         actions: [],
@@ -528,22 +605,28 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Stack',
                 props: { direction: 'column', gap: 'lg', align: 'center' },
-                style: { base: {} },
+                style: { 
+                  base: {},
+                  mobile: { gap: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Newsletter Inhalt' },
                 children: [
-                  { id: generateId(), type: 'Heading', props: { level: 2, text: 'Newsletter' }, style: { base: { fontSize: '2xl', fontWeight: 'light' } }, actions: [], meta: { name: 'Newsletter Überschrift' }, children: [] },
-                  { id: generateId(), type: 'Text', props: { text: 'Erhalte 10% Rabatt auf deine erste Bestellung und bleib über neue Kollektionen informiert.' }, style: { base: { textColor: '#525252' } }, actions: [], meta: { name: 'Newsletter Text' }, children: [] },
+                  { id: generateId(), type: 'Heading', props: { level: 2, text: 'Newsletter' }, style: { base: { fontSize: '2xl', fontWeight: 'light' }, mobile: { fontSize: 'lg' } }, actions: [], meta: { name: 'Newsletter Überschrift' }, children: [] },
+                  { id: generateId(), type: 'Text', props: { text: 'Erhalte 10% Rabatt auf deine erste Bestellung und bleib über neue Kollektionen informiert.' }, style: { base: { textColor: '#525252' }, mobile: { fontSize: 'sm' } }, actions: [], meta: { name: 'Newsletter Text' }, children: [] },
                   {
                     id: generateId(),
                     type: 'Stack',
                     props: { direction: 'row', gap: 'sm' },
-                    style: { base: { width: '100%', maxWidth: '400px' } },
+                    style: { 
+                      base: { width: '100%', maxWidth: '400px' },
+                      mobile: { flexDirection: 'column', gap: 'sm' }
+                    },
                     actions: [],
                     meta: { name: 'Newsletter Formular' },
                     children: [
-                      { id: generateId(), type: 'Input', props: { placeholder: 'E-Mail Adresse', type: 'email' }, style: { base: { flex: '1', borderColor: '#d4d4d4' } }, actions: [], meta: { name: 'E-Mail Eingabe' }, children: [] },
-                      { id: generateId(), type: 'Button', props: { text: 'Anmelden', variant: 'primary' }, style: { base: { bgColor: '#171717', textColor: '#ffffff' } }, actions: [], meta: { name: 'Anmelden Button' }, children: [] },
+                      { id: generateId(), type: 'Input', props: { placeholder: 'E-Mail Adresse', type: 'email' }, style: { base: { flex: '1', borderColor: '#d4d4d4' }, mobile: { width: '100%' } }, actions: [], meta: { name: 'E-Mail Eingabe' }, children: [] },
+                      { id: generateId(), type: 'Button', props: { text: 'Anmelden', variant: 'primary' }, style: { base: { bgColor: '#171717', textColor: '#ffffff' }, mobile: { width: '100%' } }, actions: [], meta: { name: 'Anmelden Button' }, children: [] },
                     ],
                   },
                 ],
@@ -564,6 +647,10 @@ const shopTemplate = {
             paddingY: '2xl',
             paddingX: 'lg',
             borderTop: '1px solid #e5e5e5',
+          },
+          mobile: {
+            paddingY: 'lg',
+            paddingX: 'md',
           }
         },
         actions: [],
@@ -581,11 +668,14 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Grid',
                 props: { columns: 4, gap: 'xl' },
-                style: { base: { marginBottom: 'xl' } },
+                style: { 
+                  base: { marginBottom: 'xl' },
+                  mobile: { gap: 'lg', marginBottom: 'lg' }
+                },
                 actions: [],
                 meta: { name: 'Footer Spalten' },
                 children: [
-                  // Spalte 1
+                  // Spalte 1 - auf Mobile als erstes und volle Breite
                   {
                     id: generateId(),
                     type: 'Stack',
@@ -595,7 +685,7 @@ const shopTemplate = {
                     meta: { name: 'Footer: Shop Info' },
                     children: [
                       { id: generateId(), type: 'Heading', props: { level: 4, text: 'STUDIO' }, style: { base: { fontWeight: 'bold', letterSpacing: '0.2em', fontSize: 'sm' } }, actions: [], meta: { name: 'Footer Logo' }, children: [] },
-                      { id: generateId(), type: 'Text', props: { text: 'Zeitlose Mode für den modernen Menschen. Nachhaltig produziert in Europa.' }, style: { base: { fontSize: 'sm', textColor: '#525252', lineHeight: 'relaxed' } }, actions: [], meta: { name: 'Shop Beschreibung' }, children: [] },
+                      { id: generateId(), type: 'Text', props: { text: 'Zeitlose Mode für den modernen Menschen. Nachhaltig produziert in Europa.' }, style: { base: { fontSize: 'sm', textColor: '#525252', lineHeight: 'relaxed' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Shop Beschreibung' }, children: [] },
                     ],
                   },
                   // Spalte 2
@@ -608,10 +698,10 @@ const shopTemplate = {
                     meta: { name: 'Footer: Shop Links' },
                     children: [
                       { id: generateId(), type: 'Text', props: { text: 'Shop' }, style: { base: { fontSize: 'sm', fontWeight: 'semibold', marginBottom: 'xs' } }, actions: [], meta: { name: 'Überschrift: Shop' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Neuheiten', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Neuheiten' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Bestseller', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Bestseller' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Sale', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Sale' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Geschenkgutscheine', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Gutscheine' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Neuheiten', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Neuheiten' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Bestseller', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Bestseller' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Sale', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Sale' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Geschenkgutscheine', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Gutscheine' }, children: [] },
                     ],
                   },
                   // Spalte 3
@@ -624,10 +714,10 @@ const shopTemplate = {
                     meta: { name: 'Footer: Hilfe Links' },
                     children: [
                       { id: generateId(), type: 'Text', props: { text: 'Hilfe' }, style: { base: { fontSize: 'sm', fontWeight: 'semibold', marginBottom: 'xs' } }, actions: [], meta: { name: 'Überschrift: Hilfe' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Versand & Lieferung', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Versand' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Rückgabe', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Rückgabe' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Größenberatung', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Größen' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Kontakt', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Kontakt' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Versand & Lieferung', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Versand' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Rückgabe', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Rückgabe' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Größenberatung', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Größen' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Kontakt', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Kontakt' }, children: [] },
                     ],
                   },
                   // Spalte 4
@@ -640,10 +730,10 @@ const shopTemplate = {
                     meta: { name: 'Footer: Rechtliches' },
                     children: [
                       { id: generateId(), type: 'Text', props: { text: 'Rechtliches' }, style: { base: { fontSize: 'sm', fontWeight: 'semibold', marginBottom: 'xs' } }, actions: [], meta: { name: 'Überschrift: Rechtliches' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Impressum', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Impressum' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Datenschutz', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Datenschutz' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'AGB', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: AGB' }, children: [] },
-                      { id: generateId(), type: 'Link', props: { text: 'Widerruf', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' } }, actions: [], meta: { name: 'Link: Widerruf' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Impressum', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Impressum' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Datenschutz', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Datenschutz' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'AGB', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: AGB' }, children: [] },
+                      { id: generateId(), type: 'Link', props: { text: 'Widerruf', href: '#' }, style: { base: { fontSize: 'sm', textColor: '#525252' }, mobile: { fontSize: 'xs' } }, actions: [], meta: { name: 'Link: Widerruf' }, children: [] },
                     ],
                   },
                 ],
@@ -653,7 +743,10 @@ const shopTemplate = {
                 id: generateId(),
                 type: 'Stack',
                 props: { direction: 'row', justify: 'between', align: 'center' },
-                style: { base: { paddingTop: 'lg', borderTop: '1px solid #e5e5e5' } },
+                style: { 
+                  base: { paddingTop: 'lg', borderTop: '1px solid #e5e5e5' },
+                  mobile: { flexDirection: 'column', gap: 'sm', paddingTop: 'md' }
+                },
                 actions: [],
                 meta: { name: 'Copyright Zeile' },
                 children: [

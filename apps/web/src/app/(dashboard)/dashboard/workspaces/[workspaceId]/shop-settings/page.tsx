@@ -19,8 +19,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface ShopSettingsData {
   currency: string;
@@ -39,15 +38,12 @@ interface ShopSettingsData {
 
 export default function WorkspaceShopSettingsPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [settings, setSettings] = useState<ShopSettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/shop-settings`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/shop-settings`;
 
   const loadSettings = useCallback(async () => {
     if (!baseUrl) return;
@@ -67,8 +63,8 @@ export default function WorkspaceShopSettingsPage() {
   }, [baseUrl]);
 
   useEffect(() => {
-    if (activeSiteId) loadSettings();
-  }, [activeSiteId, loadSettings]);
+    loadSettings();
+  }, [loadSettings]);
 
   async function handleSave() {
     if (!baseUrl || !settings) return;
@@ -91,24 +87,6 @@ export default function WorkspaceShopSettingsPage() {
     setSettings((prev) => prev ? { ...prev, ...partial } : null);
   }
 
-  if (sitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Lade…</div>;
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">Keine Site vorhanden</p>
-            <p className="text-sm text-muted-foreground mt-1">Erstelle zunächst eine Site, um die Shop-Einstellungen zu konfigurieren.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (loading || !settings) {
     return <div className="p-8 text-center text-muted-foreground">Lade Shop-Einstellungen…</div>;
   }
@@ -123,9 +101,6 @@ export default function WorkspaceShopSettingsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {sites.length > 1 && (
-            <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-          )}
           <Button onClick={handleSave} disabled={saving} className="gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {saved ? 'Gespeichert!' : 'Speichern'}

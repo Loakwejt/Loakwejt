@@ -18,11 +18,10 @@ import {
 
 interface Props {
   workspaceId: string;
-  siteId: string;
   children: React.ReactNode;
 }
 
-export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
+export function CreatePageDialog({ workspaceId, children }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +47,7 @@ export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
 
     try {
       const response = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/pages`,
+        `/api/workspaces/${workspaceId}/pages`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -79,9 +78,9 @@ export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create Page</DialogTitle>
+            <DialogTitle>Neue Seite erstellen</DialogTitle>
             <DialogDescription>
-              Add a new page to your site.
+              Füge eine neue Seite zu deiner Website hinzu.
             </DialogDescription>
           </DialogHeader>
 
@@ -93,10 +92,10 @@ export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="page-name">Page Name</Label>
+              <Label htmlFor="page-name">Seitenname</Label>
               <Input
                 id="page-name"
-                placeholder="About Us"
+                placeholder="Über uns"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 required
@@ -105,10 +104,10 @@ export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="page-slug">URL Slug</Label>
+              <Label htmlFor="page-slug">URL-Pfad</Label>
               <Input
                 id="page-slug"
-                placeholder="about-us"
+                placeholder="ueber-uns"
                 value={slug}
                 onChange={(e) =>
                   setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
@@ -126,17 +125,17 @@ export function CreatePageDialog({ workspaceId, siteId, children }: Props) {
                 disabled={isLoading}
               />
               <Label htmlFor="is-homepage" className="text-sm font-normal">
-                Set as homepage
+                Als Startseite festlegen
               </Label>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={isLoading || !name || !slug}>
-              {isLoading ? 'Creating...' : 'Create Page'}
+              {isLoading ? 'Wird erstellt...' : 'Seite erstellen'}
             </Button>
           </DialogFooter>
         </form>

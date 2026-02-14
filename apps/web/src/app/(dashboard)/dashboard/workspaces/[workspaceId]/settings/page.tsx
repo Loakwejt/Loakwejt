@@ -40,16 +40,17 @@ import {
 import { WorkspaceSocialLinks } from '@/components/dashboard/workspace-social-links';
 
 interface WorkspaceSettingsPageProps {
-  params: { workspaceId: string };
+  params: Promise<{ workspaceId: string }>;
 }
 
 export default async function WorkspaceSettingsPage({ params }: WorkspaceSettingsPageProps) {
+  const { workspaceId } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect('/login');
 
   const membership = await prisma.workspaceMember.findFirst({
     where: {
-      workspaceId: params.workspaceId,
+      workspaceId,
       userId: session.user.id,
     },
     include: {

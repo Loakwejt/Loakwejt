@@ -28,7 +28,13 @@ export async function createAuditLog({
     let ua: string | null = null;
 
     try {
-      const h = reqHeaders ?? headers();
+      // In Next.js 15, headers() returns a Promise
+      let h: Headers;
+      if (reqHeaders) {
+        h = reqHeaders;
+      } else {
+        h = await headers();
+      }
       ip =
         h.get('x-forwarded-for')?.split(',')[0]?.trim() ??
         h.get('x-real-ip') ??
@@ -44,7 +50,7 @@ export async function createAuditLog({
         action,
         entity: entity ?? undefined,
         entityId: entityId ?? undefined,
-        details: details ?? undefined,
+        details: (details ?? undefined) as any,
         ipAddress: ip ?? undefined,
         userAgent: ua ?? undefined,
       },

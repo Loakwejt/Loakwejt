@@ -213,7 +213,6 @@ async function collectUserData(userId: string) {
       accounts: {
         select: {
           provider: true,
-          createdAt: true,
         },
       },
       memberships: {

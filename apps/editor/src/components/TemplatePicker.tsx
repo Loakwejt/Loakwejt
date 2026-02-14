@@ -66,7 +66,7 @@ interface TemplatePickerProps {
 export function TemplatePicker({ open, onOpenChange, mode = 'section' }: TemplatePickerProps) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all');
-  const { tree, replaceTree, addNode, siteSettings } = useEditorStore();
+  const { tree, replaceTree, addNode, siteSettings, workspaceType } = useEditorStore();
   
   // Confirmation dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -147,9 +147,26 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
     return [...new Set([...registryCategories, ...dbCategories])];
   }, [dbSectionTemplates]);
 
+  // Map WorkspaceType to websiteType for filtering
+  const workspaceToWebsiteType: Record<string, string[]> = {
+    SHOP: ['ecommerce', 'all'],
+    WEBSITE: ['all', 'business', 'landing', 'portfolio', 'ecommerce'],
+    BLOG: ['blog', 'all'],
+    FORUM: ['community', 'all'],
+    WIKI: ['all'],
+    PORTFOLIO: ['portfolio', 'all'],
+    LANDING: ['landing', 'all', 'ecommerce'],
+  };
+
   // Filter templates
   const filteredSections = useMemo(() => {
     let templates = sectionTemplates;
+    
+    // Filter by workspace type - show only compatible templates
+    const compatibleTypes = workspaceToWebsiteType[workspaceType] || ['all'];
+    templates = templates.filter(t => 
+      t.websiteTypes.some(wt => compatibleTypes.includes(wt) || wt === 'all')
+    );
     
     if (selectedCategory !== 'all') {
       templates = templates.filter(t => t.category === selectedCategory);
@@ -165,18 +182,26 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
     }
     
     return templates;
-  }, [sectionTemplates, selectedCategory, search]);
+  }, [sectionTemplates, selectedCategory, search, workspaceType]);
 
   const filteredPages = useMemo(() => {
-    if (!search) return pageTemplates;
+    let templates = pageTemplates;
+    
+    // Filter by workspace type - show only compatible templates
+    const compatibleTypes = workspaceToWebsiteType[workspaceType] || ['all'];
+    templates = templates.filter(t => 
+      compatibleTypes.includes(t.websiteType) || t.websiteType === 'all'
+    );
+    
+    if (!search) return templates;
     
     const lowerSearch = search.toLowerCase();
-    return pageTemplates.filter(t =>
+    return templates.filter(t =>
       t.name.toLowerCase().includes(lowerSearch) ||
       t.description.toLowerCase().includes(lowerSearch) ||
       t.tags.some(tag => tag.toLowerCase().includes(lowerSearch))
     );
-  }, [pageTemplates, search]);
+  }, [pageTemplates, search, workspaceType]);
 
   const handleSelectSection = (template: TemplateDefinition) => {
     // Show confirmation dialog
@@ -244,6 +269,19 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
     setPendingPage(null);
   };
 
+  // Workspace type labels for display
+  const workspaceTypeLabels: Record<string, { label: string; icon: string }> = {
+    SHOP: { label: 'Shop', icon: '🛒' },
+    WEBSITE: { label: 'Website', icon: '🌐' },
+    BLOG: { label: 'Blog', icon: '📝' },
+    FORUM: { label: 'Forum', icon: '💬' },
+    WIKI: { label: 'Wiki', icon: '📚' },
+    PORTFOLIO: { label: 'Portfolio', icon: '🎨' },
+    LANDING: { label: 'Landing Page', icon: '🚀' },
+  };
+
+  const currentTypeInfo = workspaceTypeLabels[workspaceType] || { label: 'Website', icon: '🌐' };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
@@ -251,7 +289,13 @@ export function TemplatePicker({ open, onOpenChange, mode = 'section' }: Templat
           <DialogTitle className="flex items-center gap-2">
             <LayoutTemplate className="h-5 w-5" />
             Vorlagen-Bibliothek
+            <Badge variant="outline" className="ml-2 text-xs">
+              {currentTypeInfo.icon} {currentTypeInfo.label}
+            </Badge>
           </DialogTitle>
+          <DialogDescription>
+            Zeigt Vorlagen für deinen {currentTypeInfo.label}-Workspace. Wähle eine Vorlage aus, um sie zu deiner Seite hinzuzufügen.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 flex-1 overflow-hidden">

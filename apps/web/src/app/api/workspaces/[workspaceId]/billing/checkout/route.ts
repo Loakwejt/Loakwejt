@@ -7,10 +7,11 @@ import { createAuditLog } from '@/lib/audit';
 // POST /api/workspaces/[workspaceId]/billing/checkout
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
     const body = await request.json();
     const { plan, successUrl, cancelUrl } = CreateCheckoutSchema.parse(body);
@@ -31,7 +32,7 @@ export async function POST(
     }
 
     const session = await createCheckoutSession(
-      params.workspaceId,
+      workspaceId,
       priceId,
       successUrl,
       cancelUrl
@@ -41,7 +42,7 @@ export async function POST(
       userId,
       action: 'BILLING_CHECKOUT_STARTED',
       entity: 'Workspace',
-      entityId: params.workspaceId,
+      entityId: workspaceId,
       details: { plan },
     });
 

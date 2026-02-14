@@ -13,7 +13,6 @@ import {
 import {
   Users,
   Building2,
-  Globe,
   FileText,
   HardDrive,
   Crown,
@@ -29,7 +28,6 @@ export default async function AdminDashboardPage() {
   const [
     totalUsers,
     totalWorkspaces,
-    totalSites,
     totalPages,
     totalAssets,
     totalStorageAgg,
@@ -39,7 +37,6 @@ export default async function AdminDashboardPage() {
   ] = await Promise.all([
     prisma.user.count(),
     prisma.workspace.count(),
-    prisma.site.count(),
     prisma.page.count(),
     prisma.asset.count(),
     prisma.asset.aggregate({ _sum: { size: true } }),
@@ -64,7 +61,7 @@ export default async function AdminDashboardPage() {
         slug: true,
         plan: true,
         createdAt: true,
-        _count: { select: { sites: true, members: true } },
+        _count: { select: { pages: true, members: true } },
       },
     }),
   ]);
@@ -141,21 +138,7 @@ export default async function AdminDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                <Globe className="h-5 w-5 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalSites}</p>
-                <p className="text-xs text-muted-foreground">Websites</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                <FileText className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                <FileText className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold">{totalPages}</p>
@@ -282,7 +265,7 @@ export default async function AdminDashboardPage() {
                     <div>
                       <p className="text-sm font-medium">{ws.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {ws._count.sites} Sites · {ws._count.members} Mitglieder
+                        {ws._count.pages} Seiten · {ws._count.members} Mitglieder
                       </p>
                     </div>
                   </div>

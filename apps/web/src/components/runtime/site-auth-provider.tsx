@@ -21,6 +21,8 @@ interface SiteAuthContextValue {
   user: SiteAuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
+  slug: string;
+  /** @deprecated Use `slug` instead */
   siteSlug: string;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (data: { email: string; password: string; name?: string }) => Promise<{ success: boolean; error?: string }>;
@@ -35,6 +37,7 @@ const SiteAuthContext = createContext<SiteAuthContextValue>({
   user: null,
   loading: true,
   isAuthenticated: false,
+  slug: '',
   siteSlug: '',
   login: async () => ({ success: false }),
   register: async () => ({ success: false }),
@@ -50,15 +53,18 @@ const SiteAuthContext = createContext<SiteAuthContextValue>({
 // ============================================================================
 
 interface SiteAuthProviderProps {
-  siteSlug: string;
+  slug: string;
+  /** @deprecated Use `slug` instead */
+  siteSlug?: string;
   children: React.ReactNode;
 }
 
-export function SiteAuthProvider({ siteSlug, children }: SiteAuthProviderProps) {
+export function SiteAuthProvider({ slug, siteSlug: legacySiteSlug, children }: SiteAuthProviderProps) {
+  const resolvedSlug = slug || legacySiteSlug || '';
   const [user, setUser] = useState<SiteAuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const baseUrl = `/api/runtime/sites/${siteSlug}/auth`;
+  const baseUrl = `/api/runtime/workspaces/${resolvedSlug}/auth`;
 
   const refreshUser = useCallback(async () => {
     try {
@@ -204,7 +210,8 @@ export function SiteAuthProvider({ siteSlug, children }: SiteAuthProviderProps) 
         user,
         loading,
         isAuthenticated: !!user,
-        siteSlug,
+        slug: resolvedSlug,
+        siteSlug: resolvedSlug,
         login,
         register,
         logout,

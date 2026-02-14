@@ -981,6 +981,8 @@ interface MemberListRuntimeProps {
   linkToProfile?: boolean;
   profileUrlPattern?: string;
   // Context from renderer
+  slug?: string;
+  /** @deprecated Use `slug` instead */
   siteSlug?: string;
 }
 
@@ -998,10 +1000,11 @@ export function MemberListRuntime({
   title = 'Unsere Mitglieder',
   showPagination = true,
   avatarSize = 'md',
+  slug: slugProp,
   siteSlug,
 }: MemberListRuntimeProps) {
-  const { siteSlug: contextSlug } = useSiteAuth();
-  const slug = siteSlug || contextSlug;
+  const { slug: contextSlug } = useSiteAuth();
+  const slug = slugProp || siteSlug || contextSlug;
   const sizeMap = { sm: 'h-8 w-8', md: 'h-12 w-12', lg: 'h-16 w-16' };
 
   const [members, setMembers] = useState<Array<{ id: string; name: string | null; avatar: string | null; bio: string | null; role: string; createdAt: string }>>([]);
@@ -1020,7 +1023,7 @@ export function MemberListRuntime({
     if (search) params.set('search', search);
     if (filterByRole) params.set('role', filterByRole);
 
-    fetch(`/api/runtime/sites/${slug}/auth/members?${params}`)
+    fetch(`/api/runtime/workspaces/${slug}/auth/members?${params}`)
       .then((res) => res.json())
       .then((data) => {
         setMembers(data.members || []);

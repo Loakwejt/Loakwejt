@@ -94,7 +94,7 @@ export default function AssetsPage() {
         { credentials: 'include' }
       );
 
-      if (!response.ok) throw new Error('Failed to fetch assets');
+      if (!response.ok) throw new Error('Fehler beim Laden der Medien');
 
       const data: AssetsResponse = await response.json();
       setAssets(data.data);
@@ -131,20 +131,20 @@ export default function AssetsPage() {
 
         if (!response.ok) {
           const error = await response.json();
-          alert(`Failed to upload ${file.name}: ${error.error}`);
+          alert(`Fehler beim Hochladen von ${file.name}: ${error.error}`);
         }
       }
       fetchAssets();
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload files');
+      alert('Fehler beim Hochladen');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (assetId: string) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
+    if (!confirm('Bist du sicher, dass du dieses Medium löschen möchtest?')) return;
 
     try {
       const response = await fetch(`/api/workspaces/${workspaceId}/assets/${assetId}`, {
@@ -152,13 +152,13 @@ export default function AssetsPage() {
         credentials: 'include',
       });
 
-      if (!response.ok) throw new Error('Failed to delete asset');
+      if (!response.ok) throw new Error('Fehler beim Löschen');
 
       fetchAssets();
       setSelectedAsset(null);
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Failed to delete asset');
+      alert('Fehler beim Löschen des Mediums');
     }
   };
 
@@ -180,9 +180,9 @@ export default function AssetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Asset Manager</h1>
+          <h1 className="text-2xl font-bold">Medienverwaltung</h1>
           <p className="text-muted-foreground">
-            Manage your images, videos, and files
+            Verwalte deine Bilder, Videos und Dateien
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function AssetsPage() {
             ) : (
               <Upload className="mr-2 h-4 w-4" />
             )}
-            Upload Files
+            Dateien hochladen
           </Button>
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function AssetsPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search assets..."
+            placeholder="Medien durchsuchen..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -221,14 +221,14 @@ export default function AssetsPage() {
 
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="All Types" />
+            <SelectValue placeholder="Alle Typen" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="image">Images</SelectItem>
+            <SelectItem value="all">Alle Typen</SelectItem>
+            <SelectItem value="image">Bilder</SelectItem>
             <SelectItem value="video">Videos</SelectItem>
             <SelectItem value="audio">Audio</SelectItem>
-            <SelectItem value="document">Documents</SelectItem>
+            <SelectItem value="document">Dokumente</SelectItem>
           </SelectContent>
         </Select>
 
@@ -238,10 +238,10 @@ export default function AssetsPage() {
             onValueChange={(v) => setCurrentFolder(v === 'root' ? null : v)}
           >
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Folders" />
+              <SelectValue placeholder="Alle Ordner" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="root">All Folders</SelectItem>
+              <SelectItem value="root">Alle Ordner</SelectItem>
               {folders.map((folder) => (
                 <SelectItem key={folder} value={folder}>
                   <FolderOpen className="inline h-4 w-4 mr-2" />
@@ -280,9 +280,9 @@ export default function AssetsPage() {
       ) : assets.length === 0 ? (
         <div className="text-center py-12">
           <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No assets found</h3>
+          <h3 className="mt-4 text-lg font-medium">Keine Medien gefunden</h3>
           <p className="text-muted-foreground">
-            Upload your first file to get started
+            Lade deine erste Datei hoch
           </p>
         </div>
       ) : viewMode === 'grid' ? (
@@ -353,9 +353,9 @@ export default function AssetsPage() {
             onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
           >
             Previous
-          </Button>
+>Zurück</Button>
           <span className="text-sm text-muted-foreground">
-            Page {pagination.page} of {pagination.totalPages}
+            Seite {pagination.page} von {pagination.totalPages}
           </span>
           <Button
             variant="outline"
@@ -363,7 +363,7 @@ export default function AssetsPage() {
             disabled={pagination.page >= pagination.totalPages}
             onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
           >
-            Next
+            Weiter
           </Button>
         </div>
       )}
@@ -397,23 +397,23 @@ export default function AssetsPage() {
                 {/* Details */}
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-muted-foreground">File Size</Label>
+                    <Label className="text-muted-foreground">Dateigröße</Label>
                     <p>{formatFileSize(selectedAsset.size)}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Type</Label>
+                    <Label className="text-muted-foreground">Typ</Label>
                     <p>{selectedAsset.mimeType}</p>
                   </div>
                   {selectedAsset.width && selectedAsset.height && (
                     <div>
-                      <Label className="text-muted-foreground">Dimensions</Label>
+                      <Label className="text-muted-foreground">Abmessungen</Label>
                       <p>
                         {selectedAsset.width} × {selectedAsset.height} px
                       </p>
                     </div>
                   )}
                   <div>
-                    <Label className="text-muted-foreground">Uploaded</Label>
+                    <Label className="text-muted-foreground">Hochgeladen</Label>
                     <p>{new Date(selectedAsset.createdAt).toLocaleString()}</p>
                   </div>
                   <div>
@@ -440,7 +440,7 @@ export default function AssetsPage() {
                     <Button variant="outline" asChild>
                       <a href={selectedAsset.url} download target="_blank">
                         <Download className="mr-2 h-4 w-4" />
-                        Download
+                        Herunterladen
                       </a>
                     </Button>
                     <Button
@@ -448,7 +448,7 @@ export default function AssetsPage() {
                       onClick={() => handleDelete(selectedAsset.id)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      Löschen
                     </Button>
                   </div>
                 </div>

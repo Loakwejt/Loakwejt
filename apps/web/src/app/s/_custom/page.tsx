@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { prisma } from '@builderly/db';
 import { SafeRenderer } from '@/components/runtime/safe-renderer';
 import { SiteAuthProvider } from '@/components/runtime/site-auth-provider';
+import { CartProvider } from '@/components/runtime/cart-provider';
 import type { BuilderTree } from '@builderly/core';
 import { Layers } from 'lucide-react';
 
@@ -11,22 +12,23 @@ import { Layers } from 'lucide-react';
 // We resolve the site by its custom domain instead of slug.
 
 interface Props {
-  searchParams: { __domain?: string };
+  searchParams: Promise<{ __domain?: string }>;
 }
 
 export default async function CustomDomainHomePage({ searchParams }: Props) {
-  const domain = searchParams.__domain || headers().get('host') || '';
+  const resolvedSearchParams = await searchParams;
+  const headersList = await headers();
+  const domain = resolvedSearchParams.__domain || headersList.get('host') || '';
 
   if (!domain) notFound();
 
-  // Find site by custom domain
-  const site = await prisma.site.findFirst({
+  // Find workspace by custom domain
+  const workspace = await prisma.workspace.findFirst({
     where: {
       customDomain: domain,
       isPublished: true,
     },
     include: {
-      workspace: { select: { plan: true } },
       pages: {
         where: {
           isHomepage: true,
@@ -38,7 +40,7 @@ export default async function CustomDomainHomePage({ searchParams }: Props) {
     },
   });
 
-  if (!site || !site.pages[0]) {
+  if (!workspace || !workspace.pages[0]) {
     // Check if domain is registered but not verified
     const domainRecord = await prisma.customDomain.findUnique({
       where: { domain },
@@ -58,23 +60,25 @@ export default async function CustomDomainHomePage({ searchParams }: Props) {
     notFound();
   }
 
-  const page = site.pages[0];
+  const page = workspace.pages[0];
   const revision = page.publishedRevision;
   if (!revision) notFound();
 
   const builderTree = revision.builderTree as unknown as BuilderTree;
-  const showWatermark = site.workspace.plan === 'FREE';
+  const showWatermark = workspace.plan === 'FREE';
 
   return (
     <div className="min-h-screen">
-      <SiteAuthProvider siteSlug={site.slug}>
-        <SafeRenderer
-          tree={builderTree}
-          context={{
-            siteId: site.id,
-            pageId: page.id,
-          }}
-        />
+      <SiteAuthProvider slug={workspace.slug}>
+        <CartProvider slug={workspace.slug}>
+          <SafeRenderer
+            tree={builderTree}
+            context={{
+              workspaceId: workspace.id,
+              pageId: page.id,
+            }}
+          />
+        </CartProvider>
       </SiteAuthProvider>
 
       {showWatermark && (

@@ -30,30 +30,28 @@ import {
   Settings
 } from 'lucide-react';
 import { CreateWorkspaceDialog } from '@/components/dashboard/create-workspace-dialog';
-import { CreateSiteDialog } from '@/components/dashboard/create-site-dialog';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect('/login');
 
-  // Get user's workspaces with sites
+  // Get user's workspaces with pages
   const memberships = await prisma.workspaceMember.findMany({
     where: { userId: session.user.id },
     include: {
       workspace: {
         include: {
-          sites: {
-            include: {
-              _count: { select: { pages: true } },
-              pages: {
-                take: 1,
-                orderBy: { updatedAt: 'desc' },
-                select: { updatedAt: true }
-              }
+          pages: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              isDraft: true,
+              updatedAt: true,
             },
             orderBy: { updatedAt: 'desc' },
           },
-          _count: { select: { members: true, sites: true, assets: true } },
+          _count: { select: { members: true, pages: true, assets: true } },
         },
       },
     },
@@ -72,61 +70,58 @@ export default async function DashboardPage() {
   }
 
   // Calculate stats
-  const totalSites = workspaces.reduce((acc, w) => acc + w._count.sites, 0);
-  const totalPages = workspaces.reduce((acc, w) => 
-    acc + w.sites.reduce((sAcc, s) => sAcc + s._count.pages, 0), 0
-  );
-  const publishedSites = workspaces.reduce((acc, w) => 
-    acc + w.sites.filter(s => s.isPublished).length, 0
+  const totalPages = workspaces.reduce((acc, w) => acc + w._count.pages, 0);
+  const publishedPages = workspaces.reduce((acc, w) =>
+    acc + w.pages.filter(p => !p.isDraft).length, 0
   );
 
-  // Get recent activity (sites updated in last 7 days)
-  const recentSites = workspaces
-    .flatMap(w => w.sites.map(s => ({ ...s, workspaceId: w.id, workspaceName: w.name })))
+  // Get recent activity (pages updated in last 7 days)
+  const recentPages = workspaces
+    .flatMap(w => w.pages.map(p => ({ ...p, workspaceId: w.id, workspaceName: w.name, workspaceSlug: w.slug })))
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
   // Plan limits
   const planLimits = {
-    FREE: { sites: 1, storage: 500 },
-    PRO: { sites: 3, storage: 2000 },
-    BUSINESS: { sites: 10, storage: 10000 },
-    ENTERPRISE: { sites: 999, storage: 50000 },
+    FREE: { pages: 5, storage: 500 },
+    PRO: { pages: 20, storage: 2000 },
+    BUSINESS: { pages: 100, storage: 10000 },
+    ENTERPRISE: { pages: 999, storage: 50000 },
   };
 
   // If user has no workspaces, show onboarding
   if (workspaces.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
-        <div className="relative mb-8">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
+        <div className="relative mb-6 md:mb-8">
           <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
-          <div className="relative bg-gradient-to-br from-primary to-primary/60 p-6 rounded-2xl">
-            <Sparkles className="h-12 w-12 text-white" />
+          <div className="relative bg-gradient-to-br from-primary to-primary/60 p-4 md:p-6 rounded-2xl">
+            <Sparkles className="h-10 w-10 md:h-12 md:w-12 text-white" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold mb-4">Welcome to Builderly! 🎉</h1>
-        <p className="text-muted-foreground mb-8 max-w-md text-lg">
-          Create stunning websites without writing code. Start by creating your first workspace.
+        <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">Willkommen bei Builderly! 🎉</h1>
+        <p className="text-muted-foreground mb-6 md:mb-8 max-w-md text-base md:text-lg">
+          Erstelle beeindruckende Websites ohne Code. Starte jetzt mit deinem ersten Workspace.
         </p>
         <CreateWorkspaceDialog>
           <Button size="lg" className="gap-2">
             <Plus className="h-5 w-5" />
-            Create Your First Workspace
+            Ersten Workspace erstellen
           </Button>
         </CreateWorkspaceDialog>
         
-        <div className="mt-12 grid grid-cols-3 gap-8 text-center">
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary">50+</div>
-            <p className="text-sm text-muted-foreground">Components</p>
+        <div className="mt-8 md:mt-12 grid grid-cols-3 gap-4 md:gap-8 text-center w-full max-w-md">
+          <div className="space-y-1 md:space-y-2">
+            <div className="text-2xl md:text-3xl font-bold text-primary">50+</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Komponenten</p>
           </div>
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary">10+</div>
-            <p className="text-sm text-muted-foreground">Templates</p>
+          <div className="space-y-1 md:space-y-2">
+            <div className="text-2xl md:text-3xl font-bold text-primary">10+</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Vorlagen</p>
           </div>
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary">∞</div>
-            <p className="text-sm text-muted-foreground">Possibilities</p>
+          <div className="space-y-1 md:space-y-2">
+            <div className="text-2xl md:text-3xl font-bold text-primary">∞</div>
+            <p className="text-xs md:text-sm text-muted-foreground">Möglichkeiten</p>
           </div>
         </div>
       </div>
@@ -134,78 +129,78 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8 px-4 md:px-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Welcome back, {session.user.name?.split(' ')[0] || 'there'}! 👋
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Willkommen zurück, {session.user.name?.split(' ')[0] || 'User'}! 👋
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Here's what's happening with your sites
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Hier ist eine Übersicht deiner Websites
           </p>
         </div>
         <CreateWorkspaceDialog>
-          <Button className="gap-2">
+          <Button className="gap-2 w-full md:w-auto">
             <Plus className="h-4 w-4" />
-            New Workspace
+            Neuer Workspace
           </Button>
         </CreateWorkspaceDialog>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-blue-500/20">
-                <Globe className="h-6 w-6 text-blue-600" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 rounded-xl bg-blue-500/20">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{totalSites}</p>
-                <p className="text-sm text-muted-foreground">Total Sites</p>
+                <p className="text-2xl md:text-3xl font-bold">{totalPages}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Seiten gesamt</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-green-500/20">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 rounded-xl bg-green-500/20">
+                <TrendingUp className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{publishedSites}</p>
-                <p className="text-sm text-muted-foreground">Published</p>
+                <p className="text-2xl md:text-3xl font-bold">{publishedPages}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Veröffentlicht</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <FileText className="h-6 w-6 text-purple-600" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 rounded-xl bg-purple-500/20">
+                <Globe className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{totalPages}</p>
-                <p className="text-sm text-muted-foreground">Total Pages</p>
+                <p className="text-2xl md:text-3xl font-bold">{publishedPages > 0 ? workspaces.filter(w => w.isPublished).length : 0}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Live Websites</p>
               </div>
             </div>
           </CardContent>
         </Card>
         
         <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-orange-500/20">
-                <Folder className="h-6 w-6 text-orange-600" />
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 rounded-xl bg-orange-500/20">
+                <Folder className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-3xl font-bold">{workspaces.length}</p>
-                <p className="text-sm text-muted-foreground">Workspaces</p>
+                <p className="text-2xl md:text-3xl font-bold">{workspaces.length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Workspaces</p>
               </div>
             </div>
           </CardContent>
@@ -213,54 +208,54 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Activity & Quick Actions */}
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid gap-6 md:grid-cols-3">
         {/* Recent Sites */}
         <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-center justify-between p-4 md:p-6">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                Recent Activity
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Clock className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
+                Letzte Aktivität
               </CardTitle>
-              <CardDescription>Your recently updated sites</CardDescription>
+              <CardDescription className="text-xs md:text-sm">Deine zuletzt bearbeiteten Seiten</CardDescription>
             </div>
           </CardHeader>
-          <CardContent>
-            {recentSites.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No sites yet. Create your first site to get started.</p>
+          <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+            {recentPages.length === 0 ? (
+              <div className="text-center py-6 md:py-8 text-muted-foreground">
+                <FileText className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 opacity-50" />
+                <p className="text-sm md:text-base">Noch keine Seiten. Erstelle deine erste Seite.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {recentSites.map((site) => (
+              <div className="space-y-2 md:space-y-3">
+                {recentPages.map((page) => (
                   <div
-                    key={site.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
+                    key={page.id}
+                    className="flex items-center justify-between p-2 md:p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-muted">
-                        <Globe className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                      <div className="p-1.5 md:p-2 rounded-lg bg-muted shrink-0">
+                        <FileText className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
                       </div>
-                      <div>
-                        <p className="font-medium group-hover:text-primary transition-colors">
-                          {site.name}
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm md:text-base group-hover:text-primary transition-colors truncate">
+                          {page.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {site.workspaceName} · {site._count.pages} pages · Updated {formatTimeAgo(site.updatedAt)}
+                        <p className="text-[10px] md:text-xs text-muted-foreground truncate">
+                          {page.workspaceName} · {page.isDraft ? 'Entwurf' : 'Live'} · {formatTimeAgo(page.updatedAt)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {site.isPublished && (
-                        <Link href={`/s/${site.slug}`} target="_blank">
-                          <Button variant="ghost" size="sm">
-                            <ExternalLink className="h-4 w-4" />
+                    <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                      {!page.isDraft && (
+                        <Link href={`/s/${page.workspaceSlug}/${page.slug}`} target="_blank">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 md:h-8 md:w-8 p-0">
+                            <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
                           </Button>
                         </Link>
                       )}
-                      <Link href={`/dashboard/workspaces/${site.workspaceId}/sites/${site.id}`}>
-                        <Button size="sm">Edit</Button>
+                      <Link href={`/dashboard/workspaces/${page.workspaceId}`}>
+                        <Button size="sm" className="h-7 px-2 md:h-8 md:px-3 text-xs md:text-sm">Bearbeiten</Button>
                       </Link>
                     </div>
                   </div>
@@ -272,31 +267,31 @@ export default async function DashboardPage() {
 
         {/* Quick Actions */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500" />
-              Quick Actions
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Zap className="h-4 w-4 md:h-5 md:w-5 text-yellow-500" />
+              Schnellaktionen
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="p-4 md:p-6 pt-0 md:pt-0 space-y-2 md:space-y-3">
             <CreateWorkspaceDialog>
-              <Button variant="outline" className="w-full justify-start gap-3">
+              <Button variant="outline" className="w-full justify-start gap-2 md:gap-3 h-10 md:h-11 text-sm">
                 <Plus className="h-4 w-4" />
-                Create Workspace
+                Workspace erstellen
               </Button>
             </CreateWorkspaceDialog>
             
             <Link href="/dashboard/billing" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3">
+              <Button variant="outline" className="w-full justify-start gap-2 md:gap-3 h-10 md:h-11 text-sm">
                 <Crown className="h-4 w-4 text-yellow-500" />
-                Upgrade Plan
+                Plan upgraden
               </Button>
             </Link>
             
             <Link href="/dashboard/settings" className="block">
-              <Button variant="outline" className="w-full justify-start gap-3">
+              <Button variant="outline" className="w-full justify-start gap-2 md:gap-3 h-10 md:h-11 text-sm">
                 <Settings className="h-4 w-4" />
-                Account Settings
+                Kontoeinstellungen
               </Button>
             </Link>
           </CardContent>
@@ -306,57 +301,57 @@ export default async function DashboardPage() {
       {/* Workspaces */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Your Workspaces</h2>
+          <h2 className="text-lg md:text-xl font-semibold">Deine Workspaces</h2>
         </div>
 
         {workspaces.map((workspace) => {
           const limits = planLimits[workspace.plan as keyof typeof planLimits];
-          const sitesUsed = workspace._count.sites;
-          const sitesPercent = Math.min(100, (sitesUsed / limits.sites) * 100);
+          const pagesUsed = workspace._count.pages;
+          const pagesPercent = Math.min(100, (pagesUsed / limits.pages) * 100);
           
           return (
             <Card key={workspace.id} className="overflow-hidden">
-              <CardHeader className="bg-muted/30">
-                <div className="flex items-center justify-between">
+              <CardHeader className="bg-muted/30 p-4 md:p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Folder className="h-5 w-5 text-primary" />
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <Folder className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                     </div>
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {workspace.name}
+                    <div className="min-w-0">
+                      <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg">
+                        <span className="truncate">{workspace.name}</span>
                         <Badge 
                           variant={workspace.plan === 'FREE' ? 'secondary' : workspace.plan === 'ENTERPRISE' ? 'success' : 'default'}
-                          className="text-xs"
+                          className="text-[10px] md:text-xs shrink-0"
                         >
                           {workspace.plan === 'FREE' ? 'Starter' : workspace.plan === 'ENTERPRISE' ? 'Enterprise' : workspace.plan === 'BUSINESS' ? 'Business' : 'Pro'}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {workspace.role}
+                        <Badge variant="outline" className="text-[10px] md:text-xs shrink-0">
+                          {workspace.role === 'OWNER' ? 'Besitzer' : workspace.role === 'ADMIN' ? 'Admin' : workspace.role === 'EDITOR' ? 'Editor' : 'Betrachter'}
                         </Badge>
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-4 mt-1">
+                      <CardDescription className="flex flex-wrap items-center gap-3 md:gap-4 mt-1 text-xs md:text-sm">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {workspace._count.members} members
+                          {workspace._count.members} {workspace._count.members === 1 ? 'Mitglied' : 'Mitglieder'}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          {workspace._count.sites} sites
+                          <FileText className="h-3 w-3" />
+                          {workspace._count.pages} {workspace._count.pages === 1 ? 'Seite' : 'Seiten'}
                         </span>
                       </CardDescription>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <CreateSiteDialog workspaceId={workspace.id}>
-                      <Button size="sm" variant="outline">
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Site
+                  <div className="flex items-center gap-2 self-end md:self-auto">
+                    <Link href={`/dashboard/workspaces/${workspace.id}`}>
+                      <Button size="sm" variant="outline" className="h-8 md:h-9 text-xs md:text-sm">
+                        <ArrowRight className="mr-1.5 md:mr-2 h-3 w-3 md:h-4 md:w-4" />
+                        Öffnen
                       </Button>
-                    </CreateSiteDialog>
+                    </Link>
                     <Link href={`/dashboard/workspaces/${workspace.id}/settings`}>
-                      <Button size="sm" variant="ghost">
-                        <Settings className="h-4 w-4" />
+                      <Button size="sm" variant="ghost" className="h-8 w-8 md:h-9 md:w-9 p-0">
+                        <Settings className="h-3.5 w-3.5 md:h-4 md:w-4" />
                       </Button>
                     </Link>
                   </div>
@@ -365,63 +360,63 @@ export default async function DashboardPage() {
                 {/* Usage Bar */}
                 {workspace.plan === 'FREE' && (
                   <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Sites: {sitesUsed}/{limits.sites}</span>
-                      {sitesPercent >= 100 && (
+                    <div className="flex items-center justify-between text-xs md:text-sm mb-2">
+                      <span className="text-muted-foreground">Seiten: {pagesUsed}/{limits.pages}</span>
+                      {pagesPercent >= 100 && (
                         <Link href="/dashboard/billing">
-                          <Button size="sm" variant="link" className="h-auto p-0 text-primary">
-                            Upgrade for more <ArrowRight className="ml-1 h-3 w-3" />
+                          <Button size="sm" variant="link" className="h-auto p-0 text-primary text-xs md:text-sm">
+                            Mehr freischalten <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
                         </Link>
                       )}
                     </div>
-                    <Progress value={sitesPercent} className="h-2" />
+                    <Progress value={pagesPercent} className="h-1.5 md:h-2" />
                   </div>
                 )}
               </CardHeader>
               <CardContent className="p-0">
-                {workspace.sites.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Globe className="h-10 w-10 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">No sites yet</p>
-                    <CreateSiteDialog workspaceId={workspace.id}>
-                      <Button variant="link" size="sm" className="mt-2">
-                        Create your first site
+                {workspace.pages.length === 0 ? (
+                  <div className="text-center py-8 md:py-12 text-muted-foreground">
+                    <FileText className="h-8 w-8 md:h-10 md:w-10 mx-auto mb-2 md:mb-3 opacity-50" />
+                    <p className="text-xs md:text-sm">Noch keine Seiten</p>
+                    <Link href={`/dashboard/workspaces/${workspace.id}`}>
+                      <Button variant="link" size="sm" className="mt-2 text-xs md:text-sm">
+                        Erste Seite erstellen
                       </Button>
-                    </CreateSiteDialog>
+                    </Link>
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {workspace.sites.map((site: typeof workspace.sites[number]) => (
+                    {workspace.pages.map((page: typeof workspace.pages[number]) => (
                       <div 
-                        key={site.id} 
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors group"
+                        key={page.id} 
+                        className="flex items-center justify-between p-3 md:p-4 hover:bg-muted/30 transition-colors group"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${site.isPublished ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                          <div>
-                            <p className="font-medium">{site.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              /{site.slug} · {site._count.pages} page{site._count.pages !== 1 ? 's' : ''}
+                        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                          <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0 ${!page.isDraft ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm md:text-base truncate">{page.name}</p>
+                            <p className="text-[10px] md:text-xs text-muted-foreground">
+                              /{page.slug}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {site.isPublished ? (
-                            <Badge variant="success" className="text-xs">Live</Badge>
+                        <div className="flex items-center gap-1 md:gap-2 shrink-0 ml-2">
+                          {!page.isDraft ? (
+                            <Badge variant="success" className="text-[10px] md:text-xs hidden sm:inline-flex">Live</Badge>
                           ) : (
-                            <Badge variant="secondary" className="text-xs">Draft</Badge>
+                            <Badge variant="secondary" className="text-[10px] md:text-xs hidden sm:inline-flex">Entwurf</Badge>
                           )}
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {site.isPublished && (
-                              <Link href={`/s/${site.slug}`} target="_blank">
-                                <Button variant="ghost" size="sm">
-                                  <ExternalLink className="h-4 w-4" />
+                          <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            {!page.isDraft && (
+                              <Link href={`/s/${workspace.slug}/${page.slug}`} target="_blank">
+                                <Button variant="ghost" size="sm" className="h-7 w-7 md:h-8 md:w-8 p-0">
+                                  <ExternalLink className="h-3 w-3 md:h-4 md:w-4" />
                                 </Button>
                               </Link>
                             )}
-                            <Link href={`/dashboard/workspaces/${workspace.id}/sites/${site.id}`}>
-                              <Button size="sm">Manage</Button>
+                            <Link href={`/dashboard/workspaces/${workspace.id}`}>
+                              <Button size="sm" className="h-7 px-2 md:h-8 md:px-3 text-xs">Verwalten</Button>
                             </Link>
                           </div>
                         </div>
@@ -445,9 +440,9 @@ function formatTimeAgo(date: Date): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  return new Date(date).toLocaleDateString();
+  if (minutes < 1) return 'gerade eben';
+  if (minutes < 60) return `vor ${minutes} Min.`;
+  if (hours < 24) return `vor ${hours} Std.`;
+  if (days < 7) return `vor ${days} ${days === 1 ? 'Tag' : 'Tagen'}`;
+  return new Date(date).toLocaleDateString('de-DE');
 }

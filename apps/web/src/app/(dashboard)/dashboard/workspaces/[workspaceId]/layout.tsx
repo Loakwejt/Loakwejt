@@ -6,13 +6,14 @@ import { WorkspaceSidebar } from '@/components/dashboard/workspace-sidebar';
 
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
-  params: { workspaceId: string };
+  params: Promise<{ workspaceId: string }>;
 }
 
 export default async function WorkspaceLayout({
   children,
   params,
 }: WorkspaceLayoutProps) {
+  const { workspaceId } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -22,7 +23,7 @@ export default async function WorkspaceLayout({
   // Verify user has access to workspace
   const membership = await prisma.workspaceMember.findFirst({
     where: {
-      workspaceId: params.workspaceId,
+      workspaceId,
       userId: session.user.id,
     },
     include: {
@@ -39,7 +40,7 @@ export default async function WorkspaceLayout({
   return (
     <div className="flex">
       <WorkspaceSidebar
-        workspaceId={params.workspaceId}
+        workspaceId={workspaceId}
         workspaceName={membership.workspace.name}
         workspaceType={(membership.workspace as any).type || 'WEBSITE'}
       />

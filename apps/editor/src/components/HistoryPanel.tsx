@@ -50,7 +50,6 @@ interface HistoryPanelProps {
 export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
   const { 
     workspaceId, 
-    siteId, 
     pageId, 
     setTree, 
     tree 
@@ -70,7 +69,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
 
   // Fetch revisions
   const fetchRevisions = useCallback(async () => {
-    if (!workspaceId || !siteId || !pageId) return;
+    if (!workspaceId || !pageId) return;
     
     setLoading(true);
     setError(null);
@@ -78,7 +77,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/revisions`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}/revisions`,
         { credentials: 'include' }
       );
       
@@ -93,7 +92,7 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, siteId, pageId]);
+  }, [workspaceId, pageId]);
 
   useEffect(() => {
     if (isOpen) {
@@ -112,14 +111,14 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
 
   // Preview a revision
   const handlePreview = async (revision: Revision) => {
-    if (!workspaceId || !siteId || !pageId) return;
+    if (!workspaceId || !pageId) return;
     
     setSelectedRevision(revision);
     
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/revisions/${revision.id}`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}/revisions/${revision.id}`,
         { credentials: 'include' }
       );
       
@@ -156,14 +155,14 @@ export function HistoryPanel({ isOpen, onClose }: HistoryPanelProps) {
 
   // Restore a revision
   const handleRestore = async () => {
-    if (!workspaceId || !siteId || !pageId || !selectedRevision) return;
+    if (!workspaceId || !pageId || !selectedRevision) return;
     
     setRestoring(true);
     
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}/rollback`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}/rollback`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

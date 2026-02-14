@@ -18,10 +18,8 @@ import {
   Edit,
   Trash2,
   GripVertical,
-  AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface Category {
   id: string;
@@ -35,15 +33,12 @@ interface Category {
 
 export default function WorkspaceCategoriesPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/categories`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/categories`;
 
   const loadCategories = useCallback(async () => {
     if (!baseUrl) return;
@@ -63,8 +58,8 @@ export default function WorkspaceCategoriesPage() {
   }, [baseUrl]);
 
   useEffect(() => {
-    if (activeSiteId) loadCategories();
-  }, [activeSiteId, loadCategories]);
+    loadCategories();
+  }, [loadCategories]);
 
   async function handleDelete(id: string) {
     if (!baseUrl || !confirm('Kategorie wirklich löschen? Produkte werden nicht gelöscht.')) return;
@@ -102,24 +97,6 @@ export default function WorkspaceCategoriesPage() {
     loadCategories();
   }
 
-  if (sitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Lade…</div>;
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">Keine Site vorhanden</p>
-            <p className="text-sm text-muted-foreground mt-1">Erstelle zunächst eine Site, um Kategorien zu verwalten.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -130,9 +107,6 @@ export default function WorkspaceCategoriesPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {sites.length > 1 && (
-            <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-          )}
           <Button onClick={() => { setEditCategory(null); setShowForm(true); }} className="gap-2">
             <Plus className="h-4 w-4" /> Kategorie erstellen
           </Button>

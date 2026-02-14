@@ -35,8 +35,7 @@ async function loadPlanConfigs(): Promise<Record<string, Entitlements>> {
 
       map[row.plan] = {
         plan: row.plan,
-        maxSites: row.maxSites,
-        maxPagesPerSite: row.maxPagesPerSite,
+        maxPages: row.maxPages,
         maxStorage: Number(row.maxStorage),
         maxCustomDomains: row.maxCustomDomains,
         maxTeamMembers: row.maxTeamMembers,
@@ -92,7 +91,9 @@ export async function getWorkspaceEntitlements(workspaceId: string): Promise<Ent
   }
 
   const configs = await getCachedPlanConfigs();
-  return configs[workspace.plan] ?? configs.FREE ?? PLAN_ENTITLEMENTS.FREE;
+  const result = configs[workspace.plan] ?? configs.FREE ?? PLAN_ENTITLEMENTS.FREE;
+  if (!result) throw new Error(`No plan configuration found for plan: ${workspace.plan}`);
+  return result;
 }
 
 export async function checkEntitlement(
@@ -103,46 +104,10 @@ export async function checkEntitlement(
   return check(entitlements);
 }
 
-export async function canCreateSite(workspaceId: string): Promise<{ allowed: boolean; reason?: string }> {
-  const entitlements = await getWorkspaceEntitlements(workspaceId);
-  
-  const siteCount = await prisma.site.count({
-    where: { workspaceId },
-  });
+// canCreateSite removed – workspaces are created separately, not "sites"
 
-  if (siteCount >= entitlements.maxSites) {
-    return {
-      allowed: false,
-      reason: `Du hast die maximale Anzahl an Websites (${entitlements.maxSites}) für deinen Plan erreicht. Bitte upgrade für mehr Websites.`,
-    };
-  }
-
-  return { allowed: true };
-}
-
-export async function canCreatePage(siteId: string): Promise<{ allowed: boolean; reason?: string }> {
-  const site = await prisma.site.findUnique({
-    where: { id: siteId },
-    select: { workspaceId: true },
-  });
-
-  if (!site) {
-    return { allowed: false, reason: 'Site nicht gefunden' };
-  }
-
-  const entitlements = await getWorkspaceEntitlements(site.workspaceId);
-  
-  const pageCount = await prisma.page.count({
-    where: { siteId },
-  });
-
-  if (pageCount >= entitlements.maxPagesPerSite) {
-    return {
-      allowed: false,
-      reason: `Du hast die maximale Anzahl an Seiten (${entitlements.maxPagesPerSite}) für diese Site erreicht. Bitte upgrade für mehr Seiten.`,
-    };
-  }
-
+// Seitenanzahl-Beschränkung entfernt - unbegrenzte Seiten erlaubt
+export async function canCreatePage(_workspaceId: string): Promise<{ allowed: boolean; reason?: string }> {
   return { allowed: true };
 }
 

@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const pageId = 'cml05pgqp0007rdvesgt03wif';
+  const pageId = 'cmlfql26e00085krwhj0o4ecn';
   
   // Get the NEXUS template
   const template = await prisma.template.findUnique({

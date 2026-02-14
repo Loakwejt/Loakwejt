@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEditorStore } from '../store/editor-store';
+import type { WorkspaceProduct } from '../store/editor-store';
 import { componentRegistry, findNodeById } from '@builderly/core';
 import type { BuilderStyle, BuilderActionBinding, BuilderAnimation } from '@builderly/core';
 import { ANIMATION_PRESETS, defaultAnimation } from '@builderly/core';
@@ -165,7 +166,7 @@ function PropsEditor({
   onUpdate: (props: Record<string, unknown>) => void;
 }) {
   const props = node.props;
-  const { workspaceId, siteId } = useEditorStore();
+  const { workspaceId } = useEditorStore();
   const [assetPickerOpen, setAssetPickerOpen] = useState(false);
   const [assetPickerTarget, setAssetPickerTarget] = useState<string | null>(null);
 
@@ -243,7 +244,6 @@ function PropsEditor({
                 onOpenChange={setAssetPickerOpen}
                 onSelect={handleAssetSelect}
                 workspaceId={workspaceId}
-                siteId={siteId || undefined}
                 accept="image"
               />
             )}
@@ -575,7 +575,6 @@ function PropsEditor({
               onOpenChange={setAssetPickerOpen}
               onSelect={handleAssetSelect}
               workspaceId={workspaceId}
-              siteId={siteId || undefined}
               accept="image"
             />
           )}
@@ -666,7 +665,6 @@ function PropsEditor({
               onOpenChange={setAssetPickerOpen}
               onSelect={handleAssetSelect}
               workspaceId={workspaceId}
-              siteId={siteId || undefined}
               accept="image"
             />
           )}
@@ -814,6 +812,246 @@ function PropsEditor({
         </div>
       );
 
+    case 'ProductList':
+      return (
+        <div className="space-y-4">
+          <CollapsibleSection title="Layout">
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Darstellung</Label>
+                <Select
+                  value={(props.layout as string) || 'grid'}
+                  onValueChange={(v) => onUpdate({ layout: v })}
+                >
+                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="grid">Raster</SelectItem>
+                    <SelectItem value="list">Liste</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Spalten</Label>
+                <Select
+                  value={String((props.columns as number) || 4)}
+                  onValueChange={(v) => onUpdate({ columns: parseInt(v) })}
+                >
+                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Spalte</SelectItem>
+                    <SelectItem value="2">2 Spalten</SelectItem>
+                    <SelectItem value="3">3 Spalten</SelectItem>
+                    <SelectItem value="4">4 Spalten</SelectItem>
+                    <SelectItem value="5">5 Spalten</SelectItem>
+                    <SelectItem value="6">6 Spalten</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Max. Produkte</Label>
+                <Input
+                  type="number"
+                  value={(props.limit as number) || 12}
+                  onChange={(e) => onUpdate({ limit: parseInt(e.target.value) || 12 })}
+                  min={1}
+                  max={50}
+                  className="h-7 text-xs"
+                />
+              </div>
+            </div>
+          </CollapsibleSection>
+          <CollapsibleSection title="Sortierung">
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Sortieren nach</Label>
+                <Select
+                  value={(props.sortBy as string) || 'createdAt'}
+                  onValueChange={(v) => onUpdate({ sortBy: v })}
+                >
+                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="createdAt">Neueste</SelectItem>
+                    <SelectItem value="price">Preis</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Reihenfolge</Label>
+                <Select
+                  value={(props.sortOrder as string) || 'desc'}
+                  onValueChange={(v) => onUpdate({ sortOrder: v })}
+                >
+                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="desc">Absteigend</SelectItem>
+                    <SelectItem value="asc">Aufsteigend</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CollapsibleSection>
+          <ProductDataInfo />
+        </div>
+      );
+
+    case 'ProductCard':
+      return (
+        <div className="space-y-4">
+          <ProductPicker
+            currentProductId={(props.productId as string) || ''}
+            onSelect={(product) => {
+              if (product) {
+                onUpdate({
+                  productId: product.id,
+                  productName: product.name,
+                  productPrice: product.price / 100,
+                  productComparePrice: product.compareAtPrice ? product.compareAtPrice / 100 : undefined,
+                  productImage: product.images[0] || '',
+                  productDescription: product.description || '',
+                  productBadge: product.isFeatured ? 'Beliebt' : '',
+                  productSlug: product.slug,
+                });
+              } else {
+                onUpdate({ productId: '' });
+              }
+            }}
+          />
+          <Separator />
+          <CollapsibleSection title="Anzeige">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Preis anzeigen</Label>
+                <Switch
+                  checked={props.showPrice !== false}
+                  onCheckedChange={(v) => onUpdate({ showPrice: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Warenkorb-Button</Label>
+                <Switch
+                  checked={props.showAddToCart !== false}
+                  onCheckedChange={(v) => onUpdate({ showAddToCart: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Beschreibung</Label>
+                <Switch
+                  checked={props.showDescription === true}
+                  onCheckedChange={(v) => onUpdate({ showDescription: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Badge</Label>
+                <Switch
+                  checked={props.showBadge !== false}
+                  onCheckedChange={(v) => onUpdate({ showBadge: v })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Bildformat</Label>
+                <Select
+                  value={(props.imageAspect as string) || 'square'}
+                  onValueChange={(v) => onUpdate({ imageAspect: v })}
+                >
+                  <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="square">Quadratisch (1:1)</SelectItem>
+                    <SelectItem value="4:3">Querformat (4:3)</SelectItem>
+                    <SelectItem value="16:9">Breit (16:9)</SelectItem>
+                    <SelectItem value="3:4">Hochformat (3:4)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CollapsibleSection>
+          {!(props.productId as string) && (
+            <CollapsibleSection title="Manuell">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Produktname</Label>
+                  <Input
+                    value={(props.productName as string) || ''}
+                    onChange={(e) => onUpdate({ productName: e.target.value })}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Preis (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={String((props.productPrice as number) ?? 29.99)}
+                    onChange={(e) => onUpdate({ productPrice: parseFloat(e.target.value) || 0 })}
+                    className="h-7 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Badge-Text</Label>
+                  <Input
+                    value={(props.productBadge as string) || ''}
+                    onChange={(e) => onUpdate({ productBadge: e.target.value })}
+                    placeholder="z.B. Neu, Sale, Beliebt"
+                    className="h-7 text-xs"
+                  />
+                </div>
+              </div>
+            </CollapsibleSection>
+          )}
+        </div>
+      );
+
+    case 'ProductDetail':
+      return (
+        <div className="space-y-4">
+          <ProductPicker
+            currentProductId={(props.productId as string) || ''}
+            onSelect={(product) => {
+              if (product) {
+                onUpdate({
+                  productId: product.id,
+                  productName: product.name,
+                  productPrice: product.price / 100,
+                  productComparePrice: product.compareAtPrice ? product.compareAtPrice / 100 : undefined,
+                  productImages: product.images,
+                  productDescription: product.description || '',
+                  productSku: product.sku || '',
+                  productInventory: product.inventory,
+                  productSlug: product.slug,
+                });
+              } else {
+                onUpdate({ productId: '' });
+              }
+            }}
+          />
+          <Separator />
+          <CollapsibleSection title="Anzeige">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Galerie</Label>
+                <Switch checked={props.showGallery !== false} onCheckedChange={(v) => onUpdate({ showGallery: v })} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Beschreibung</Label>
+                <Switch checked={props.showDescription !== false} onCheckedChange={(v) => onUpdate({ showDescription: v })} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">SKU anzeigen</Label>
+                <Switch checked={props.showSku === true} onCheckedChange={(v) => onUpdate({ showSku: v })} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Lagerbestand</Label>
+                <Switch checked={props.showInventory === true} onCheckedChange={(v) => onUpdate({ showInventory: v })} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Warenkorb-Button</Label>
+                <Switch checked={props.showAddToCart !== false} onCheckedChange={(v) => onUpdate({ showAddToCart: v })} />
+              </div>
+            </div>
+          </CollapsibleSection>
+        </div>
+      );
+
     default:
       return (
         <div className="text-sm text-muted-foreground">
@@ -821,6 +1059,132 @@ function PropsEditor({
         </div>
       );
   }
+}
+
+// ============================================================================
+// PRODUCT PICKER — binds a ProductCard/ProductDetail to a real workspace product
+// ============================================================================
+
+function ProductPicker({
+  currentProductId,
+  onSelect,
+}: {
+  currentProductId: string;
+  onSelect: (product: WorkspaceProduct | null) => void;
+}) {
+  const { workspaceProducts, isLoadingProducts, fetchWorkspaceProducts } = useEditorStore();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const selected = currentProductId
+    ? workspaceProducts.find((p) => p.id === currentProductId)
+    : undefined;
+
+  const filtered = searchTerm
+    ? workspaceProducts.filter((p) =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : workspaceProducts;
+
+  const formatPrice = (cents: number) =>
+    new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 }).format(cents / 100);
+
+  return (
+    <CollapsibleSection title="Produkt verknüpfen" defaultOpen>
+      <div className="space-y-2">
+        {selected ? (
+          <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+            {selected.images[0] ? (
+              <img src={selected.images[0]} alt="" className="w-8 h-8 rounded object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded bg-muted flex items-center justify-center text-muted-foreground text-[10px]">?</div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium truncate">{selected.name}</div>
+              <div className="text-[10px] text-muted-foreground">{formatPrice(selected.price)}</div>
+            </div>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => onSelect(null)}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        ) : (
+          <>
+            {workspaceProducts.length === 0 && !isLoadingProducts && (
+              <div className="text-xs text-muted-foreground text-center py-2">
+                Keine Produkte gefunden.{' '}
+                <button className="text-primary underline" onClick={fetchWorkspaceProducts}>
+                  Neu laden
+                </button>
+              </div>
+            )}
+            {isLoadingProducts && (
+              <div className="text-xs text-muted-foreground text-center py-2">Lade Produkte…</div>
+            )}
+            {workspaceProducts.length > 0 && (
+              <>
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Produkt suchen..."
+                  className="h-7 text-xs"
+                />
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {filtered.slice(0, 20).map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => onSelect(product)}
+                      className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-muted/50 text-left transition-colors"
+                    >
+                      {product.images[0] ? (
+                        <img src={product.images[0]} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-7 h-7 rounded bg-muted flex items-center justify-center text-muted-foreground text-[9px] flex-shrink-0">?</div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs truncate">{product.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatPrice(product.price)}</div>
+                      </div>
+                    </button>
+                  ))}
+                  {filtered.length === 0 && (
+                    <div className="text-xs text-muted-foreground text-center py-1">Kein Treffer</div>
+                  )}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </CollapsibleSection>
+  );
+}
+
+function ProductDataInfo() {
+  const { workspaceProducts, isLoadingProducts, fetchWorkspaceProducts } = useEditorStore();
+
+  return (
+    <CollapsibleSection title="Datenquelle">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Produkte geladen:</span>
+          <span className="font-medium">
+            {isLoadingProducts ? '…' : workspaceProducts.length}
+          </span>
+        </div>
+        <div className="text-[10px] text-muted-foreground">
+          Die Produktliste zeigt automatisch die aktiven Produkte deines Workspace an.
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full h-7 text-xs"
+          onClick={fetchWorkspaceProducts}
+          disabled={isLoadingProducts}
+        >
+          {isLoadingProducts ? 'Lade…' : 'Produkte neu laden'}
+        </Button>
+      </div>
+    </CollapsibleSection>
+  );
 }
 
 // ============================================================================
@@ -837,7 +1201,7 @@ function StyleEditor({
   onUpdate: (style: BuilderStyle) => void;
 }) {
   const base = style.base || {};
-  const { workspaceId, siteId } = useEditorStore();
+  const { workspaceId } = useEditorStore();
   const [bgAssetPickerOpen, setBgAssetPickerOpen] = useState(false);
 
   const updateBase = (key: string, value: unknown) => {
@@ -1242,12 +1606,11 @@ function StyleEditor({
       </CollapsibleSection>
 
       {/* Asset Picker for Background */}
-      {workspaceId && siteId && (
+      {workspaceId && (
         <AssetPicker
           open={bgAssetPickerOpen}
           onOpenChange={setBgAssetPickerOpen}
           workspaceId={workspaceId}
-          siteId={siteId}
           onSelect={handleBgAssetSelect}
         />
       )}

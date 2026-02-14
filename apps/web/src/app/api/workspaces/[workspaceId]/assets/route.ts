@@ -5,15 +5,15 @@ import { requireWorkspacePermission } from '@/lib/permissions';
 // GET /api/workspaces/[workspaceId]/assets
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const { searchParams } = new URL(request.url);
     
     // Filtering
-    const siteId = searchParams.get('siteId');
     const folder = searchParams.get('folder');
     const mimeType = searchParams.get('mimeType');
     const search = searchParams.get('search');
@@ -29,12 +29,8 @@ export async function GET(
 
     // Build where clause
     const where: Record<string, unknown> = {
-      workspaceId: params.workspaceId,
+      workspaceId,
     };
-
-    if (siteId) {
-      where.siteId = siteId;
-    }
 
     if (folder) {
       where.folder = folder === 'root' ? null : folder;
@@ -81,7 +77,7 @@ export async function GET(
     // Get unique folders for this workspace
     const folders = await prisma.asset.findMany({
       where: {
-        workspaceId: params.workspaceId,
+        workspaceId,
         folder: { not: null },
       },
       select: { folder: true },

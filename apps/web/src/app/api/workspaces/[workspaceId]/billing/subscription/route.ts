@@ -7,13 +7,14 @@ import { stripe } from '@/lib/stripe';
 // Gibt den aktuellen Subscription-Status zurück
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'admin');
+    await requireWorkspacePermission(workspaceId, 'admin');
 
     const workspace = await prisma.workspace.findUnique({
-      where: { id: params.workspaceId },
+      where: { id: workspaceId },
       select: {
         plan: true,
         planExpiresAt: true,

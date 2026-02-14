@@ -33,6 +33,7 @@ export type TemplateStyle =
   | 'creative';
 
 export type WebsiteType =
+  | 'all'
   | 'landing'
   | 'blog'
   | 'ecommerce'

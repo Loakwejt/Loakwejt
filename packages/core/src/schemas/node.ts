@@ -12,6 +12,7 @@ export const BuilderNodeMetaSchema = z.object({
   locked: z.boolean().optional(),
   hidden: z.boolean().optional(),
   notes: z.string().optional(),
+  symbolId: z.string().optional(),
 });
 
 export type BuilderNodeMeta = z.infer<typeof BuilderNodeMetaSchema>;

@@ -55,7 +55,7 @@ interface SymbolsPanelProps {
 }
 
 export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
-  const { workspaceId, siteId, selectedNodeId, tree, addNode, insertNodeTree } = useEditorStore();
+  const { workspaceId, selectedNodeId, tree, addNode, insertNodeTree } = useEditorStore();
   
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,14 +74,14 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
 
   // Fetch symbols
   const fetchSymbols = useCallback(async () => {
-    if (!workspaceId || !siteId) return;
+    if (!workspaceId) return;
     
     setLoading(true);
     setError(null);
     
     try {
       const response = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/symbols`
+        `/api/workspaces/${workspaceId}/symbols`
       );
       
       if (!response.ok) {
@@ -95,17 +95,17 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
     } finally {
       setLoading(false);
     }
-  }, [workspaceId, siteId]);
+  }, [workspaceId]);
 
   useEffect(() => {
-    if (isOpen && workspaceId && siteId) {
+    if (isOpen && workspaceId) {
       fetchSymbols();
     }
-  }, [isOpen, workspaceId, siteId, fetchSymbols]);
+  }, [isOpen, workspaceId, fetchSymbols]);
 
   // Create symbol from selected node
   const handleCreateSymbol = async () => {
-    if (!workspaceId || !siteId || !selectedNodeId || !symbolName.trim()) return;
+    if (!workspaceId || !selectedNodeId || !symbolName.trim()) return;
     
     const selectedNode = findNodeById(tree.root, selectedNodeId);
     if (!selectedNode) return;
@@ -115,7 +115,7 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
     
     try {
       const response = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/symbols`,
+        `/api/workspaces/${workspaceId}/symbols`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -164,11 +164,11 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
 
   // Update symbol
   const handleUpdateSymbol = async () => {
-    if (!workspaceId || !siteId || !editingSymbol) return;
+    if (!workspaceId || !editingSymbol) return;
     
     try {
       const response = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/symbols/${editingSymbol.id}`,
+        `/api/workspaces/${workspaceId}/symbols/${editingSymbol.id}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -195,13 +195,13 @@ export function SymbolsPanel({ isOpen, onClose }: SymbolsPanelProps) {
 
   // Delete symbol
   const handleDeleteSymbol = async (symbolId: string) => {
-    if (!workspaceId || !siteId) return;
+    if (!workspaceId) return;
     
     if (!confirm('Möchten Sie dieses Symbol wirklich löschen?')) return;
     
     try {
       const response = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}/symbols/${symbolId}`,
+        `/api/workspaces/${workspaceId}/symbols/${symbolId}`,
         { method: 'DELETE' }
       );
       

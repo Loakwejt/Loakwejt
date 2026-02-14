@@ -22,10 +22,8 @@ import {
   Percent,
   DollarSign,
   Truck,
-  AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface Coupon {
   id: string;
@@ -57,7 +55,6 @@ const TYPE_ICONS: Record<string, typeof Percent> = {
 
 export default function WorkspaceCouponsPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
@@ -65,9 +62,7 @@ export default function WorkspaceCouponsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editCoupon, setEditCoupon] = useState<Coupon | null>(null);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/coupons`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/coupons`;
 
   const loadCoupons = useCallback(async () => {
     if (!baseUrl) return;
@@ -89,8 +84,8 @@ export default function WorkspaceCouponsPage() {
   }, [baseUrl, search]);
 
   useEffect(() => {
-    if (activeSiteId) loadCoupons();
-  }, [activeSiteId, search, loadCoupons]);
+    loadCoupons();
+  }, [search, loadCoupons]);
 
   async function handleDelete(id: string) {
     if (!baseUrl || !confirm('Coupon wirklich löschen?')) return;
@@ -147,24 +142,6 @@ export default function WorkspaceCouponsPage() {
     return 'Kostenloser Versand';
   }
 
-  if (sitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Lade…</div>;
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-8">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">Keine Site vorhanden</p>
-            <p className="text-sm text-muted-foreground mt-1">Erstelle zunächst eine Site, um Coupons zu verwalten.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
@@ -175,9 +152,6 @@ export default function WorkspaceCouponsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {sites.length > 1 && (
-            <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-          )}
           <Button onClick={() => { setEditCoupon(null); setShowForm(true); }} className="gap-2">
             <Plus className="h-4 w-4" /> Coupon erstellen
           </Button>

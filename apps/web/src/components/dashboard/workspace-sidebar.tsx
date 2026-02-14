@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@builderly/ui';
 import {
   LayoutDashboard,
-  Globe,
   Image,
   Database,
   Settings,
@@ -24,6 +23,21 @@ import {
   CreditCard,
   Truck,
   Cog,
+  Star,
+  Percent,
+  Ticket,
+  Package,
+  ShoppingCart,
+  FileText,
+  FileCheck,
+  FileMinus,
+  FilePlus,
+  Mail,
+  CalendarDays,
+  Repeat,
+  Zap,
+  ClipboardList,
+  Scale,
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -56,6 +70,31 @@ function getTypeSections(basePath: string, type: string): SidebarSection[] {
             { href: `${basePath}/categories`, label: 'Kategorien', icon: FolderTree },
             { href: `${basePath}/orders`, label: 'Bestellungen', icon: Receipt },
             { href: `${basePath}/coupons`, label: 'Coupons & Rabatte', icon: Tag },
+            { href: `${basePath}/vouchers`, label: 'Gutscheine', icon: Ticket },
+            { href: `${basePath}/reviews`, label: 'Bewertungen', icon: Star },
+            { href: `${basePath}/carts`, label: 'Warenkörbe', icon: ShoppingCart },
+            { href: `${basePath}/inventory`, label: 'Lagerverwaltung', icon: Package },
+          ],
+        },
+        {
+          title: 'Finanzen',
+          links: [
+            { href: `${basePath}/invoices`, label: 'Rechnungen', icon: FileText },
+            { href: `${basePath}/credit-notes`, label: 'Gutschriften', icon: FileMinus },
+            { href: `${basePath}/debit-notes`, label: 'Belastungsanzeigen', icon: FilePlus },
+            { href: `${basePath}/quotes`, label: 'Angebote', icon: FileCheck },
+            { href: `${basePath}/claims`, label: 'Reklamationen', icon: ClipboardList },
+            { href: `${basePath}/tax-zones`, label: 'Steuerzonen', icon: Scale },
+            { href: `${basePath}/invoice-settings`, label: 'Rechnungseinst.', icon: Cog },
+          ],
+        },
+        {
+          title: 'Erweitert',
+          links: [
+            { href: `${basePath}/subscriptions`, label: 'Abonnements', icon: Repeat },
+            { href: `${basePath}/bookings`, label: 'Buchungen', icon: CalendarDays },
+            { href: `${basePath}/email-templates`, label: 'E-Mail-Vorlagen', icon: Mail },
+            { href: `${basePath}/automations`, label: 'Automatisierungen', icon: Zap },
           ],
         },
         {
@@ -141,7 +180,6 @@ export function WorkspaceSidebar({
 
   const mainLinks: SidebarLink[] = [
     { href: basePath, label: 'Übersicht', icon: LayoutDashboard, exact: true },
-    { href: `${basePath}/sites`, label: 'Sites', icon: Globe },
     { href: `${basePath}/assets`, label: 'Medien', icon: Image },
     { href: `${basePath}/collections`, label: 'Sammlungen', icon: Database },
   ];

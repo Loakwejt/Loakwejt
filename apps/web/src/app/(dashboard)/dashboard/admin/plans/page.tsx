@@ -40,8 +40,7 @@ interface PlanConfig {
   plan: string;
   displayName: string;
   description: string;
-  maxSites: number;
-  maxPagesPerSite: number;
+  maxPages: number;
   maxStorage: number;
   maxCustomDomains: number;
   maxTeamMembers: number;
@@ -365,29 +364,15 @@ export default function AdminPlansPage() {
               <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                    Max. Websites
-                  </Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={config.maxSites}
-                    onChange={(e) =>
-                      updateField(config.plan, 'maxSites', parseInt(e.target.value) || 0)
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                    Max. Seiten/Site
+                    Max. Seiten
                   </Label>
                   <Input
                     type="number"
                     min={0}
-                    value={config.maxPagesPerSite}
+                    value={config.maxPages}
                     onChange={(e) =>
-                      updateField(config.plan, 'maxPagesPerSite', parseInt(e.target.value) || 0)
+                      updateField(config.plan, 'maxPages', parseInt(e.target.value) || 0)
                     }
                   />
                 </div>

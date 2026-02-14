@@ -4,9 +4,9 @@ import { prisma } from '@builderly/db';
 // POST — track a page view (called from published sites, no auth needed)
 export async function POST(req: NextRequest) {
   try {
-    const { siteId, pageId, path, referrer } = await req.json();
-    if (!siteId || !path) {
-      return NextResponse.json({ error: 'siteId and path required' }, { status: 400 });
+    const { workspaceId, pageId, path, referrer } = await req.json();
+    if (!workspaceId || !path) {
+      return NextResponse.json({ error: 'workspaceId and path required' }, { status: 400 });
     }
 
     const ua = req.headers.get('user-agent') || '';
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.pageView.create({
       data: {
-        siteId,
+        workspaceId,
         pageId: pageId || null,
         path,
         referrer: referrer || null,

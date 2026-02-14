@@ -12,10 +12,11 @@ const BulkOperationSchema = z.object({
 // POST /api/workspaces/[workspaceId]/collections/[collectionId]/records/bulk
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string; collectionId: string } }
+  { params }: { params: Promise<{ workspaceId: string; collectionId: string }> }
 ) {
+  const { workspaceId, collectionId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'edit');
 
     const body = await request.json();
     const { action, recordIds } = BulkOperationSchema.parse(body);
@@ -23,8 +24,8 @@ export async function POST(
     // Verify collection belongs to workspace
     const collection = await prisma.collection.findFirst({
       where: {
-        id: params.collectionId,
-        workspaceId: params.workspaceId,
+        id: collectionId,
+        workspaceId,
       },
     });
 
@@ -36,7 +37,7 @@ export async function POST(
     const records = await prisma.record.findMany({
       where: {
         id: { in: recordIds },
-        collectionId: params.collectionId,
+        collectionId,
       },
       select: { id: true },
     });
@@ -58,10 +59,10 @@ export async function POST(
         result = await prisma.record.deleteMany({
           where: {
             id: { in: recordIds },
-            collectionId: params.collectionId,
+            collectionId,
           },
         });
-        await createAuditLog({ userId, action: 'RECORDS_BULK_DELETED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_DELETED', entity: 'Record', details: { collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -72,14 +73,14 @@ export async function POST(
         result = await prisma.record.updateMany({
           where: {
             id: { in: recordIds },
-            collectionId: params.collectionId,
+            collectionId,
           },
           data: {
             status: 'PUBLISHED',
             publishedAt: new Date(),
           },
         });
-        await createAuditLog({ userId, action: 'RECORDS_BULK_PUBLISHED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_PUBLISHED', entity: 'Record', details: { collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -90,13 +91,13 @@ export async function POST(
         result = await prisma.record.updateMany({
           where: {
             id: { in: recordIds },
-            collectionId: params.collectionId,
+            collectionId,
           },
           data: {
             status: 'DRAFT',
           },
         });
-        await createAuditLog({ userId, action: 'RECORDS_BULK_UNPUBLISHED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_UNPUBLISHED', entity: 'Record', details: { collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,
@@ -107,13 +108,13 @@ export async function POST(
         result = await prisma.record.updateMany({
           where: {
             id: { in: recordIds },
-            collectionId: params.collectionId,
+            collectionId,
           },
           data: {
             status: 'ARCHIVED',
           },
         });
-        await createAuditLog({ userId, action: 'RECORDS_BULK_ARCHIVED', entity: 'Record', details: { collectionId: params.collectionId, count: result.count } });
+        await createAuditLog({ userId, action: 'RECORDS_BULK_ARCHIVED', entity: 'Record', details: { collectionId, count: result.count } });
         return NextResponse.json({
           success: true,
           action,

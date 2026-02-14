@@ -22,26 +22,26 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // GDPR Consent fields
-  privacyConsentAt    DateTime?  // When user accepted privacy policy
-  privacyConsentVersion String?  // Version of privacy policy accepted
-  marketingConsent    Boolean   @default(false)
-  marketingConsentAt  DateTime?
-  
+  privacyConsentAt      DateTime? // When user accepted privacy policy
+  privacyConsentVersion String? // Version of privacy policy accepted
+  marketingConsent      Boolean   @default(false)
+  marketingConsentAt    DateTime?
+
   // Account status
-  isActive            Boolean   @default(true)
-  deletedAt           DateTime? // Soft delete for GDPR compliance
-  anonymizedAt        DateTime? // When data was anonymized
+  isActive     Boolean   @default(true)
+  deletedAt    DateTime? // Soft delete for GDPR compliance
+  anonymizedAt DateTime? // When data was anonymized
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  memberships   WorkspaceMember[]
-  createdPages  Page[]            @relation("PageCreator")
-  revisions     PageRevision[]
-  records       Record[]
-  assets        Asset[]
-  auditLogs     AuditLog[]
-  dataExports   DataExportRequest[]
+  accounts       Account[]
+  sessions       Session[]
+  memberships    WorkspaceMember[]
+  createdPages   Page[]               @relation("PageCreator")
+  revisions      PageRevision[]
+  records        Record[]
+  assets         Asset[]
+  auditLogs      AuditLog[]
+  dataExports    DataExportRequest[]
   passwordResets PasswordResetToken[]
 
   @@index([email])
@@ -73,13 +73,13 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  
+
   // Session metadata for security
-  ipAddress    String?
-  userAgent    String?
-  deviceType   String?  // desktop, mobile, tablet
-  lastActive   DateTime @default(now())
-  createdAt    DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  deviceType String? // desktop, mobile, tablet
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -97,11 +97,11 @@ model VerificationToken {
 
 // Email verification tokens (separate from NextAuth VerificationToken)
 model EmailVerificationToken {
-  id         String   @id @default(cuid())
-  email      String
-  token      String   @unique
-  expires    DateTime
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
 
   @@index([email])
   @@index([expires])
@@ -109,14 +109,14 @@ model EmailVerificationToken {
 
 // Password reset tokens
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String    @unique
   expires   DateTime
-  used      Boolean  @default(false)
+  used      Boolean   @default(false)
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime  @default(now())
+
   // Security: track IP that requested reset
   ipAddress String?
   userAgent String?
@@ -130,21 +130,21 @@ model PasswordResetToken {
 
 // Audit log for GDPR compliance
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?
-  
+  id     String  @id @default(cuid())
+  userId String?
+
   // Action details
-  action    String   // LOGIN, LOGOUT, DATA_EXPORT, CONSENT_UPDATE, etc.
-  entity    String?  // User, Workspace, Page, etc.
-  entityId  String?
-  
+  action   String // LOGIN, LOGOUT, DATA_EXPORT, CONSENT_UPDATE, etc.
+  entity   String? // User, Workspace, Page, etc.
+  entityId String?
+
   // Details
-  details   Json?    // Additional context
-  
+  details Json? // Additional context
+
   // Request metadata
   ipAddress String?
   userAgent String?
-  
+
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -157,19 +157,19 @@ model AuditLog {
 
 // Data export requests (GDPR Art. 15)
 model DataExportRequest {
-  id        String   @id @default(cuid())
-  userId    String
-  
-  status    DataRequestStatus @default(PENDING)
-  
+  id     String @id @default(cuid())
+  userId String
+
+  status DataRequestStatus @default(PENDING)
+
   // Generated file
   fileUrl   String?
   expiresAt DateTime?
-  
+
   // Processing
   processedAt DateTime?
   error       String?
-  
+
   // Metadata
   ipAddress String?
   createdAt DateTime @default(now())
@@ -195,14 +195,15 @@ enum DataRequestStatus {
 // ============================================================================
 
 model Workspace {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   name        String
-  slug        String   @unique
+  slug        String        @unique
   description String?
   logoUrl     String?
+  faviconUrl  String?
   type        WorkspaceType @default(WEBSITE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   // Company info
   companyName    String?
@@ -212,8 +213,20 @@ model Workspace {
   companyVatId   String?
   companyWebsite String?
 
-  // Social media links (JSON: { facebook?: string, instagram?: string, ... })
-  socialLinks    Json?
+  // Social media links
+  socialLinks Json?
+
+  // Feature Flags (from Site)
+  enableUserAuth    Boolean   @default(false)
+  userAuthEnabledAt DateTime?
+
+  // Settings (design/theme settings JSON from Site)
+  settings     Json    @default("{}")
+  customDomain String? @unique
+
+  // Publishing status
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
 
   // Billing
   stripeCustomerId     String?   @unique
@@ -222,12 +235,42 @@ model Workspace {
   planExpiresAt        DateTime?
 
   // Relations
-  members     WorkspaceMember[]
-  sites       Site[]
-  collections Collection[]
-  assets      Asset[]
+  members            WorkspaceMember[]
+  pages              Page[]
+  collections        Collection[]
+  assets             Asset[]
+  forms              Form[]
+  symbols            Symbol[]
+  customDomains      CustomDomain[]
+  siteUsers          SiteUser[]
+  products           Product[]
+  orders             Order[]
+  coupons            Coupon[]
+  productCategories  ProductCategory[]
+  paymentMethods     PaymentMethod[]
+  shippingMethods    ShippingMethod[]
+  shopSettings       ShopSettings?
+  forumCategories    ForumCategory[]
+  pageViews          PageView[]
+  taxZones           TaxZone[]
+  vouchers           Voucher[]
+  carts              Cart[]
+  invoices           Invoice[]
+  creditNotes        CreditNote[]
+  debitNotes         DebitNote[]
+  quotes             Quote[]
+  reviews            Review[]
+  emailTemplates     EmailTemplate[]
+  inventoryMovements InventoryMovement[]
+  subscriptionPlans  SubscriptionPlan[]
+  subscriptions      ShopSubscription[]
+  bookings           Booking[]
+  claims             Claim[]
+  invoiceSettings    InvoiceSettings?
+  automationRules    AutomationRule[]
 
   @@index([slug])
+  @@index([customDomain])
 }
 
 model WorkspaceMember {
@@ -269,16 +312,15 @@ model PlanConfig {
   plan Plan   @unique
 
   // Display
-  displayName String  @default("")
-  description String  @default("")
+  displayName String @default("")
+  description String @default("")
 
   // Numeric limits
-  maxSites                  Int @default(1)
-  maxPagesPerSite           Int @default(5)
-  maxStorage                BigInt @default(524288000)  // bytes, default 500 MB
-  maxCustomDomains          Int @default(0)
-  maxTeamMembers            Int @default(1)
-  maxFormSubmissionsPerMonth Int @default(50)
+  maxPages                   Int    @default(5)
+  maxStorage                 BigInt @default(524288000) // bytes, default 500 MB
+  maxCustomDomains           Int    @default(0)
+  maxTeamMembers             Int    @default(1)
+  maxFormSubmissionsPerMonth Int    @default(50)
 
   // Feature flags
   customDomains      Boolean @default(false)
@@ -300,97 +342,40 @@ model PlanConfig {
 }
 
 // ============================================================================
-// SITES & PAGES
+// PAGES
 // ============================================================================
-
-model Site {
-  id          String   @id @default(cuid())
-  workspaceId String
-  name        String
-  slug        String
-  description String?
-  faviconUrl  String?
-  logoUrl     String?
-  
-  // Company / Branding
-  companyName   String?
-  companyEmail  String?
-  companyPhone  String?
-  companyAddress String?
-  companyVatId  String?
-  companyWebsite String?
-  
-  // Feature Flags
-  enableUserAuth Boolean @default(false)
-  userAuthEnabledAt DateTime?
-  
-  // Settings
-  settings    Json     @default("{}")
-  customDomain String?  @unique
-  
-  // Status
-  isPublished Boolean  @default(false)
-  publishedAt DateTime?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  workspace     Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  pages         Page[]
-  collections   Collection[]
-  assets        Asset[]
-  forms         Form[]
-  symbols       Symbol[]
-  customDomains CustomDomain[]
-  siteUsers     SiteUser[]
-  products           Product[]
-  orders             Order[]
-  coupons            Coupon[]
-  productCategories  ProductCategory[]
-  paymentMethods     PaymentMethod[]
-  shippingMethods    ShippingMethod[]
-  shopSettings       ShopSettings?
-  forumCategories    ForumCategory[]
-  pageViews          PageView[]
-
-  @@unique([workspaceId, slug])
-  @@index([workspaceId])
-  @@index([slug])
-  @@index([customDomain])
-}
 
 // ============================================================================
 // CUSTOM DOMAINS
 // ============================================================================
 
 model CustomDomain {
-  id       String @id @default(cuid())
-  siteId   String
-  domain   String @unique // e.g. "www.example.com"
-  
+  id          String @id @default(cuid())
+  workspaceId String
+  domain      String @unique // e.g. "www.example.com"
+
   // Verification
-  status           DomainStatus @default(PENDING)
-  verificationToken String?     // TXT record value for DNS verification
-  verifiedAt       DateTime?
-  
+  status            DomainStatus @default(PENDING)
+  verificationToken String? // TXT record value for DNS verification
+  verifiedAt        DateTime?
+
   // SSL
-  sslStatus   SslStatus @default(PENDING)
-  sslIssuedAt DateTime?
+  sslStatus    SslStatus @default(PENDING)
+  sslIssuedAt  DateTime?
   sslExpiresAt DateTime?
-  
+
   // DNS
-  dnsConfigured Boolean @default(false)
+  dnsConfigured Boolean   @default(false)
   lastCheckedAt DateTime?
-  
+
   isPrimary Boolean @default(false) // Primary domain for this site
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  
-  @@index([siteId])
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
   @@index([domain])
 }
 
@@ -410,24 +395,24 @@ enum SslStatus {
 }
 
 model Page {
-  id          String   @id @default(cuid())
-  siteId      String
+  id          String  @id @default(cuid())
+  workspaceId String
   name        String
   slug        String
   description String?
-  
+
   // Builder tree (draft)
-  builderTree Json     @default("{}")
-  
+  builderTree Json @default("{}")
+
   // SEO
   metaTitle       String?
   metaDescription String?
   ogImage         String?
-  
+
   // Status
-  isHomepage  Boolean  @default(false)
-  isDraft     Boolean  @default(true)
-  
+  isHomepage Boolean @default(false)
+  isDraft    Boolean @default(true)
+
   // Publishing
   publishedRevisionId String?
   scheduledPublishAt  DateTime?
@@ -437,25 +422,25 @@ model Page {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  site              Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace         Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdBy         User           @relation("PageCreator", fields: [createdById], references: [id])
   revisions         PageRevision[]
   publishedRevision PageRevision?  @relation("PublishedRevision", fields: [publishedRevisionId], references: [id])
   pageViews         PageView[]
 
-  @@unique([siteId, slug])
-  @@index([siteId])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
   @@index([createdById])
 }
 
 model PageRevision {
-  id          String   @id @default(cuid())
-  pageId      String
-  
+  id     String @id @default(cuid())
+  pageId String
+
   // Snapshot
   builderTree Json
   version     Int
-  
+
   // Metadata
   comment     String?
   createdById String
@@ -475,28 +460,28 @@ model PageRevision {
 // ============================================================================
 
 model Symbol {
-  id          String   @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   // Display info
   name        String
   description String?
   category    String?
-  
+
   // The component tree (JSON)
-  tree        Json
-  
+  tree Json
+
   // Preview thumbnail
   thumbnailUrl String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@unique([siteId, name])
-  @@index([siteId])
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
   @@index([category])
 }
 
@@ -505,52 +490,49 @@ model Symbol {
 // ============================================================================
 
 model Collection {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
-  siteId      String?
-  
+
   name        String
   slug        String
   description String?
-  
+
   // Schema definition
-  schema      Json     @default("[]")
-  
+  schema Json @default("[]")
+
   // Settings
-  isSystem    Boolean  @default(false)
-  
+  isSystem Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  records   Record[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+}
+
+model Record {
+  id           String @id @default(cuid())
+  collectionId String
+
+  // Record data
+  data Json    @default("{}")
+  slug String?
+
+  // Status
+  status      RecordStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  site        Site?     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  records     Record[]
-
-  @@unique([siteId, slug])
-  @@index([workspaceId])
-  @@index([siteId])
-}
-
-model Record {
-  id           String   @id @default(cuid())
-  collectionId String
-  
-  // Record data
-  data         Json     @default("{}")
-  slug         String?
-  
-  // Status
-  status       RecordStatus @default(DRAFT)
-  publishedAt  DateTime?
-  
-  createdById  String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  createdBy    User       @relation(fields: [createdById], references: [id])
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdBy  User       @relation(fields: [createdById], references: [id])
 
   @@unique([collectionId, slug])
   @@index([collectionId])
@@ -569,38 +551,35 @@ enum RecordStatus {
 // ============================================================================
 
 model Asset {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   workspaceId String
-  siteId      String?
-  
-  name        String
-  fileName    String
-  mimeType    String
-  size        Int
-  url         String
+
+  name         String
+  fileName     String
+  mimeType     String
+  size         Int
+  url          String
   thumbnailUrl String?
-  
+
   // Organization
-  folder      String?
-  tags        String[]
-  
+  folder String?
+  tags   String[]
+
   // Metadata
-  width       Int?
-  height      Int?
-  alt         String?
-  caption     String?
-  
+  width   Int?
+  height  Int?
+  alt     String?
+  caption String?
+
   uploadedById String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  site        Site?     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  uploadedBy  User      @relation(fields: [uploadedById], references: [id])
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  uploadedBy User      @relation(fields: [uploadedById], references: [id])
 
   @@index([workspaceId])
-  @@index([siteId])
   @@index([uploadedById])
   @@index([folder])
 }
@@ -610,71 +589,72 @@ model Asset {
 // ============================================================================
 
 model SiteUser {
-  id          String   @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   // Auth
-  email       String
+  email        String
   passwordHash String?
-  
+
   // Profile
-  name        String?
-  avatar      String?
-  bio         String?
-  
+  name   String?
+  avatar String?
+  bio    String?
+
   // Custom profile data (flexible JSON for site-specific fields)
-  profileData Json     @default("{}")
-  
+  profileData Json @default("{}")
+
   // Role & Status
-  role        SiteUserRole @default(MEMBER)
-  isActive    Boolean      @default(true)
-  isBanned    Boolean      @default(false)
-  banReason   String?
-  
+  role      SiteUserRole @default(MEMBER)
+  isActive  Boolean      @default(true)
+  isBanned  Boolean      @default(false)
+  banReason String?
+
   // Verification
-  emailVerified DateTime?
+  emailVerified     DateTime?
   verificationToken String?
-  
+
   // OAuth (website visitors can also log in via Google etc.)
-  provider    String?   // 'email', 'google', 'facebook'
-  providerId  String?   // Provider-specific user ID
-  
+  provider   String? // 'email', 'google', 'facebook'
+  providerId String? // Provider-specific user ID
+
   // Tracking
   lastLoginAt DateTime?
   loginCount  Int       @default(0)
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  sessions    SiteUserSession[]
-  orders      Order[]
+  workspace Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sessions  SiteUserSession[]
+  orders    Order[]
+  carts     Cart[]
 
-  @@unique([siteId, email])
-  @@unique([siteId, provider, providerId])
-  @@index([siteId])
+  @@unique([workspaceId, email])
+  @@unique([workspaceId, provider, providerId])
+  @@index([workspaceId])
   @@index([email])
   @@index([role])
 }
 
 model SiteUserSession {
-  id          String   @id @default(cuid())
-  siteUserId  String
-  
-  token       String   @unique
-  expiresAt   DateTime
-  
+  id         String @id @default(cuid())
+  siteUserId String
+
+  token     String   @unique
+  expiresAt DateTime
+
   // Metadata
-  ipAddress   String?
-  userAgent   String?
-  deviceType  String?
-  
-  createdAt   DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  deviceType String?
+
+  createdAt    DateTime @default(now())
   lastActiveAt DateTime @default(now())
 
   // Relations
-  siteUser    SiteUser @relation(fields: [siteUserId], references: [id], onDelete: Cascade)
+  siteUser SiteUser @relation(fields: [siteUserId], references: [id], onDelete: Cascade)
 
   @@index([siteUserId])
   @@index([token])
@@ -682,33 +662,33 @@ model SiteUserSession {
 }
 
 model SiteUserPasswordReset {
-  id         String   @id @default(cuid())
-  siteId     String
-  email      String
-  token      String   @unique
-  expires    DateTime
-  used       Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  workspaceId String
+  email       String
+  token       String   @unique
+  expires     DateTime
+  used        Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
   @@index([token])
-  @@index([siteId, email])
+  @@index([workspaceId, email])
 }
 
 enum SiteUserRole {
-  ADMIN      // Full access, manages other users
-  MODERATOR  // Can moderate content/comments
-  MEMBER     // Standard registered user
-  VIP        // Premium/paid members
+  ADMIN // Full access, manages other users
+  MODERATOR // Can moderate content/comments
+  MEMBER // Standard registered user
+  VIP // Premium/paid members
 }
 
 enum WorkspaceType {
-  WEBSITE    // General purpose website
-  SHOP       // E-commerce / online store
-  BLOG       // Blog / news site
-  FORUM      // Community forum
-  WIKI       // Knowledge base / wiki
-  PORTFOLIO  // Portfolio / showcase
-  LANDING    // Single landing page
+  WEBSITE // General purpose website
+  SHOP // E-commerce / online store
+  BLOG // Blog / news site
+  FORUM // Community forum
+  WIKI // Knowledge base / wiki
+  PORTFOLIO // Portfolio / showcase
+  LANDING // Single landing page
 }
 
 // ============================================================================
@@ -716,126 +696,139 @@ enum WorkspaceType {
 // ============================================================================
 
 model Product {
-  id          String   @id @default(cuid())
-  siteId      String
+  id          String  @id @default(cuid())
+  workspaceId String
   categoryId  String?
-  
-  name        String
-  slug        String
-  description String?  @db.Text
-  
+
+  name             String
+  slug             String
+  shortDescription String? @db.VarChar(500) // Kurzbeschreibung (max 500 chars)
+  description      String? @db.Text // Langbeschreibung
+
+  // Manufacturer / Specifications
+  specifications Json? // [{ label: "Material", value: "Edelstahl" }, { label: "Herkunft", value: "Deutschland" }]
+  manufacturer   String? // Herstellername
+  manufacturerSku String? // Hersteller-Artikelnummer
+  manufacturerUrl String? // Link zur Herstellerseite
+
   // Pricing
-  price       Int      // in cents
-  compareAtPrice Int?   // original price for discounts
-  costPrice   Int?     // cost/purchase price in cents (for margin calc)
-  currency    String   @default("EUR")
-  taxRate     Float?   // product-specific tax rate override (e.g. 19.0)
-  
+  price          Int // in cents
+  compareAtPrice Int? // original price for discounts
+  costPrice      Int? // cost/purchase price in cents (for margin calc)
+  currency       String @default("EUR")
+  taxRate        Float? // product-specific tax rate override (e.g. 19.0)
+
   // Inventory
-  sku         String?
-  barcode     String?  // EAN / UPC / GTIN
-  inventory   Int      @default(0)
+  sku               String?
+  barcode           String? // EAN / UPC / GTIN
+  inventory         Int     @default(0)
   lowStockThreshold Int? // alert when stock drops below this
-  trackInventory Boolean @default(false)
-  
+  trackInventory    Boolean @default(false)
+
   // Media
-  images      Json     @default("[]")
-  
+  images Json @default("[]")
+
   // Variants / Options (e.g. size, color)
-  options     Json?    // [{ name: "Größe", values: ["S","M","L"] }]
-  
+  options Json? // [{ name: "Größe", values: ["S","M","L"] }]
+
   // Physical product / Shipping
-  weight      Float?   // in grams
-  length      Float?   // in cm
-  width       Float?   // in cm
-  height      Float?   // in cm
+  weight           Float? // in grams
+  length           Float? // in cm
+  width            Float? // in cm
+  height           Float? // in cm
   requiresShipping Boolean @default(true)
-  
+
   // SEO
   metaTitle       String?
   metaDescription String?
-  
+
   // Organisation
-  tags        Json     @default("[]")  // string array for filtering
-  vendor      String?  // brand / manufacturer
-  
+  tags   Json    @default("[]") // string array for filtering
+  vendor String? // brand / manufacturer
+
   // Status
-  isActive    Boolean  @default(true)
-  isFeatured  Boolean  @default(false)
-  isDigital   Boolean  @default(false) // digital product (no shipping)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+  isDigital  Boolean @default(false) // digital product (no shipping)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  category    ProductCategory?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  orderItems  OrderItem[]
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  category           ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  orderItems         OrderItem[]
+  reviews            Review[]
+  inventoryMovements InventoryMovement[]
 
-  @@unique([siteId, slug])
-  @@index([siteId])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
   @@index([categoryId])
-  @@index([siteId, isActive])
+  @@index([workspaceId, isActive])
 }
 
 model ProductCategory {
-  id          String   @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   name        String
   slug        String
   description String?
   image       String?
-  sortOrder   Int      @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  products    Product[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  products  Product[]
 
-  @@unique([siteId, slug])
-  @@index([siteId])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  siteId      String
+  id          String  @id @default(cuid())
+  workspaceId String
   couponId    String?
-  
+
   // Customer
-  email       String
-  name        String?
-  siteUserId  String?     // Optional: linked to registered SiteUser
-  
+  email      String
+  name       String?
+  siteUserId String? // Optional: linked to registered SiteUser
+
   // Totals
-  subtotal    Int
-  tax         Int         @default(0)
-  shipping    Int         @default(0)
-  discount    Int         @default(0)
-  total       Int
-  currency    String      @default("EUR")
-  
+  subtotal Int
+  tax      Int    @default(0)
+  shipping Int    @default(0)
+  discount Int    @default(0)
+  total    Int
+  currency String @default("EUR")
+
   // Status
-  status      OrderStatus @default(PENDING)
-  
+  status OrderStatus @default(PENDING)
+
   // Stripe
   stripePaymentIntentId String?
-  
+
   // Shipping
   shippingAddress Json?
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   items       OrderItem[]
-  siteUser    SiteUser?   @relation(fields: [siteUserId], references: [id], onDelete: SetNull)
-  coupon      Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  siteUser    SiteUser?    @relation(fields: [siteUserId], references: [id], onDelete: SetNull)
+  coupon      Coupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  invoices    Invoice[]
+  creditNotes CreditNote[]
+  debitNotes  DebitNote[]
+  claims      Claim[]
 
-  @@index([siteId])
+  @@index([workspaceId])
   @@index([siteUserId])
   @@index([email])
   @@index([status])
@@ -846,13 +839,13 @@ model OrderItem {
   id        String @id @default(cuid())
   orderId   String
   productId String
-  
-  quantity  Int
-  price     Int    // price at time of order
-  
+
+  quantity Int
+  price    Int // price at time of order
+
   // Relations
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
@@ -873,38 +866,38 @@ enum OrderStatus {
 // ============================================================================
 
 model Coupon {
-  id          String      @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   code        String
   description String?
-  
+
   // Discount
-  type        DiscountType @default(PERCENTAGE)
-  value       Int          // percentage (e.g. 10 = 10%) or fixed amount in cents
-  
+  type  DiscountType @default(PERCENTAGE)
+  value Int // percentage (e.g. 10 = 10%) or fixed amount in cents
+
   // Constraints
-  minOrderAmount  Int?     // minimum order total in cents
-  maxUses         Int?     // null = unlimited
-  maxUsesPerUser  Int?     @default(1)
-  usedCount       Int      @default(0)
-  
+  minOrderAmount Int? // minimum order total in cents
+  maxUses        Int? // null = unlimited
+  maxUsesPerUser Int? @default(1)
+  usedCount      Int  @default(0)
+
   // Validity
-  startsAt    DateTime    @default(now())
-  expiresAt   DateTime?
-  
+  startsAt  DateTime  @default(now())
+  expiresAt DateTime?
+
   // Status
-  isActive    Boolean     @default(true)
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  orders      Order[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  orders    Order[]
 
-  @@unique([siteId, code])
-  @@index([siteId])
+  @@unique([workspaceId, code])
+  @@index([workspaceId])
   @@index([code])
 }
 
@@ -919,30 +912,30 @@ enum DiscountType {
 // ============================================================================
 
 model PaymentMethod {
-  id          String   @id @default(cuid())
-  siteId      String
-  
-  name        String              // e.g. "Kreditkarte", "PayPal", "Rechnung"
-  provider    PaymentProvider     @default(MANUAL)
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
+  name     String // e.g. "Kreditkarte", "PayPal", "Rechnung"
+  provider PaymentProvider @default(MANUAL)
+
   // Provider config (encrypted or tokenized)
-  config      Json     @default("{}")
-  
+  config Json @default("{}")
+
   // Display
   description String?
-  icon        String?             // icon URL or identifier
-  sortOrder   Int      @default(0)
-  
+  icon        String? // icon URL or identifier
+  sortOrder   Int     @default(0)
+
   // Status
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@index([siteId])
+  @@index([workspaceId])
 }
 
 enum PaymentProvider {
@@ -959,37 +952,37 @@ enum PaymentProvider {
 // ============================================================================
 
 model ShippingMethod {
-  id          String   @id @default(cuid())
-  siteId      String
-  
-  name        String              // e.g. "Standardversand", "Expressversand"
+  id          String @id @default(cuid())
+  workspaceId String
+
+  name        String // e.g. "Standardversand", "Expressversand"
   description String?
-  
+
   // Pricing
-  price       Int      @default(0) // in cents
-  freeAbove   Int?                  // free shipping above this order total (cents)
-  
+  price     Int  @default(0) // in cents
+  freeAbove Int? // free shipping above this order total (cents)
+
   // Delivery time
-  estimatedDaysMin Int?  @default(3)
-  estimatedDaysMax Int?  @default(5)
-  
+  estimatedDaysMin Int? @default(3)
+  estimatedDaysMax Int? @default(5)
+
   // Restrictions
-  countries   String[] @default([])  // empty = all countries
-  maxWeight   Float?                  // max weight in grams
-  
+  countries String[] @default([]) // empty = all countries
+  maxWeight Float? // max weight in grams
+
   // Display
-  sortOrder   Int      @default(0)
-  
+  sortOrder Int @default(0)
+
   // Status
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@index([siteId])
+  @@index([workspaceId])
 }
 
 // ============================================================================
@@ -997,36 +990,36 @@ model ShippingMethod {
 // ============================================================================
 
 model ShopSettings {
-  id          String   @id @default(cuid())
-  siteId      String   @unique
-  
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
   // General
-  currency        String   @default("EUR")
-  taxRate         Float    @default(19.0)  // default tax rate in %
-  taxIncluded     Boolean  @default(true)  // prices include tax?
-  
+  currency    String  @default("EUR")
+  taxRate     Float   @default(19.0) // default tax rate in %
+  taxIncluded Boolean @default(true) // prices include tax?
+
   // Checkout
-  requireAccount  Boolean  @default(false)
+  requireAccount      Boolean @default(false)
   enableGuestCheckout Boolean @default(true)
-  
+
   // Notifications
   orderNotifyEmail String?
-  
+
   // Legal
   termsUrl        String?
   privacyUrl      String?
   returnPolicyUrl String?
   imprintUrl      String?
-  
+
   // Branding
-  shopName        String?
-  shopLogo        String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  shopName String?
+  shopLogo String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================================
@@ -1034,64 +1027,64 @@ model ShopSettings {
 // ============================================================================
 
 model Form {
-  id          String   @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   name        String
   slug        String
   description String?
-  
+
   // Form schema (fields configuration)
-  schema      Json     @default("{}")
-  
+  schema Json @default("{}")
+
   // Settings
-  submitLabel     String   @default("Submit")
-  successMessage  String   @default("Thank you for your submission!")
-  redirectUrl     String?
-  
+  submitLabel    String  @default("Submit")
+  successMessage String  @default("Thank you for your submission!")
+  redirectUrl    String?
+
   // Notifications
   notifyEmails    String[] @default([])
   enableRecaptcha Boolean  @default(false)
-  
+
   // Status
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive Boolean @default(true)
 
-  // Relations
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  submissions FormSubmission[]
-
-  @@unique([siteId, slug])
-  @@index([siteId])
-}
-
-model FormSubmission {
-  id        String   @id @default(cuid())
-  formId    String
-  
-  // Submission data
-  data      Json
-  
-  // Metadata
-  ipAddress String?
-  userAgent String?
-  referrer  String?
-  
-  // Status
-  status    SubmissionStatus @default(NEW)
-  readAt    DateTime?
-  
-  // Spam detection
-  isSpam    Boolean  @default(false)
-  spamScore Float?
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  submissions FormSubmission[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+}
+
+model FormSubmission {
+  id     String @id @default(cuid())
+  formId String
+
+  // Submission data
+  data Json
+
+  // Metadata
+  ipAddress String?
+  userAgent String?
+  referrer  String?
+
+  // Status
+  status SubmissionStatus @default(NEW)
+  readAt DateTime?
+
+  // Spam detection
+  isSpam    Boolean @default(false)
+  spamScore Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
 
   @@index([formId])
   @@index([status])
@@ -1111,59 +1104,59 @@ enum SubmissionStatus {
 // ============================================================================
 
 model ForumCategory {
-  id          String   @id @default(cuid())
-  siteId      String
-  
+  id          String @id @default(cuid())
+  workspaceId String
+
   name        String
   slug        String
   description String?
-  order       Int      @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  site        Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  threads     ForumThread[]
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  threads   ForumThread[]
 
-  @@unique([siteId, slug])
-  @@index([siteId])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
 }
 
 model ForumThread {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   categoryId  String
   authorEmail String
-  
-  title       String
-  slug        String
-  
-  isPinned    Boolean  @default(false)
-  isLocked    Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  title String
+  slug  String
+
+  isPinned Boolean @default(false)
+  isLocked Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  posts       ForumPost[]
+  category ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  posts    ForumPost[]
 
   @@index([categoryId])
   @@index([authorEmail])
 }
 
 model ForumPost {
-  id          String   @id @default(cuid())
+  id          String @id @default(cuid())
   threadId    String
   authorEmail String
-  
-  content     String   @db.Text
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  content String @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  thread      ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  thread ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId])
   @@index([authorEmail])
@@ -1174,28 +1167,28 @@ model ForumPost {
 // ============================================================================
 
 model Template {
-  id          String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Basic info
   name        String
-  slug        String   @unique
+  slug        String  @unique
   description String?
   thumbnail   String?
-  
+
   // Template data
   category    TemplateCategory @default(FULL_PAGE)
-  style       String?          // minimal, modern, classic, etc.
-  websiteType String?          // business, landing, portfolio, etc.
-  tags        String[]         // Array of tags
-  
+  style       String? // minimal, modern, classic, etc.
+  websiteType String? // business, landing, portfolio, etc.
+  tags        String[] // Array of tags
+
   // The actual template content (BuilderTree JSON)
-  tree        Json
-  
+  tree Json
+
   // Settings
-  isPro       Boolean  @default(false)
-  isPublished Boolean  @default(true)
-  isSystem    Boolean  @default(false) // Built-in templates can't be deleted
-  
+  isPro       Boolean @default(false)
+  isPublished Boolean @default(true)
+  isSystem    Boolean @default(false) // Built-in templates can't be deleted
+
   // Metadata
   createdById String?
   createdAt   DateTime @default(now())
@@ -1229,23 +1222,826 @@ enum TemplateCategory {
 // ============================================================================
 
 model PageView {
-  id        String   @id @default(cuid())
-  siteId    String
-  pageId    String?
-  path      String
-  referrer  String?
-  userAgent String?
-  country   String?
-  device    String?  // desktop, mobile, tablet
-  browser   String?
-  os        String?
-  sessionId String?
+  id          String   @id @default(cuid())
+  workspaceId String
+  pageId      String?
+  path        String
+  referrer    String?
+  userAgent   String?
+  country     String?
+  device      String? // desktop, mobile, tablet
+  browser     String?
+  os          String?
+  sessionId   String?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  page      Page?     @relation(fields: [pageId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, path])
+  @@index([pageId])
+}
+
+// ============================================================================
+// SHOP - TAX ZONES (Regional Tax Configuration)
+// ============================================================================
+
+model TaxZone {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  name      String // e.g. "Deutschland", "EU", "Schweiz"
+  countries String[] @default([]) // ISO country codes: ["DE", "AT", "CH"]
+
+  // Tax rates
+  defaultRate Float  @default(19.0) // Standard tax rate %
+  reducedRate Float? // Reduced rate (e.g. 7% for food in DE)
+
+  // Tax class rates (JSON: { "standard": 19, "reduced": 7, "zero": 0 })
+  taxClasses Json @default("{}")
+
+  // Settings
+  taxIncluded Boolean @default(true) // Prices include tax?
+  isDefault   Boolean @default(false) // Default zone for unknown countries
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+// ============================================================================
+// SHOP - VOUCHERS / GIFT CARDS
+// ============================================================================
+
+model Voucher {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  code String
+  type VoucherType @default(GIFT_CARD)
+
+  // Value
+  initialValue Int // in cents
+  balance      Int // remaining balance in cents
+  currency     String @default("EUR")
+
+  // Purchaser / Recipient
+  purchaserEmail  String?
+  purchaserName   String?
+  recipientEmail  String?
+  recipientName   String?
+  personalMessage String?
+
+  // Validity
+  expiresAt  DateTime?
+  isActive   Boolean   @default(true)
+  redeemedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, code])
+  @@index([workspaceId])
+  @@index([code])
+}
+
+enum VoucherType {
+  GIFT_CARD
+  STORE_CREDIT
+  LOYALTY_REWARD
+}
+
+// ============================================================================
+// SHOP - ABANDONED CARTS
+// ============================================================================
+
+model Cart {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  // Customer info
+  email      String?
+  siteUserId String?
+  sessionId  String?
+
+  // Cart data
+  items    Json   @default("[]") // [{ productId, quantity, price, name, image }]
+  subtotal Int    @default(0)
+  currency String @default("EUR")
+
+  // Status
+  status CartStatus @default(ACTIVE)
+
+  // Recovery
+  recoveryEmailSentAt DateTime?
+  recoveryEmailCount  Int       @default(0)
+  recoveredAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  siteUser  SiteUser? @relation(fields: [siteUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([siteUserId])
+  @@index([email])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+enum CartStatus {
+  ACTIVE
+  ABANDONED
+  RECOVERED
+  CONVERTED
+}
+
+// ============================================================================
+// SHOP - INVOICES
+// ============================================================================
+
+model Invoice {
+  id          String  @id @default(cuid())
+  workspaceId String
+  orderId     String?
+
+  invoiceNumber String // e.g. "INV-2026-0001"
+
+  // Customer
+  customerName    String
+  customerEmail   String
+  customerAddress Json? // { street, city, zip, country, vatId }
+
+  // Seller
+  sellerName    String?
+  sellerAddress Json?
+  sellerVatId   String?
+
+  // Line items
+  items Json @default("[]") // [{ description, quantity, unitPrice, taxRate, total }]
+
+  // Totals
+  subtotal  Int // in cents
+  taxAmount Int    @default(0)
+  discount  Int    @default(0)
+  shipping  Int    @default(0)
+  total     Int
+  currency  String @default("EUR")
+
+  // Tax breakdown
+  taxBreakdown Json? // [{ rate: 19, base: 10000, amount: 1900 }]
+
+  // Status
+  status InvoiceStatus @default(DRAFT)
+
+  // Dates
+  issueDate DateTime  @default(now())
+  dueDate   DateTime?
+  paidAt    DateTime?
+
+  // Notes
+  notes      String? @db.Text
+  footerText String?
+
+  // PDF
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([orderId])
+  @@index([invoiceNumber])
+  @@index([status])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+// ============================================================================
+// SHOP - CREDIT NOTES
+// ============================================================================
+
+model CreditNote {
+  id          String  @id @default(cuid())
+  workspaceId String
+  orderId     String?
+
+  creditNoteNumber String // e.g. "CN-2026-0001"
+
+  // Customer
+  customerName  String
+  customerEmail String
+
+  // Line items
+  items Json @default("[]")
+
+  // Totals
+  subtotal  Int
+  taxAmount Int    @default(0)
+  total     Int
+  currency  String @default("EUR")
+
+  // Reason
+  reason String? @db.Text
+
+  // Status
+  status    CreditNoteStatus @default(DRAFT)
+  issueDate DateTime         @default(now())
+
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([orderId])
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  VOIDED
+}
+
+// ============================================================================
+// SHOP - DEBIT NOTES
+// ============================================================================
+
+model DebitNote {
+  id          String  @id @default(cuid())
+  workspaceId String
+  orderId     String?
+
+  debitNoteNumber String // e.g. "DN-2026-0001"
+
+  // Customer
+  customerName  String
+  customerEmail String
+
+  // Line items
+  items Json @default("[]")
+
+  // Totals
+  subtotal  Int
+  taxAmount Int    @default(0)
+  total     Int
+  currency  String @default("EUR")
+
+  // Reason
+  reason String? @db.Text
+
+  // Status
+  status    DebitNoteStatus @default(DRAFT)
+  issueDate DateTime        @default(now())
+
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order     Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([orderId])
+}
+
+enum DebitNoteStatus {
+  DRAFT
+  ISSUED
+  VOIDED
+}
+
+// ============================================================================
+// SHOP - PRICE QUOTES / ANGEBOTE
+// ============================================================================
+
+model Quote {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  quoteNumber String // e.g. "QT-2026-0001"
+
+  // Customer
+  customerName    String
+  customerEmail   String
+  customerAddress Json?
+
+  // Line items
+  items Json @default("[]") // [{ description, quantity, unitPrice, taxRate, total }]
+
+  // Totals
+  subtotal  Int
+  taxAmount Int    @default(0)
+  discount  Int    @default(0)
+  total     Int
+  currency  String @default("EUR")
+
+  // Status
+  status QuoteStatus @default(DRAFT)
+
+  // Validity
+  issueDate  DateTime  @default(now())
+  validUntil DateTime?
+  acceptedAt DateTime?
+
+  // Notes
+  notes String? @db.Text
+
+  // Converted to invoice?
+  convertedInvoiceId String?
+
+  pdfUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CONVERTED
+}
+
+// ============================================================================
+// SHOP - REVIEWS / RATINGS
+// ============================================================================
+
+model Review {
+  id          String @id @default(cuid())
+  workspaceId String
+  productId   String
+
+  // Reviewer
+  authorName  String
+  authorEmail String
+  siteUserId  String?
+
+  // Content
+  rating  Int // 1-5
+  title   String?
+  comment String? @db.Text
+
+  // Moderation
+  status ReviewStatus @default(PENDING)
+
+  // Helpful votes
+  helpfulCount    Int @default(0)
+  notHelpfulCount Int @default(0)
+
+  // Admin response
+  adminResponse    String?   @db.Text
+  adminRespondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([productId])
+  @@index([status])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+// ============================================================================
+// SHOP - EMAIL TEMPLATES (Transactional Emails)
+// ============================================================================
+
+model EmailTemplate {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  type    EmailTemplateType
+  name    String
+  subject String
+
+  // Content
+  bodyHtml String  @db.Text
+  bodyText String? @db.Text
+
+  // Settings
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, type])
+  @@index([workspaceId])
+}
+
+enum EmailTemplateType {
+  ORDER_CONFIRMATION
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  ORDER_REFUNDED
+  PAYMENT_RECEIVED
+  INVOICE_SENT
+  ABANDONED_CART
+  REVIEW_REQUEST
+  WELCOME
+  ACCOUNT_ACTIVATED
+  PASSWORD_RESET
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_CANCELLED
+  SUBSCRIPTION_RENEWED
+  CUSTOM
+}
+
+// ============================================================================
+// SHOP - INVENTORY MOVEMENTS
+// ============================================================================
+
+model InventoryMovement {
+  id          String @id @default(cuid())
+  workspaceId String
+  productId   String
+
+  type      InventoryMovementType
+  quantity  Int // positive = stock in, negative = stock out
+  reason    String?
+  reference String? // e.g. order ID, PO number
+
+  // Stock levels after movement
+  previousStock Int
+  newStock      Int
+
   createdAt DateTime @default(now())
 
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  page Page? @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([siteId, createdAt])
-  @@index([siteId, path])
-  @@index([pageId])
+  @@index([workspaceId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum InventoryMovementType {
+  PURCHASE // Einkauf / Wareneingang
+  SALE // Verkauf
+  RETURN // Rückgabe
+  ADJUSTMENT // Manuelle Korrektur
+  TRANSFER // Umlagerung
+  DAMAGED // Beschädigt / Verlust
+  INITIAL // Anfangsbestand
+}
+
+// ============================================================================
+// SHOP - SUBSCRIPTIONS (Product Subscriptions)
+// ============================================================================
+
+model SubscriptionPlan {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  name        String
+  slug        String
+  description String?
+
+  // Pricing
+  price    Int // in cents per interval
+  currency String               @default("EUR")
+  interval SubscriptionInterval @default(MONTHLY)
+
+  // Trial
+  trialDays Int @default(0)
+
+  // Features (JSON array of strings)
+  features Json @default("[]")
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace     Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscriptions ShopSubscription[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+}
+
+model ShopSubscription {
+  id          String @id @default(cuid())
+  workspaceId String
+  planId      String
+
+  // Customer
+  email      String
+  name       String?
+  siteUserId String?
+
+  // Status
+  status ShopSubscriptionStatus @default(ACTIVE)
+
+  // Dates
+  startedAt        DateTime  @default(now())
+  currentPeriodEnd DateTime?
+  cancelledAt      DateTime?
+
+  // Payment
+  stripeSubscriptionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan      SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([planId])
+  @@index([email])
+  @@index([status])
+}
+
+enum SubscriptionInterval {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ShopSubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+  TRIALING
+}
+
+// ============================================================================
+// SHOP - BOOKINGS
+// ============================================================================
+
+model Booking {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  // Customer
+  customerName  String
+  customerEmail String
+  customerPhone String?
+  siteUserId    String?
+
+  // Booking details
+  title       String
+  description String?
+
+  // Time
+  startTime DateTime
+  endTime   DateTime
+  timezone  String   @default("Europe/Berlin")
+  isAllDay  Boolean  @default(false)
+
+  // Pricing (optional — can be free)
+  price    Int? // in cents
+  currency String  @default("EUR")
+  isPaid   Boolean @default(false)
+
+  // Status
+  status BookingStatus @default(PENDING)
+
+  // Notes
+  notes      String? @db.Text
+  adminNotes String? @db.Text
+
+  // Reminder
+  reminderSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([startTime])
+  @@index([status])
+  @@index([customerEmail])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// ============================================================================
+// SHOP - CLAIMS / RETURNS / DISPUTES
+// ============================================================================
+
+model Claim {
+  id          String @id @default(cuid())
+  workspaceId String
+  orderId     String
+
+  claimNumber String // e.g. "CLM-2026-0001"
+
+  // Customer
+  customerName  String
+  customerEmail String
+
+  // Claim details
+  type   ClaimType
+  reason String    @db.Text
+
+  // Items being claimed
+  items Json @default("[]") // [{ productId, quantity, reason }]
+
+  // Resolution
+  status       ClaimStatus @default(OPEN)
+  resolution   String?     @db.Text
+  refundAmount Int? // in cents, if applicable
+
+  // Evidence
+  attachments Json @default("[]") // [{ url, name, type }]
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([orderId])
+  @@index([status])
+}
+
+enum ClaimType {
+  RETURN
+  REFUND
+  EXCHANGE
+  WARRANTY
+  DAMAGE
+  MISSING_ITEM
+  WRONG_ITEM
+}
+
+enum ClaimStatus {
+  OPEN
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  RESOLVED
+  CLOSED
+}
+
+// ============================================================================
+// SHOP - INVOICE SETTINGS
+// ============================================================================
+
+model InvoiceSettings {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  // Numbering
+  invoicePrefix        String @default("INV")
+  creditNotePrefix     String @default("CN")
+  debitNotePrefix      String @default("DN")
+  quotePrefix          String @default("QT")
+  nextInvoiceNumber    Int    @default(1)
+  nextCreditNoteNumber Int    @default(1)
+  nextDebitNoteNumber  Int    @default(1)
+  nextQuoteNumber      Int    @default(1)
+
+  // Company details (for documents)
+  companyName    String?
+  companyAddress String?
+  companyVatId   String?
+  companyEmail   String?
+  companyPhone   String?
+  companyLogo    String?
+  companyWebsite String?
+
+  // Bank details
+  bankName          String?
+  bankIban          String?
+  bankBic           String?
+  bankAccountHolder String?
+
+  // Tax
+  defaultTaxRate   Float   @default(19.0)
+  showTaxBreakdown Boolean @default(true)
+
+  // Layout
+  footerText String? @db.Text
+  headerText String? @db.Text
+  termsText  String? @db.Text
+
+  // Payment terms
+  defaultPaymentTermsDays Int @default(14)
+
+  // Locale
+  locale     String @default("de-DE")
+  dateFormat String @default("dd.MM.yyyy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// SHOP - AUTOMATION RULES
+// ============================================================================
+
+model AutomationRule {
+  id          String @id @default(cuid())
+  workspaceId String
+
+  name        String
+  description String?
+
+  // Trigger
+  trigger       AutomationTrigger
+  triggerConfig Json              @default("{}") // e.g. { delayMinutes: 60 }
+
+  // Action
+  action       AutomationAction
+  actionConfig Json             @default("{}") // e.g. { templateId: "...", webhookUrl: "..." }
+
+  // Status
+  isActive  Boolean   @default(true)
+  lastRunAt DateTime?
+  runCount  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([trigger])
+}
+
+enum AutomationTrigger {
+  ORDER_CREATED
+  ORDER_PAID
+  ORDER_SHIPPED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  CART_ABANDONED
+  NEW_CUSTOMER
+  REVIEW_SUBMITTED
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_CANCELLED
+  FORM_SUBMITTED
+  LOW_STOCK
+  BOOKING_CREATED
+  BOOKING_CONFIRMED
+  CLAIM_CREATED
+}
+
+enum AutomationAction {
+  SEND_EMAIL
+  SEND_WEBHOOK
+  SEND_SLACK
+  UPDATE_ORDER_STATUS
+  ADD_TAG
+  CREATE_TASK
+  NOTIFY_ADMIN
 }

@@ -21,8 +21,7 @@ import {
   ArrowLeft,
   AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface FormDef {
   id: string;
@@ -49,7 +48,6 @@ interface Submission {
 
 export default function WorkspaceFormsPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [forms, setForms] = useState<FormDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -58,9 +56,7 @@ export default function WorkspaceFormsPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [subTotal, setSubTotal] = useState(0);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/forms`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/forms`;
 
   async function loadForms() {
     if (!baseUrl) return;
@@ -83,8 +79,8 @@ export default function WorkspaceFormsPage() {
   }
 
   useEffect(() => {
-    if (activeSiteId) loadForms();
-  }, [activeSiteId]);
+    loadForms();
+  }, []);
 
   async function handleDelete(id: string) {
     if (!baseUrl || !confirm('Formular wirklich löschen?')) return;
@@ -126,36 +122,10 @@ export default function WorkspaceFormsPage() {
     loadForms();
   }
 
-  if (sitesLoading) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Formulare</h1>
-        <p className="text-muted-foreground mt-2">Laden...</p>
-      </div>
-    );
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Formulare</h1>
-        <Card className="mt-6">
-          <CardContent className="py-12 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-semibold mb-1">Keine Site vorhanden</h3>
-            <p className="text-sm text-muted-foreground">Erstelle zuerst eine Site, um Formulare zu verwalten.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Submissions view
   if (selectedForm) {
     return (
       <div className="p-6 space-y-6">
-        <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => setSelectedForm(null)}>
             <ArrowLeft className="w-4 h-4 mr-1" /> Zurück
@@ -205,8 +175,6 @@ export default function WorkspaceFormsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <WorkspaceSiteSelector sites={sites} activeSiteId={activeSiteId!} onSelect={setActiveSiteId} />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Formulare</h1>

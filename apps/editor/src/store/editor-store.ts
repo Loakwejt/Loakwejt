@@ -27,14 +27,17 @@ interface Command {
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile';
 
+// Workspace types matching Prisma enum
+export type WorkspaceType = 'WEBSITE' | 'SHOP' | 'BLOG' | 'FORUM' | 'WIKI' | 'PORTFOLIO' | 'LANDING';
+
 interface EditorState {
   // Page data
   workspaceId: string | null;
-  siteId: string | null;
   pageId: string | null;
   pageName: string;
+  workspaceType: WorkspaceType;
   
-  // Site data
+  // Site data (now workspace settings)
   siteName: string;
   siteSettings: SiteSettings;
   
@@ -66,7 +69,8 @@ interface EditorState {
   lastSaved: Date | null;
   
   // Actions
-  setPageContext: (workspaceId: string, siteId: string, pageId: string) => void;
+  setPageContext: (workspaceId: string, pageId: string) => void;
+  setWorkspaceType: (type: WorkspaceType) => void;
   setTree: (tree: BuilderTree) => void;
   replaceTree: (tree: BuilderTree) => void;
   setPageName: (name: string) => void;
@@ -118,13 +122,70 @@ interface EditorState {
   setLastSaved: (date: Date) => void;
   
   // Page navigation
-  loadPage: (workspaceId: string, siteId: string, pageId: string) => Promise<void>;
+  loadPage: (workspaceId: string, pageId: string) => Promise<void>;
   isLoadingPage: boolean;
+
+  // Workspace products (for live product data in Canvas)
+  workspaceProducts: WorkspaceProduct[];
+  isLoadingProducts: boolean;
+  fetchWorkspaceProducts: () => Promise<void>;
 }
+
+export interface WorkspaceProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  price: number; // cents
+  compareAtPrice: number | null;
+  currency: string;
+  images: string[];
+  isActive: boolean;
+  isFeatured: boolean;
+  sku: string | null;
+  inventory: number;
+  categoryId: string | null;
+  tags: string[];
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/**
+ * Maximum number of history entries to keep.
+ * Prevents memory leaks from unbounded undo history.
+ */
+const MAX_HISTORY_SIZE = 100;
 
 // ============================================================================
 // HELPERS
 // ============================================================================
+
+/**
+ * Adds a new tree to history with automatic size limiting.
+ * Removes oldest entries when limit is exceeded.
+ */
+function pushToHistory(
+  currentHistory: BuilderTree[],
+  historyIndex: number,
+  newTree: BuilderTree
+): { history: BuilderTree[]; historyIndex: number } {
+  // Slice history up to current index (discard any redo states)
+  const newHistory = currentHistory.slice(0, historyIndex + 1);
+  newHistory.push(newTree);
+  
+  // Apply history limit - remove oldest entries if exceeded
+  if (newHistory.length > MAX_HISTORY_SIZE) {
+    const overflow = newHistory.length - MAX_HISTORY_SIZE;
+    newHistory.splice(0, overflow);
+  }
+  
+  return {
+    history: newHistory,
+    historyIndex: newHistory.length - 1,
+  };
+}
 
 function deepMerge(target: Record<string, unknown>, source: Partial<Record<string, unknown>>): Record<string, unknown> {
   const result = { ...target };
@@ -176,9 +237,9 @@ const DEFAULT_TREE: BuilderTree = {
 export const useEditorStore = create<EditorState>((set, get) => ({
   // Initial state
   workspaceId: null,
-  siteId: null,
   pageId: null,
   pageName: 'Untitled Page',
+  workspaceType: 'WEBSITE' as WorkspaceType,
   siteName: 'Untitled Site',
   siteSettings: getDefaultSiteSettings(),
   tree: DEFAULT_TREE,
@@ -199,10 +260,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isDirty: false,
   lastSaved: null,
   isLoadingPage: false,
+  workspaceProducts: [],
+  isLoadingProducts: false,
 
   // Context
-  setPageContext: (workspaceId, siteId, pageId) => {
-    set({ workspaceId, siteId, pageId });
+  setPageContext: (workspaceId, pageId) => {
+    set({ workspaceId, pageId });
+  },
+
+  setWorkspaceType: (type) => {
+    set({ workspaceType: type });
   },
 
   setTree: (tree) => {
@@ -216,13 +283,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   replaceTree: (tree) => {
     const { history, historyIndex } = get();
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(tree);
+    const historyUpdate = pushToHistory(history, historyIndex, tree);
     
     set({
       tree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -283,14 +348,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: insertNodeAt(tree.root, parentId, newNode, insertIndex),
     };
 
-    // Update history
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    // Update history with limit
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       selectedNodeId: newNode.id,
       isDirty: true,
     });
@@ -307,13 +370,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: insertNodeAt(tree.root, parentId, node, insertIndex),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       selectedNodeId: node.id,
       isDirty: true,
     });
@@ -330,13 +391,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -352,13 +411,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -374,13 +431,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -396,13 +451,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -418,13 +471,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -443,13 +494,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: removeNodeFromTree(tree.root, nodeId),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       selectedNodeId: selectedNodeId === nodeId ? null : selectedNodeId,
       isDirty: true,
     });
@@ -485,13 +534,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: insertNodeAt(tree.root, result.parent.id, clonedNode, result.index + 1),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       selectedNodeId: clonedNode.id,
       isDirty: true,
     });
@@ -546,13 +593,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       })),
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -573,13 +618,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       root: newRoot,
     };
 
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newTree);
+    const historyUpdate = pushToHistory(history, historyIndex, newTree);
 
     set({
       tree: newTree,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
+      ...historyUpdate,
       isDirty: true,
     });
   },
@@ -671,14 +714,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   // Page navigation - smooth page switching without full reload
-  loadPage: async (workspaceId, siteId, pageId) => {
+  loadPage: async (workspaceId, pageId) => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     
     set({ isLoadingPage: true, selectedNodeId: null, hoveredNodeId: null });
     
     try {
       const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`,
+        `${apiUrl}/api/workspaces/${workspaceId}/pages/${pageId}`,
         { credentials: 'include' }
       );
 
@@ -689,13 +732,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const page = await response.json();
       
       // Update URL without reload
-      const newUrl = `${window.location.origin}${window.location.pathname}?workspaceId=${workspaceId}&siteId=${siteId}&pageId=${pageId}`;
-      window.history.pushState({ workspaceId, siteId, pageId }, '', newUrl);
+      const newUrl = `${window.location.origin}${window.location.pathname}?workspaceId=${workspaceId}&pageId=${pageId}`;
+      window.history.pushState({ workspaceId, pageId }, '', newUrl);
       
       // Update store state
       set({
         workspaceId,
-        siteId,
         pageId,
         pageName: page.name,
         tree: page.builderTree || {
@@ -717,6 +759,50 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     } catch (error) {
       console.error('Error loading page:', error);
       set({ isLoadingPage: false });
+    }
+  },
+
+  // ── Workspace Products ────────────────────────────────────────────────
+  fetchWorkspaceProducts: async () => {
+    const { workspaceId } = get();
+    if (!workspaceId) return;
+
+    set({ isLoadingProducts: true });
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(
+        `${apiUrl}/api/workspaces/${workspaceId}/products?limit=50&status=active`,
+        { credentials: 'include' }
+      );
+
+      if (!res.ok) {
+        console.warn('Could not fetch workspace products:', res.status);
+        set({ isLoadingProducts: false });
+        return;
+      }
+
+      const data = await res.json();
+      const products: WorkspaceProduct[] = (data.products || []).map((p: Record<string, unknown>) => ({
+        id: p.id as string,
+        name: p.name as string,
+        slug: p.slug as string,
+        description: (p.description as string) ?? null,
+        price: p.price as number,
+        compareAtPrice: (p.compareAtPrice as number) ?? null,
+        currency: (p.currency as string) || 'EUR',
+        images: Array.isArray(p.images) ? p.images as string[] : [],
+        isActive: (p.isActive as boolean) ?? true,
+        isFeatured: (p.isFeatured as boolean) ?? false,
+        sku: (p.sku as string) ?? null,
+        inventory: (p.inventory as number) || 0,
+        categoryId: (p.categoryId as string) ?? null,
+        tags: Array.isArray(p.tags) ? p.tags as string[] : [],
+      }));
+
+      set({ workspaceProducts: products, isLoadingProducts: false });
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      set({ isLoadingProducts: false });
     }
   },
 }));

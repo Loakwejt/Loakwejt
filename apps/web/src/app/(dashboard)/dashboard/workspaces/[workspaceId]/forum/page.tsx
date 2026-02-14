@@ -19,10 +19,8 @@ import {
   ArrowLeft,
   Pin,
   Lock,
-  AlertCircle,
 } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+
 
 interface ForumCategory {
   id: string;
@@ -49,7 +47,6 @@ interface ForumThread {
 
 export default function WorkspaceForumPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [totalThreads, setTotalThreads] = useState(0);
@@ -59,9 +56,7 @@ export default function WorkspaceForumPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [view, setView] = useState<'categories' | 'threads'>('categories');
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/forum`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/forum`;
 
   async function loadCategories() {
     if (!baseUrl) return;
@@ -91,14 +86,14 @@ export default function WorkspaceForumPage() {
   }
 
   useEffect(() => {
-    if (activeSiteId) loadCategories();
-  }, [activeSiteId]);
+    loadCategories();
+  }, []);
 
   useEffect(() => {
-    if (view === 'threads' && activeSiteId) {
+    if (view === 'threads') {
       loadThreads(selectedCategory || undefined);
     }
-  }, [view, page, selectedCategory, activeSiteId]);
+  }, [view, page, selectedCategory]);
 
   async function handleCreateCategory(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -117,40 +112,10 @@ export default function WorkspaceForumPage() {
     loadCategories();
   }
 
-  if (sitesLoading) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Forum-Verwaltung</h1>
-        <p className="text-muted-foreground mt-2">Laden...</p>
-      </div>
-    );
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Forum-Verwaltung</h1>
-        <Card className="mt-6">
-          <CardContent className="py-12 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-semibold mb-1">Keine Site vorhanden</h3>
-            <p className="text-sm text-muted-foreground">Erstelle zuerst eine Site, um das Forum zu verwalten.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Categories View
   if (view === 'categories') {
     return (
       <div className="p-6 space-y-6">
-        <WorkspaceSiteSelector
-          sites={sites}
-          activeSiteId={activeSiteId!}
-          onSelect={setActiveSiteId}
-        />
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Forum-Verwaltung</h1>
@@ -238,12 +203,6 @@ export default function WorkspaceForumPage() {
   // Threads View
   return (
     <div className="p-6 space-y-6">
-      <WorkspaceSiteSelector
-        sites={sites}
-        activeSiteId={activeSiteId!}
-        onSelect={setActiveSiteId}
-      />
-
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => { setView('categories'); setSelectedCategory(''); }}>
           <ArrowLeft className="w-4 h-4 mr-1" /> Kategorien

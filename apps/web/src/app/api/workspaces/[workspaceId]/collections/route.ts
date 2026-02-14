@@ -7,18 +7,15 @@ import { createAuditLog } from '@/lib/audit';
 // GET /api/workspaces/[workspaceId]/collections
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'view');
-
-    const { searchParams } = new URL(request.url);
-    const siteId = searchParams.get('siteId');
+    await requireWorkspacePermission(workspaceId, 'view');
 
     const collections = await prisma.collection.findMany({
       where: {
-        workspaceId: params.workspaceId,
-        ...(siteId && { siteId }),
+        workspaceId,
       },
       include: {
         _count: { select: { records: true } },
@@ -39,10 +36,11 @@ export async function GET(
 // POST /api/workspaces/[workspaceId]/collections
 export async function POST(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    await requireWorkspacePermission(workspaceId, 'edit');
 
     const body = await request.json();
     const validated = CreateCollectionSchema.parse(body);
@@ -50,8 +48,7 @@ export async function POST(
     // Check if slug is unique
     const existing = await prisma.collection.findFirst({
       where: {
-        workspaceId: params.workspaceId,
-        siteId: validated.siteId || null,
+        workspaceId,
         slug: validated.slug,
       },
     });
@@ -65,8 +62,7 @@ export async function POST(
 
     const collection = await prisma.collection.create({
       data: {
-        workspaceId: params.workspaceId,
-        siteId: validated.siteId || null,
+        workspaceId,
         name: validated.name,
         slug: validated.slug,
         description: validated.description,

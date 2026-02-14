@@ -25,14 +25,12 @@ import {
 } from 'lucide-react';
 
 interface SiteAuthToggleProps {
-  siteId: string;
   workspaceId: string;
   enableUserAuth: boolean;
   userAuthEnabledAt: string | null;
 }
 
 export function SiteAuthToggle({
-  siteId,
   workspaceId,
   enableUserAuth: initialEnabled,
   userAuthEnabledAt,
@@ -55,7 +53,7 @@ export function SiteAuthToggle({
     setError('');
     try {
       const res = await fetch(
-        `/api/workspaces/${workspaceId}/sites/${siteId}`,
+        `/api/workspaces/${workspaceId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -182,7 +180,7 @@ export function SiteAuthToggle({
         {isEnabled && (
           <div className="pt-2">
             <Link
-              href={`/dashboard/workspaces/${workspaceId}/sites/${siteId}/users`}
+              href={`/dashboard/workspaces/${workspaceId}/users`}
             >
               <Button variant="outline" size="sm" className="gap-2 w-full">
                 <Users className="h-4 w-4" />

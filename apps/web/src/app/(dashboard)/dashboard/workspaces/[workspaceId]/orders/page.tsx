@@ -11,9 +11,7 @@ import {
   Badge,
   Separator,
 } from '@builderly/ui';
-import { ShoppingCart, AlertCircle } from 'lucide-react';
-import { useWorkspaceSite } from '@/hooks/use-workspace-site';
-import { WorkspaceSiteSelector } from '@/components/dashboard/workspace-site-selector';
+import { ShoppingCart } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -56,7 +54,6 @@ const STATUS_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'o
 
 export default function WorkspaceOrdersPage() {
   const params = useParams<{ workspaceId: string }>();
-  const { sites, activeSiteId, setActiveSiteId, loading: sitesLoading, hasSites } = useWorkspaceSite(params.workspaceId);
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -64,9 +61,7 @@ export default function WorkspaceOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const baseUrl = activeSiteId
-    ? `/api/workspaces/${params.workspaceId}/sites/${activeSiteId}/orders`
-    : null;
+  const baseUrl = `/api/workspaces/${params.workspaceId}/orders`;
 
   async function loadOrders() {
     if (!baseUrl) return;
@@ -89,8 +84,8 @@ export default function WorkspaceOrdersPage() {
   }
 
   useEffect(() => {
-    if (activeSiteId) loadOrders();
-  }, [activeSiteId, page, statusFilter]);
+    loadOrders();
+  }, [page, statusFilter]);
 
   async function handleUpdateStatus(orderId: string, status: string) {
     if (!baseUrl) return;
@@ -109,38 +104,8 @@ export default function WorkspaceOrdersPage() {
     return `€${(cents / 100).toFixed(2)}`;
   }
 
-  if (sitesLoading) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Bestellungen</h1>
-        <p className="text-muted-foreground mt-2">Laden...</p>
-      </div>
-    );
-  }
-
-  if (!hasSites) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Bestellungen</h1>
-        <Card className="mt-6">
-          <CardContent className="py-12 text-center">
-            <AlertCircle className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-semibold mb-1">Keine Site vorhanden</h3>
-            <p className="text-sm text-muted-foreground">Erstelle zuerst eine Site, um Bestellungen zu sehen.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6">
-      <WorkspaceSiteSelector
-        sites={sites}
-        activeSiteId={activeSiteId!}
-        onSelect={setActiveSiteId}
-      />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Bestellungen</h1>

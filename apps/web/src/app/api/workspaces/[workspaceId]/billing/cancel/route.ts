@@ -7,18 +7,19 @@ import { createAuditLog } from '@/lib/audit';
 // Kündigt das laufende Abo zum Periodenende
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await params;
   try {
-    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(workspaceId, 'admin');
 
-    await cancelSubscription(params.workspaceId);
+    await cancelSubscription(workspaceId);
 
     await createAuditLog({
       userId,
       action: 'SUBSCRIPTION_CANCELLED',
       entity: 'Workspace',
-      entityId: params.workspaceId,
+      entityId: workspaceId,
     });
 
     return NextResponse.json({
