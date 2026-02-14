@@ -7,34 +7,34 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
       "import": "./dist/schemas/index.mjs",
-      "require": "./dist/schemas/index.js",
-      "types": "./dist/schemas/index.d.ts"
+      "require": "./dist/schemas/index.js"
     },
     "./registry": {
+      "types": "./dist/registry/index.d.ts",
       "import": "./dist/registry/index.mjs",
-      "require": "./dist/registry/index.js",
-      "types": "./dist/registry/index.d.ts"
+      "require": "./dist/registry/index.js"
     },
     "./actions": {
+      "types": "./dist/actions/index.d.ts",
       "import": "./dist/actions/index.mjs",
-      "require": "./dist/actions/index.js",
-      "types": "./dist/actions/index.d.ts"
+      "require": "./dist/actions/index.js"
     },
     "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
       "import": "./dist/plugins/index.mjs",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
+      "require": "./dist/plugins/index.js"
     },
     "./templates": {
+      "types": "./dist/templates/index.d.ts",
       "import": "./dist/templates/index.mjs",
-      "require": "./dist/templates/index.js",
-      "types": "./dist/templates/index.d.ts"
+      "require": "./dist/templates/index.js"
     }
   },
   "scripts": {
@@ -42,7 +42,8 @@
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "test": "vitest run"
   },
   "dependencies": {
     "zod": "^3.22.4"
@@ -50,6 +51,7 @@
   "devDependencies": {
     "@builderly/config": "workspace:*",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.1"
   }
 }

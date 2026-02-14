@@ -157,14 +157,14 @@ function LayerItem({
               <button
                 className="p-1 hover:bg-accent rounded"
                 onClick={handleDuplicate}
-                title="Duplicate"
+                title="Duplizieren"
               >
                 <Copy className="h-3 w-3" />
               </button>
               <button
                 className="p-1 hover:bg-destructive/20 hover:text-destructive rounded"
                 onClick={handleDelete}
-                title="Delete"
+                title="Löschen"
               >
                 <Trash2 className="h-3 w-3" />
               </button>
@@ -240,7 +240,7 @@ export function LayerPanel() {
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
     >
-      <h3 className="text-sm font-semibold px-2 mb-2">Layers</h3>
+      <h3 className="text-sm font-semibold px-2 mb-2">Ebenen</h3>
       <div className="space-y-0.5">
         <LayerItem
           node={tree.root}

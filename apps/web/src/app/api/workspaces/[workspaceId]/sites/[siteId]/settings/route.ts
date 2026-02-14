@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { SiteSettingsSchema, mergeSiteSettings } from '@builderly/core';
 import { z } from 'zod';
 
@@ -55,7 +56,7 @@ export async function PATCH(
   { params }: { params: { workspaceId: string; siteId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
 
@@ -98,7 +99,7 @@ export async function PATCH(
         ...(body.description !== undefined && { description: body.description }),
         ...(body.faviconUrl !== undefined && { faviconUrl: body.faviconUrl }),
         ...(body.customDomain !== undefined && { customDomain: body.customDomain || null }),
-        settings: newSettings,
+        settings: newSettings as Prisma.InputJsonValue,
       },
       select: {
         id: true,
@@ -111,6 +112,8 @@ export async function PATCH(
         isPublished: true,
       },
     });
+
+    await createAuditLog({ userId, action: 'SITE_SETTINGS_UPDATED', entity: 'Site', entityId: params.siteId, details: { changedFields: Object.keys(body) } });
 
     return NextResponse.json(updatedSite);
   } catch (error) {

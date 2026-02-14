@@ -2,50 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   PHOTOSHOP-STYLE DARK THEME
+   Professional, compact, minimal UI inspired by Adobe CC apps
+   ============================================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* Force dark mode - Photoshop style */
+    --background: 220 10% 12%;           /* #1c1e22 - Main app background */
+    --foreground: 220 10% 85%;           /* #d3d5d9 - Primary text */
+    
+    --card: 220 10% 15%;                 /* #232629 - Panel background */
+    --card-foreground: 220 10% 85%;
+    
+    --popover: 220 10% 14%;              /* #212427 - Dropdown/popover bg */
+    --popover-foreground: 220 10% 85%;
+    
+    --primary: 211 100% 50%;             /* #0099ff - Accent blue */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 220 10% 20%;            /* #2d3035 - Secondary backgrounds */
+    --secondary-foreground: 220 10% 80%;
+    
+    --muted: 220 10% 18%;                /* #282b2f - Muted backgrounds */
+    --muted-foreground: 220 10% 55%;     /* #878a8f - Muted text */
+    
+    --accent: 220 10% 22%;               /* #333639 - Hover states */
+    --accent-foreground: 220 10% 90%;
+    
+    --destructive: 0 72% 51%;            /* #e53935 - Red for delete */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 10% 22%;               /* #333639 - Subtle borders */
+    --input: 220 10% 18%;                /* #282b2f - Input backgrounds */
+    --ring: 211 100% 50%;                /* #0099ff - Focus ring */
+    
+    --radius: 0.25rem;                   /* Smaller radius for compact feel */
+    
+    /* Custom Photoshop-specific vars */
+    --ps-toolbar: 220 10% 16%;           /* Toolbar background */
+    --ps-panel: 220 10% 14%;             /* Panel background */
+    --ps-panel-header: 220 10% 12%;      /* Panel header */
+    --ps-divider: 220 10% 25%;           /* Visible dividers */
+    --ps-hover: 211 100% 50%;            /* Hover accent */
+    --ps-selected: 211 80% 25%;          /* Selected item bg */
+    --ps-canvas: 220 5% 22%;             /* Canvas checkerboard */
   }
 
+  /* Remove .dark class - always dark */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --background: 220 10% 12%;
+    --foreground: 220 10% 85%;
+    --card: 220 10% 15%;
+    --card-foreground: 220 10% 85%;
+    --popover: 220 10% 14%;
+    --popover-foreground: 220 10% 85%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 20%;
+    --secondary-foreground: 220 10% 80%;
+    --muted: 220 10% 18%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 220 10% 22%;
+    --accent-foreground: 220 10% 90%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 22%;
+    --input: 220 10% 18%;
+    --ring: 211 100% 50%;
   }
 }
 
@@ -55,22 +80,140 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 12px;
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+/* ============================================================================
+   PHOTOSHOP-STYLE COMPONENTS
+   ============================================================================ */
+
+/* Panel styles */
+.ps-panel {
+  @apply bg-[hsl(var(--ps-panel))] border-[hsl(var(--border))];
+}
+
+.ps-panel-header {
+  @apply bg-[hsl(var(--ps-panel-header))] text-[11px] uppercase tracking-wider font-semibold text-muted-foreground px-3 py-2 border-b border-[hsl(var(--border))];
+}
+
+.ps-toolbar {
+  @apply bg-[hsl(var(--ps-toolbar))] border-b border-[hsl(var(--border))];
+}
+
+/* Compact button styles */
+.ps-btn {
+  @apply h-6 px-2 text-[11px] rounded-[3px] transition-colors;
+}
+
+.ps-btn-icon {
+  @apply h-6 w-6 p-0 rounded-[3px] transition-colors hover:bg-accent;
+}
+
+/* Input styles */
+.ps-input {
+  @apply h-6 text-[11px] bg-input border-0 rounded-[3px] px-2 focus:ring-1 focus:ring-primary;
+}
+
+/* Divider */
+.ps-divider {
+  @apply h-px bg-[hsl(var(--ps-divider))];
+}
+
+/* Selected state */
+.ps-selected {
+  @apply bg-[hsl(var(--ps-selected))] border-l-2 border-primary;
 }
 
 /* Editor-specific styles */
 .editor-canvas {
-  min-height: calc(100vh - 4rem);
+  min-height: calc(100vh - 2.5rem);
+  background: 
+    linear-gradient(45deg, hsl(var(--ps-canvas)) 25%, transparent 25%),
+    linear-gradient(-45deg, hsl(var(--ps-canvas)) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, hsl(var(--ps-canvas)) 75%),
+    linear-gradient(-45deg, transparent 75%, hsl(var(--ps-canvas)) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  background-color: hsl(220 5% 18%);
 }
 
 .component-item {
-  @apply cursor-grab active:cursor-grabbing;
+  @apply cursor-grab active:cursor-grabbing bg-card hover:bg-accent rounded-[3px] transition-colors;
 }
 
 .drop-indicator {
-  @apply bg-primary/20 border-2 border-dashed border-primary rounded;
+  @apply bg-primary/30 border border-dashed border-primary rounded-[2px];
 }
 
 .selected-node {
-  @apply ring-2 ring-primary ring-offset-2;
+  @apply ring-1 ring-primary ring-offset-0;
+}
+
+/* Hover effect classes using CSS custom properties */
+.hover-bg-custom {
+  transition: background-color 0.15s ease;
+}
+.hover-bg-custom:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.hover-color-custom {
+  transition: color 0.15s ease;
+}
+.hover-color-custom:hover {
+  color: var(--hover-color) !important;
+}
+
+.hover-border-custom {
+  transition: border-color 0.15s ease;
+}
+.hover-border-custom:hover {
+  border-color: var(--hover-border) !important;
+}
+
+.hover-scale-custom {
+  transition: transform 0.15s ease;
+}
+.hover-scale-custom:hover {
+  transform: scale(var(--hover-scale)) !important;
+}
+
+.hover-shadow-custom {
+  transition: box-shadow 0.15s ease;
+}
+.hover-shadow-custom:hover {
+  box-shadow: var(--hover-shadow) !important;
+}
+
+.hover-opacity-custom {
+  transition: opacity 0.15s ease;
+}
+.hover-opacity-custom:hover {
+  opacity: var(--hover-opacity) !important;
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+/* Hide scrollbar for carousel */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

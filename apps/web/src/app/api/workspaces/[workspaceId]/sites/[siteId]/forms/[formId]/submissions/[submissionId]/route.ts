@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const UpdateSubmissionSchema = z.object({
@@ -56,7 +57,7 @@ export async function PATCH(
   { params }: { params: { workspaceId: string; siteId: string; formId: string; submissionId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const validated = UpdateSubmissionSchema.parse(body);
@@ -81,6 +82,8 @@ export async function PATCH(
       },
     });
 
+    await createAuditLog({ userId, action: 'SUBMISSION_UPDATED', entity: 'FormSubmission', entityId: params.submissionId, details: { formId: params.formId, status: validated.status } });
+
     return NextResponse.json(submission);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -100,7 +103,7 @@ export async function DELETE(
   { params }: { params: { workspaceId: string; siteId: string; formId: string; submissionId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const existing = await prisma.formSubmission.findFirst({
       where: {
@@ -116,6 +119,8 @@ export async function DELETE(
     await prisma.formSubmission.delete({
       where: { id: params.submissionId },
     });
+
+    await createAuditLog({ userId, action: 'SUBMISSION_DELETED', entity: 'FormSubmission', entityId: params.submissionId, details: { formId: params.formId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

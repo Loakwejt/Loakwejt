@@ -3,6 +3,7 @@ import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { canCreateSite } from '@/lib/entitlements';
 import { CreateSiteSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/sites
 export async function GET(
@@ -112,6 +113,14 @@ export async function POST(
           },
         },
       },
+    });
+
+    await createAuditLog({
+      userId,
+      action: 'SITE_CREATED',
+      entity: 'Site',
+      entityId: site.id,
+      details: { name: site.name, slug: site.slug, workspaceId: params.workspaceId },
     });
 
     return NextResponse.json(site, { status: 201 });

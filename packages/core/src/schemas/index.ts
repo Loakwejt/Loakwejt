@@ -4,6 +4,12 @@ export * from './style';
 // Node schemas and operations
 export * from './node';
 
+// Animation schemas and presets
+export * from './animation';
+
+// Symbol schemas for reusable components
+export * from './symbol';
+
 // Action schemas and registry
 export * from './actions';
 

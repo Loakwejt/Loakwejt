@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { CreateRecordSchema } from '@builderly/sdk';
 
 // GET /api/workspaces/[workspaceId]/collections/[collectionId]/records
@@ -82,12 +83,14 @@ export async function POST(
     const record = await prisma.record.create({
       data: {
         collectionId: params.collectionId,
-        data: validated.data,
+        data: validated.data as Prisma.InputJsonValue,
         slug: validated.slug,
         status: validated.status || 'DRAFT',
         createdById: userId,
       },
     });
+
+    await createAuditLog({ userId, action: 'RECORD_CREATED', entity: 'Record', entityId: record.id, details: { collectionId: params.collectionId, slug: validated.slug } });
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {

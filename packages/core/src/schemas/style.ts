@@ -93,7 +93,7 @@ export const FlexJustifyToken = z.enum([
 ]);
 export type FlexJustifyToken = z.infer<typeof FlexJustifyToken>;
 
-export const DisplayToken = z.enum(['block', 'inline', 'inline-block', 'flex', 'grid', 'none']);
+export const DisplayToken = z.enum(['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'none']);
 export type DisplayToken = z.infer<typeof DisplayToken>;
 
 export const PositionToken = z.enum(['static', 'relative', 'absolute', 'fixed', 'sticky']);
@@ -155,12 +155,26 @@ export const StylePropertiesSchema = z.object({
   flexWrap: z.enum(['wrap', 'nowrap', 'wrap-reverse']).optional(),
   flexGrow: z.number().optional(),
   flexShrink: z.number().optional(),
+  flex: z.string().optional(), // Flex shorthand (e.g., '1', '0 0 auto')
+  alignSelf: z.enum(['auto', 'flex-start', 'flex-end', 'center', 'baseline', 'stretch']).optional(),
+  justifySelf: z.enum(['auto', 'flex-start', 'flex-end', 'center', 'stretch']).optional(),
+  order: z.number().optional(),
   
   // Grid
   gridColumns: z.number().min(1).max(12).optional(),
   gridRows: z.number().min(1).max(12).optional(),
   gridColumnSpan: z.number().min(1).max(12).optional(),
   gridRowSpan: z.number().min(1).max(12).optional(),
+  placeItems: z.string().optional(), // Grid/Flex centering (e.g., 'center')
+  gridTemplateColumns: z.string().optional(), // e.g., 'repeat(3, 1fr)'
+  gridTemplateRows: z.string().optional(), // e.g., 'auto 1fr auto'
+  justifyItems: z.enum(['start', 'end', 'center', 'stretch']).optional(),
+  
+  // Positioning
+  top: z.string().optional(),
+  right: z.string().optional(),
+  bottom: z.string().optional(),
+  left: z.string().optional(),
   
   // Theme Colors (using tokens)
   backgroundColor: ColorToken.optional(),
@@ -187,13 +201,36 @@ export const StylePropertiesSchema = z.object({
   textTransform: z.enum(['none', 'uppercase', 'lowercase', 'capitalize']).optional(),
   
   // Borders
+  border: z.string().optional(), // CSS border shorthand, e.g., '1px solid #ccc'
+  borderTop: z.string().optional(), // CSS border-top shorthand
+  borderBottom: z.string().optional(), // CSS border-bottom shorthand
+  borderLeft: z.string().optional(),
+  borderRight: z.string().optional(),
   borderWidth: z.enum(['0', '1', '2', '4', '8']).optional(),
   borderRadius: BorderRadiusToken.optional(),
   borderStyle: z.enum(['solid', 'dashed', 'dotted', 'none']).optional(),
   
   // Effects
+  background: z.string().optional(), // CSS background shorthand (gradients, etc.)
   shadow: z.union([ShadowToken, z.literal('inner')]).optional(),
+  boxShadow: z.string().optional(), // Custom box-shadow value
   opacity: z.number().min(0).max(100).optional(),
+  gradient: z.string().optional(), // CSS gradient value
+  backdropBlur: z.string().optional(), // e.g., '4px', '8px'
+  blur: z.string().optional(), // e.g., '4px', '8px'
+  transform: z.string().optional(), // CSS transform value
+  transition: z.string().optional(), // CSS transition value
+  transitionDuration: z.string().optional(), // e.g., '300ms', '0.5s'
+  aspectRatio: z.string().optional(), // e.g., '16/9', '1/1'
+  objectFit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
+  
+  // Hover States
+  hoverBackgroundColor: z.string().optional(),
+  hoverTextColor: z.string().optional(),
+  hoverBorderColor: z.string().optional(),
+  hoverScale: z.string().optional(), // e.g., '1.05', '1.1'
+  hoverShadow: z.string().optional(), // Custom hover shadow
+  hoverOpacity: z.number().min(0).max(100).optional(),
   
   // Cursor
   cursor: z.enum(['default', 'pointer', 'text', 'move', 'not-allowed', 'grab', 'grabbing']).optional(),

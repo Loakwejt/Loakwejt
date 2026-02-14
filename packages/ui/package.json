@@ -7,21 +7,21 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./globals.css": "./src/globals.css"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --external react",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --external react --watch",
+    "build": "tsup src/index.ts --format cjs,esm --dts --external react --external react-dom",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --external react --external react-dom --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@radix-ui/react-alert-dialog": "^1.0.5",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-collapsible": "^1.0.3",
@@ -29,6 +29,7 @@
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-popover": "^1.0.7",
+    "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-scroll-area": "^1.0.5",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-separator": "^1.0.3",

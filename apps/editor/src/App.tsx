@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TooltipProvider } from '@builderly/ui';
 import { Toolbar } from './components/Toolbar';
-import { Palette } from './components/Palette';
 import { Canvas } from './components/Canvas';
 import { Inspector } from './components/Inspector';
-import { LayerPanel } from './components/LayerPanel';
+import { LeftSidebar } from './components/LeftSidebar';
+import { FloatingPalette } from './components/FloatingPalette';
 import { DndProvider } from './components/DndProvider';
 import { SiteSettingsPanel } from './components/SiteSettingsPanel';
+import { KeyboardShortcutsDialog } from './components/KeyboardShortcutsDialog';
+import { SymbolsPanel } from './components/SymbolsPanel';
+import { HistoryPanel } from './components/HistoryPanel';
 import { useEditorStore } from './store/editor-store';
 import { mergeSiteSettings } from '@builderly/core';
 
@@ -14,11 +17,15 @@ import { mergeSiteSettings } from '@builderly/core';
 import '@builderly/core/registry';
 
 function App() {
+  const [isSymbolsPanelOpen, setIsSymbolsPanelOpen] = useState(false);
+  const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
+  
   const {
-    isPaletteOpen,
     isInspectorOpen,
-    isLayerPanelOpen,
     isPreviewMode,
+    isPaletteOpen,
+    isLeftSidebarOpen,
+    toggleLeftSidebar,
     setPageContext,
     setTree,
     setPageName,
@@ -31,12 +38,32 @@ function App() {
     const workspaceId = params.get('workspaceId');
     const siteId = params.get('siteId');
     const pageId = params.get('pageId');
+    const templateId = params.get('templateId');
+
+    // Template-Import per templateId (Port 5173, z.B. aus Admin-Panel)
+    if (templateId) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      fetch(`${apiUrl}/api/templates?templateId=${templateId}`)
+        .then(res => res.json())
+        .then(data => {
+          // Finde das Template (DB-Id oder db-Id)
+          const tpl = (data.data || []).find((t: any) => t.id === templateId || t.id === `db-${templateId}`);
+          if (tpl && tpl.tree) {
+            setTree(tpl.tree);
+            setPageName(tpl.name || 'Template');
+          }
+        })
+        .catch(err => {
+          console.error('Fehler beim Laden des Templates:', err);
+        });
+      return; // Wenn Template, laden wir keine Seite
+    }
 
     if (workspaceId && siteId && pageId) {
       setPageContext(workspaceId, siteId, pageId);
       loadPage(workspaceId, siteId, pageId);
-      loadSiteSettings(workspaceId, siteId);
     }
+
   }, [setPageContext, setTree, setPageName, setSiteData]);
 
   const loadPage = async (workspaceId: string, siteId: string, pageId: string) => {
@@ -59,26 +86,6 @@ function App() {
       }
     } catch (error) {
       console.error('Error loading page:', error);
-    }
-  };
-
-  const loadSiteSettings = async (workspaceId: string, siteId: string) => {
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(
-        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/settings`,
-        { credentials: 'include' }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to load site settings');
-      }
-
-      const site = await response.json();
-      const settings = mergeSiteSettings(site.settings || {});
-      setSiteData(site.name, settings);
-    } catch (error) {
-      console.error('Error loading site settings:', error);
     }
   };
 
@@ -138,37 +145,53 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Listen for symbols panel toggle event
+  useEffect(() => {
+    const handleToggleSymbols = () => {
+      setIsSymbolsPanelOpen(prev => !prev);
+    };
+    
+    window.addEventListener('toggle-symbols-panel', handleToggleSymbols);
+    return () => window.removeEventListener('toggle-symbols-panel', handleToggleSymbols);
+  }, []);
+
+  // Listen for history panel toggle event
+  useEffect(() => {
+    const handleToggleHistory = () => {
+      setIsHistoryPanelOpen(prev => !prev);
+    };
+    
+    window.addEventListener('toggle-history-panel', handleToggleHistory);
+    return () => window.removeEventListener('toggle-history-panel', handleToggleHistory);
+  }, []);
+
   return (
     <TooltipProvider>
       <DndProvider>
-        <div className="h-screen flex flex-col bg-muted/30">
-          {/* Toolbar */}
+        <div className="h-screen flex flex-col bg-background overflow-hidden">
+          {/* Toolbar - Compact Photoshop style */}
           <Toolbar />
 
           {/* Main editor area */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Left sidebar - Palette */}
-            {isPaletteOpen && !isPreviewMode && (
-              <aside className="w-64 border-r bg-background overflow-y-auto flex-shrink-0">
-                <Palette />
-              </aside>
+            {/* Left sidebar - Pages, Layers, Components */}
+            {!isPreviewMode && (
+              <LeftSidebar 
+                isCollapsed={!isLeftSidebarOpen}
+                onToggleCollapse={toggleLeftSidebar}
+              />
             )}
 
-            {/* Layer Panel (optional, between palette and canvas) */}
-            {isLayerPanelOpen && !isPreviewMode && (
-              <aside className="w-56 border-r bg-background overflow-y-auto flex-shrink-0">
-                <LayerPanel />
-              </aside>
-            )}
-
-            {/* Center - Canvas */}
-            <main className="flex-1 overflow-auto bg-muted/50 relative">
+            {/* Center - Canvas with checkerboard */}
+            <main className="flex-1 overflow-auto relative editor-canvas">
               <Canvas />
+              {/* Floating Palette */}
+              {isPaletteOpen && !isPreviewMode && <FloatingPalette />}
             </main>
 
             {/* Right sidebar - Inspector */}
             {isInspectorOpen && !isPreviewMode && (
-              <aside className="w-80 border-l bg-background overflow-y-auto flex-shrink-0">
+              <aside className="w-80 flex flex-col flex-shrink-0 overflow-hidden border-l border-border bg-[hsl(220,10%,14%)]">
                 <Inspector />
               </aside>
             )}
@@ -176,6 +199,21 @@ function App() {
 
           {/* Site Settings Panel (Sheet/Drawer) */}
           <SiteSettingsPanel />
+          
+          {/* Keyboard Shortcuts Dialog */}
+          <KeyboardShortcutsDialog />
+          
+          {/* Symbols Panel */}
+          <SymbolsPanel 
+            isOpen={isSymbolsPanelOpen} 
+            onClose={() => setIsSymbolsPanelOpen(false)} 
+          />
+          
+          {/* History Panel */}
+          <HistoryPanel 
+            isOpen={isHistoryPanelOpen} 
+            onClose={() => setIsHistoryPanelOpen(false)} 
+          />
         </div>
       </DndProvider>
     </TooltipProvider>

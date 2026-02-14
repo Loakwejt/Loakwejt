@@ -22,9 +22,10 @@ export const DEFAULT_CATEGORIES: ComponentCategory[] = [
   { id: 'data', name: 'Data', icon: 'database', order: 5 },
   { id: 'gates', name: 'Gates', icon: 'shield', order: 6 },
   { id: 'media', name: 'Media', icon: 'image', order: 7 },
-  { id: 'commerce', name: 'Commerce', icon: 'shopping-cart', order: 8 },
-  { id: 'blog', name: 'Blog', icon: 'book-open', order: 9 },
-  { id: 'forum', name: 'Forum', icon: 'message-square', order: 10 },
+  { id: 'auth', name: 'Benutzer & Auth', icon: 'user-check', order: 8 },
+  { id: 'commerce', name: 'Commerce', icon: 'shopping-cart', order: 9 },
+  { id: 'blog', name: 'Blog', icon: 'book-open', order: 10 },
+  { id: 'forum', name: 'Forum', icon: 'message-square', order: 11 },
 ];
 
 // ============================================================================

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { BuilderStyleSchema } from './style';
 import { BuilderActionBindingSchema } from './actions';
+import { BuilderAnimationSchema, type BuilderAnimation } from './animation';
 
 // ============================================================================
 // NODE METADATA
@@ -28,6 +29,7 @@ export const BuilderNodeSchema: z.ZodType<BuilderNode> = z.lazy(() =>
     actions: z.array(BuilderActionBindingSchema),
     children: z.array(BuilderNodeSchema),
     meta: BuilderNodeMetaSchema.optional(),
+    animation: BuilderAnimationSchema.optional(),
   })
 );
 
@@ -39,6 +41,7 @@ export interface BuilderNode {
   actions: z.infer<typeof BuilderActionBindingSchema>[];
   children: BuilderNode[];
   meta?: BuilderNodeMeta;
+  animation?: BuilderAnimation;
 }
 
 // ============================================================================

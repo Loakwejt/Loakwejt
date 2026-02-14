@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { CreateCollectionSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/collections
 export async function GET(
@@ -69,8 +70,15 @@ export async function POST(
         name: validated.name,
         slug: validated.slug,
         description: validated.description,
-        schema: validated.schema,
+        schema: validated.schema as Prisma.InputJsonValue,
       },
+    });
+
+    await createAuditLog({
+      action: 'COLLECTION_CREATED',
+      entity: 'Collection',
+      entityId: collection.id,
+      details: { name: collection.name, slug: collection.slug },
     });
 
     return NextResponse.json(collection, { status: 201 });

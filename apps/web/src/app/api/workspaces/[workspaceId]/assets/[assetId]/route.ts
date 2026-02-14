@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { deleteFile } from '@/lib/storage';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/assets/[assetId]
 export async function GET(
@@ -71,6 +72,13 @@ export async function PATCH(
       },
     });
 
+    await createAuditLog({
+      action: 'ASSET_UPDATED',
+      entity: 'Asset',
+      entityId: params.assetId,
+      details: { fields: Object.keys({ name, alt, caption, folder, tags }).filter(k => (({ name, alt, caption, folder, tags }) as any)[k] !== undefined) },
+    });
+
     return NextResponse.json(asset);
   } catch (error) {
     if (error instanceof Error && error.message.includes('Forbidden')) {
@@ -123,6 +131,13 @@ export async function DELETE(
     // Delete from database
     await prisma.asset.delete({
       where: { id: params.assetId },
+    });
+
+    await createAuditLog({
+      action: 'ASSET_DELETED',
+      entity: 'Asset',
+      entityId: params.assetId,
+      details: { fileName: asset.fileName },
     });
 
     return NextResponse.json({ success: true });

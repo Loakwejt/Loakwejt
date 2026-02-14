@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
+import { createAuditLog } from '@/lib/audit';
 import { z } from 'zod';
 
 const CreateFormSchema = z.object({
@@ -47,7 +48,7 @@ export async function POST(
   { params }: { params: { workspaceId: string; siteId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'edit');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'edit');
 
     const body = await request.json();
     const validated = CreateFormSchema.parse(body);
@@ -81,6 +82,8 @@ export async function POST(
         enableRecaptcha: validated.enableRecaptcha || false,
       },
     });
+
+    await createAuditLog({ userId, action: 'FORM_CREATED', entity: 'Form', entityId: form.id, details: { name: validated.name, slug: validated.slug, siteId: params.siteId } });
 
     return NextResponse.json(form, { status: 201 });
   } catch (error) {

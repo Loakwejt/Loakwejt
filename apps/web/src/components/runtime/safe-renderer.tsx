@@ -1,9 +1,121 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import type { BuilderNode, BuilderTree, BuilderStyle } from '@builderly/core';
-import { componentRegistry } from '@builderly/core';
+import { componentRegistry, createClientActionRunner } from '@builderly/core';
+import type { ActionResult } from '@builderly/core';
 import { cn } from '@builderly/ui';
+import { RuntimeAnimationWrapper } from './animation-wrapper';
+import {
+  LoginFormRuntime,
+  RegisterFormRuntime,
+  PasswordResetFormRuntime,
+  UserProfileRuntime,
+  UserAvatarRuntime,
+  LogoutButtonRuntime,
+  ProtectedContentRuntime,
+  MemberListRuntime,
+} from './auth-components';
+
+// ============================================================================
+// ACTION EXECUTION HELPER — runs node.actions for a given event
+// ============================================================================
+
+const actionRunner = createClientActionRunner();
+
+function buildClickHandler(
+  node: BuilderNode,
+  eventName: string = 'onClick'
+): ((e: React.MouseEvent) => void) | undefined {
+  const actions = node.actions as
+    | Array<{ event: string; action: { type: string; [key: string]: unknown } }>
+    | undefined;
+  if (!actions || actions.length === 0) return undefined;
+
+  const matching = actions.filter(
+    (a) => a.event === eventName || a.event === 'click'
+  );
+  if (matching.length === 0) return undefined;
+
+  return (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    matching.forEach((binding) => {
+      const action = binding.action;
+      switch (action.type) {
+        case 'navigate': {
+          const target = (action.target as string) || '_self';
+          const to = action.to as string;
+          if (target === '_blank') {
+            window.open(to, '_blank');
+          } else {
+            window.location.href = to;
+          }
+          break;
+        }
+        case 'scrollTo': {
+          const targetId = action.targetId as string;
+          const el =
+            document.getElementById(targetId) ||
+            document.querySelector(`[data-node-id="${targetId}"]`);
+          if (el) {
+            el.scrollIntoView({
+              behavior: (action.behavior as ScrollBehavior) || 'smooth',
+              block: 'start',
+            });
+          }
+          break;
+        }
+        case 'openModal': {
+          const modalId = action.modalId as string;
+          const modal = document.getElementById(modalId);
+          if (modal) modal.classList.remove('hidden');
+          document.dispatchEvent(
+            new CustomEvent('builderly:openModal', { detail: { modalId } })
+          );
+          break;
+        }
+        case 'closeModal': {
+          const modalId = (action.modalId as string) || '';
+          if (modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+          }
+          document.dispatchEvent(
+            new CustomEvent('builderly:closeModal', { detail: { modalId } })
+          );
+          break;
+        }
+        case 'submitForm': {
+          // Find the closest parent form and submit
+          const target2 = e.currentTarget as HTMLElement;
+          const form = target2.closest('form');
+          if (form) {
+            form.requestSubmit();
+          }
+          break;
+        }
+        case 'login': {
+          const redirectTo =
+            (action.redirectTo as string) || window.location.pathname;
+          window.location.href = `/login?redirect=${encodeURIComponent(redirectTo)}`;
+          break;
+        }
+        case 'logout': {
+          const logoutRedirect = (action.redirectTo as string) || '/';
+          // Fire-and-forget logout, then redirect
+          fetch('/api/auth/signout', { method: 'POST', credentials: 'include' })
+            .finally(() => {
+              window.location.href = logoutRedirect;
+            });
+          break;
+        }
+        default:
+          console.warn('Unknown runtime action:', action.type);
+      }
+    });
+  };
+}
 
 // ============================================================================
 // STYLE MAPPING - Convert tokens to Tailwind classes
@@ -101,6 +213,159 @@ function mapSpacing(token: string): string {
 }
 
 // ============================================================================
+// INLINE STYLE EXTRACTION - For CSS values that can't be mapped to Tailwind
+// ============================================================================
+
+function extractInlineStyles(style: BuilderStyle): React.CSSProperties {
+  const props = style.base || {};
+  const inlineStyles: React.CSSProperties = {};
+
+  // Background (supports gradients and colors)
+  if (props.background && typeof props.background === 'string') {
+    inlineStyles.background = props.background;
+  }
+  // Also check for 'gradient' prop (used by CanvasNode in Editor)
+  if (props.gradient && typeof props.gradient === 'string') {
+    inlineStyles.background = props.gradient;
+  }
+  if (props.backgroundColor && typeof props.backgroundColor === 'string') {
+    // Only use inline if it looks like a CSS value (has # or rgb or is a color name)
+    if (props.backgroundColor.includes('#') || props.backgroundColor.includes('rgb') || props.backgroundColor.includes('hsl')) {
+      inlineStyles.backgroundColor = props.backgroundColor;
+    }
+  }
+  // Also check for 'bgColor' prop (used by CanvasNode in Editor)
+  if (props.bgColor && typeof props.bgColor === 'string') {
+    if (props.bgColor.includes('#') || props.bgColor.includes('rgb') || props.bgColor.includes('hsl')) {
+      inlineStyles.backgroundColor = props.bgColor;
+    }
+  }
+
+  // Color
+  if (props.color && typeof props.color === 'string') {
+    if (props.color.includes('#') || props.color.includes('rgb') || props.color.includes('hsl') || props.color.includes('rgba')) {
+      inlineStyles.color = props.color;
+    }
+  }
+
+  // Typography
+  if (props.fontSize && typeof props.fontSize === 'string' && props.fontSize.includes('px')) {
+    inlineStyles.fontSize = props.fontSize;
+  }
+  if (props.fontWeight && typeof props.fontWeight === 'string' && /^\d+$/.test(props.fontWeight)) {
+    inlineStyles.fontWeight = parseInt(props.fontWeight) as React.CSSProperties['fontWeight'];
+  }
+  if (props.lineHeight && typeof props.lineHeight === 'string') {
+    inlineStyles.lineHeight = props.lineHeight;
+  }
+  if (props.letterSpacing && typeof props.letterSpacing === 'string') {
+    inlineStyles.letterSpacing = props.letterSpacing;
+  }
+
+  // Spacing with px values or numeric
+  if (props.padding && typeof props.padding === 'string') {
+    inlineStyles.padding = props.padding;
+  }
+  if (props.margin && typeof props.margin === 'string') {
+    inlineStyles.margin = props.margin;
+  }
+  if (props.marginBottom && typeof props.marginBottom === 'string') {
+    inlineStyles.marginBottom = props.marginBottom;
+  }
+  if (props.marginTop && typeof props.marginTop === 'string') {
+    inlineStyles.marginTop = props.marginTop;
+  }
+
+  // Borders
+  if (props.border && typeof props.border === 'string') {
+    inlineStyles.border = props.border;
+  }
+  if (props.borderBottom && typeof props.borderBottom === 'string') {
+    inlineStyles.borderBottom = props.borderBottom;
+  }
+  if (props.borderTop && typeof props.borderTop === 'string') {
+    inlineStyles.borderTop = props.borderTop;
+  }
+  if (props.borderRadius && typeof props.borderRadius === 'string') {
+    inlineStyles.borderRadius = props.borderRadius;
+  }
+
+  // Layout
+  if (props.minHeight && typeof props.minHeight === 'string') {
+    inlineStyles.minHeight = props.minHeight;
+  }
+  if (props.maxWidth && typeof props.maxWidth === 'string') {
+    inlineStyles.maxWidth = props.maxWidth;
+  }
+  if (props.width && typeof props.width === 'string') {
+    inlineStyles.width = props.width;
+  }
+  if (props.height && typeof props.height === 'string') {
+    inlineStyles.height = props.height;
+  }
+
+  // Flexbox
+  if (props.display && typeof props.display === 'string') {
+    inlineStyles.display = props.display as React.CSSProperties['display'];
+  }
+  if (props.flexDirection && typeof props.flexDirection === 'string') {
+    inlineStyles.flexDirection = props.flexDirection as React.CSSProperties['flexDirection'];
+  }
+  if (props.justifyContent && typeof props.justifyContent === 'string') {
+    inlineStyles.justifyContent = props.justifyContent as React.CSSProperties['justifyContent'];
+  }
+  if (props.alignItems && typeof props.alignItems === 'string') {
+    inlineStyles.alignItems = props.alignItems as React.CSSProperties['alignItems'];
+  }
+  if (props.gap && typeof props.gap === 'string') {
+    inlineStyles.gap = props.gap;
+  }
+  if (props.flex && typeof props.flex === 'string') {
+    inlineStyles.flex = props.flex;
+  }
+
+  // Position
+  if (props.position && typeof props.position === 'string') {
+    inlineStyles.position = props.position as React.CSSProperties['position'];
+  }
+  if (props.top && typeof props.top === 'string') {
+    inlineStyles.top = props.top;
+  }
+  if (props.left && typeof props.left === 'string') {
+    inlineStyles.left = props.left;
+  }
+  if (props.right && typeof props.right === 'string') {
+    inlineStyles.right = props.right;
+  }
+  if (props.zIndex && typeof props.zIndex === 'number') {
+    inlineStyles.zIndex = props.zIndex;
+  }
+
+  // Object fit for images
+  if (props.objectFit && typeof props.objectFit === 'string') {
+    inlineStyles.objectFit = props.objectFit as React.CSSProperties['objectFit'];
+  }
+
+  // Text
+  if (props.textAlign && typeof props.textAlign === 'string') {
+    inlineStyles.textAlign = props.textAlign as React.CSSProperties['textAlign'];
+  }
+  if (props.textDecoration && typeof props.textDecoration === 'string') {
+    inlineStyles.textDecoration = props.textDecoration;
+  }
+  if (props.whiteSpace && typeof props.whiteSpace === 'string') {
+    inlineStyles.whiteSpace = props.whiteSpace as React.CSSProperties['whiteSpace'];
+  }
+
+  // Cursor
+  if (props.cursor && typeof props.cursor === 'string') {
+    inlineStyles.cursor = props.cursor as React.CSSProperties['cursor'];
+  }
+
+  return inlineStyles;
+}
+
+// ============================================================================
 // COMPONENT RENDERERS - Whitelist-based safe rendering
 // ============================================================================
 
@@ -118,16 +383,53 @@ type ComponentRenderer = (
 
 const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
   // Layout
-  Section: (node, children) => (
-    <section className={cn('w-full', mapStyleToClasses(node.style))}>
-      {children}
-    </section>
-  ),
+  Section: (node, children) => {
+    const onClick = buildClickHandler(node);
+    return (
+      <section 
+        className={cn('w-full', mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+        onClick={onClick}
+      >
+        {children}
+      </section>
+    );
+  },
 
   Container: (node, children) => {
     const maxWidth = (node.props.maxWidth as string) || 'lg';
+    const centered = node.props.centered === true;
+    
+    // Map maxWidth tokens to Tailwind classes
+    const maxWidthMap: Record<string, string> = {
+      'sm': 'max-w-sm',
+      'md': 'max-w-md',
+      'lg': 'max-w-lg',
+      'xl': 'max-w-xl',
+      '2xl': 'max-w-2xl',
+      '3xl': 'max-w-3xl',
+      '4xl': 'max-w-4xl',
+      '5xl': 'max-w-5xl',
+      '6xl': 'max-w-6xl',
+      '7xl': 'max-w-7xl',
+      'full': 'max-w-full',
+      'screen-sm': 'max-w-screen-sm',
+      'screen-md': 'max-w-screen-md',
+      'screen-lg': 'max-w-screen-lg',
+      'screen-xl': 'max-w-screen-xl',
+      'screen-2xl': 'max-w-screen-2xl',
+    };
+    
     return (
-      <div className={cn('mx-auto w-full', `max-w-${maxWidth}`, mapStyleToClasses(node.style))}>
+      <div 
+        className={cn(
+          'w-full', 
+          centered && 'mx-auto',
+          maxWidthMap[maxWidth] || 'max-w-lg', 
+          mapStyleToClasses(node.style)
+        )}
+        style={extractInlineStyles(node.style)}
+      >
         {children}
       </div>
     );
@@ -148,16 +450,22 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
       start: 'justify-start', center: 'justify-center', end: 'justify-end',
       between: 'justify-between', around: 'justify-around', evenly: 'justify-evenly',
     };
+    const gapMap: Record<string, string> = {
+      none: 'gap-0', xs: 'gap-1', sm: 'gap-2', md: 'gap-4', lg: 'gap-6', xl: 'gap-8', '2xl': 'gap-12',
+    };
 
     return (
-      <div className={cn(
-        'flex',
-        dirClass,
-        `gap-${mapSpacing(gap)}`,
-        alignMap[align],
-        justifyMap[justify],
-        mapStyleToClasses(node.style)
-      )}>
+      <div 
+        className={cn(
+          'flex',
+          dirClass,
+          gapMap[gap] || 'gap-4',
+          alignMap[align],
+          justifyMap[justify],
+          mapStyleToClasses(node.style)
+        )}
+        style={extractInlineStyles(node.style)}
+      >
         {children}
       </div>
     );
@@ -167,13 +475,30 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
     const columns = (node.props.columns as number) || 3;
     const gap = (node.props.gap as string) || 'md';
 
+    // Map columns to Tailwind classes for JIT compatibility
+    const lgColsMap: Record<number, string> = {
+      1: 'lg:grid-cols-1', 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3',
+      4: 'lg:grid-cols-4', 5: 'lg:grid-cols-5', 6: 'lg:grid-cols-6',
+      7: 'lg:grid-cols-7', 8: 'lg:grid-cols-8',
+    };
+    const mdColsMap: Record<number, string> = {
+      1: 'md:grid-cols-1', 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4',
+    };
+    const gapMap: Record<string, string> = {
+      none: 'gap-0', xs: 'gap-1', sm: 'gap-2', md: 'gap-4', lg: 'gap-6', xl: 'gap-8', '2xl': 'gap-12',
+    };
+
     return (
-      <div className={cn(
-        'grid',
-        `grid-cols-1 md:grid-cols-${Math.min(columns, 4)} lg:grid-cols-${columns}`,
-        `gap-${mapSpacing(gap)}`,
-        mapStyleToClasses(node.style)
-      )}>
+      <div 
+        className={cn(
+          'grid grid-cols-1',
+          mdColsMap[Math.min(columns, 4)] || 'md:grid-cols-3',
+          lgColsMap[columns] || 'lg:grid-cols-3',
+          gapMap[gap] || 'gap-4',
+          mapStyleToClasses(node.style)
+        )}
+        style={extractInlineStyles(node.style)}
+      >
         {children}
       </div>
     );
@@ -195,7 +520,10 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
   Text: (node) => {
     const text = (node.props.text as string) || '';
     return (
-      <p className={cn('text-base', mapStyleToClasses(node.style))}>
+      <p 
+        className={cn('text-base', mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+      >
         {text}
       </p>
     );
@@ -216,7 +544,10 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
     };
 
     return (
-      <Tag className={cn(sizeMap[level] || sizeMap[2], mapStyleToClasses(node.style))}>
+      <Tag 
+        className={cn(sizeMap[level] || sizeMap[2], mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+      >
         {text}
       </Tag>
     );
@@ -232,6 +563,7 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
         src={src}
         alt={alt}
         className={cn('max-w-full h-auto', `object-${objectFit}`, mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
       />
     );
   },
@@ -256,13 +588,20 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
       lg: 'h-11 px-8',
     };
 
+    const onClick = buildClickHandler(node);
+
     return (
-      <button className={cn(
-        'inline-flex items-center justify-center rounded-md font-medium transition-colors',
-        variantClasses[variant] || variantClasses.primary,
-        sizeClasses[size] || sizeClasses.md,
-        mapStyleToClasses(node.style)
-      )}>
+      <button 
+        className={cn(
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors',
+          onClick && 'cursor-pointer',
+          variantClasses[variant] || variantClasses.primary,
+          sizeClasses[size] || sizeClasses.md,
+          mapStyleToClasses(node.style)
+        )}
+        style={extractInlineStyles(node.style)}
+        onClick={onClick}
+      >
         {text}
       </button>
     );
@@ -273,7 +612,10 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
     const description = (node.props.description as string) || '';
 
     return (
-      <div className={cn('rounded-lg border bg-card text-card-foreground shadow-sm', mapStyleToClasses(node.style))}>
+      <div 
+        className={cn('rounded-lg border bg-card text-card-foreground shadow-sm', mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+      >
         {(title || description) && (
           <div className="p-6">
             {title && <h3 className="text-lg font-semibold">{title}</h3>}
@@ -297,11 +639,14 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
     };
 
     return (
-      <span className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
-        variantClasses[variant] || variantClasses.default,
-        mapStyleToClasses(node.style)
-      )}>
+      <span 
+        className={cn(
+          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold',
+          variantClasses[variant] || variantClasses.default,
+          mapStyleToClasses(node.style)
+        )}
+        style={extractInlineStyles(node.style)}
+      >
         {text}
       </span>
     );
@@ -312,7 +657,10 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
     const description = (node.props.description as string) || '';
 
     return (
-      <div className={cn('rounded-lg border p-4', mapStyleToClasses(node.style))}>
+      <div 
+        className={cn('rounded-lg border p-4', mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+      >
         {title && <h5 className="font-medium mb-1">{title}</h5>}
         {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
@@ -323,11 +671,14 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
   Link: (node) => {
     const text = (node.props.text as string) || '';
     const href = (node.props.href as string) || '#';
+    const onClick = buildClickHandler(node);
 
     return (
       <a 
-        href={href}
+        href={onClick ? undefined : href}
         className={cn('text-primary hover:underline', mapStyleToClasses(node.style))}
+        style={extractInlineStyles(node.style)}
+        onClick={onClick}
       >
         {text}
       </a>
@@ -336,7 +687,11 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
 
   // Forms (read-only in runtime, but show structure)
   Form: (node, children) => (
-    <form className={cn('space-y-4', mapStyleToClasses(node.style))} onSubmit={(e) => e.preventDefault()}>
+    <form 
+      className={cn('space-y-4', mapStyleToClasses(node.style))} 
+      style={extractInlineStyles(node.style)}
+      onSubmit={(e) => e.preventDefault()}
+    >
       {children}
     </form>
   ),
@@ -352,6 +707,7 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
           type="text"
           placeholder={placeholder}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          style={extractInlineStyles(node.style)}
           readOnly
         />
       </div>
@@ -392,10 +748,144 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
 
   // Gates
   AuthGate: (node, children) => {
-    // In runtime, we'd check auth state. For now, just render children
-    // TODO: Implement proper auth checking
-    return <>{children}</>;
+    // AuthGate renders a client-side component that checks site auth
+    const showWhen = (node.props.showWhen as string) || 'authenticated';
+    return (
+      <AuthGateRuntime showWhen={showWhen as 'authenticated' | 'unauthenticated'}>
+        {children}
+      </AuthGateRuntime>
+    );
   },
+
+  // Auth Components
+  LoginForm: (node) => (
+    <LoginFormRuntime
+      title={node.props.title as string}
+      subtitle={node.props.subtitle as string}
+      showRemember={node.props.showRemember as boolean}
+      showForgotPassword={node.props.showForgotPassword as boolean}
+      showRegisterLink={node.props.showRegisterLink as boolean}
+      registerUrl={node.props.registerUrl as string}
+      forgotPasswordUrl={node.props.forgotPasswordUrl as string}
+      redirectAfterLogin={node.props.redirectAfterLogin as string}
+      buttonText={node.props.buttonText as string}
+      variant={node.props.variant as 'card' | 'inline' | 'minimal'}
+      emailLabel={node.props.emailLabel as string}
+      passwordLabel={node.props.passwordLabel as string}
+    />
+  ),
+
+  RegisterForm: (node) => (
+    <RegisterFormRuntime
+      title={node.props.title as string}
+      subtitle={node.props.subtitle as string}
+      showName={node.props.showName as boolean}
+      showLoginLink={node.props.showLoginLink as boolean}
+      loginUrl={node.props.loginUrl as string}
+      redirectAfterRegister={node.props.redirectAfterRegister as string}
+      buttonText={node.props.buttonText as string}
+      variant={node.props.variant as 'card' | 'inline' | 'minimal'}
+      showTerms={node.props.showTerms as boolean}
+      termsUrl={node.props.termsUrl as string}
+      privacyUrl={node.props.privacyUrl as string}
+      nameLabel={node.props.nameLabel as string}
+      emailLabel={node.props.emailLabel as string}
+      passwordLabel={node.props.passwordLabel as string}
+      confirmPasswordLabel={node.props.confirmPasswordLabel as string}
+      showPasswordStrength={node.props.showPasswordStrength as boolean}
+      minPasswordLength={node.props.minPasswordLength as number}
+    />
+  ),
+
+  PasswordResetForm: (node) => (
+    <PasswordResetFormRuntime
+      title={node.props.title as string}
+      subtitle={node.props.subtitle as string}
+      buttonText={node.props.buttonText as string}
+      variant={node.props.variant as 'card' | 'inline' | 'minimal'}
+      loginUrl={node.props.loginUrl as string}
+      showLoginLink={node.props.showLoginLink as boolean}
+      emailLabel={node.props.emailLabel as string}
+    />
+  ),
+
+  UserProfile: (node) => (
+    <UserProfileRuntime
+      variant={node.props.variant as 'card' | 'inline' | 'sidebar'}
+      showAvatar={node.props.showAvatar as boolean}
+      showName={node.props.showName as boolean}
+      showEmail={node.props.showEmail as boolean}
+      showBio={node.props.showBio as boolean}
+      editable={node.props.editable as boolean}
+      showChangePassword={node.props.showChangePassword as boolean}
+      showDeleteAccount={node.props.showDeleteAccount as boolean}
+      title={node.props.title as string}
+      saveButtonText={node.props.saveButtonText as string}
+      avatarSize={node.props.avatarSize as 'sm' | 'md' | 'lg' | 'xl'}
+      showJoinDate={node.props.showJoinDate as boolean}
+      showRole={node.props.showRole as boolean}
+    />
+  ),
+
+  UserAvatar: (node) => (
+    <UserAvatarRuntime
+      size={node.props.size as 'xs' | 'sm' | 'md' | 'lg' | 'xl'}
+      showName={node.props.showName as boolean}
+      showRole={node.props.showRole as boolean}
+      namePosition={node.props.namePosition as 'right' | 'below'}
+      showDropdown={node.props.showDropdown as boolean}
+      profileUrl={node.props.profileUrl as string}
+      logoutRedirect={node.props.logoutRedirect as string}
+      showLoginButton={node.props.showLoginButton as boolean}
+      loginUrl={node.props.loginUrl as string}
+      loginButtonText={node.props.loginButtonText as string}
+    />
+  ),
+
+  LogoutButton: (node) => (
+    <LogoutButtonRuntime
+      text={node.props.text as string}
+      variant={node.props.variant as 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'link'}
+      size={node.props.size as 'sm' | 'md' | 'lg'}
+      redirectTo={node.props.redirectTo as string}
+      confirmLogout={node.props.confirmLogout as boolean}
+      confirmMessage={node.props.confirmMessage as string}
+      showIcon={node.props.showIcon as boolean}
+      fullWidth={node.props.fullWidth as boolean}
+    />
+  ),
+
+  MemberList: (node) => (
+    <MemberListRuntime
+      layout={node.props.layout as 'grid' | 'list' | 'compact'}
+      columns={node.props.columns as number}
+      showAvatar={node.props.showAvatar as boolean}
+      showName={node.props.showName as boolean}
+      showRole={node.props.showRole as boolean}
+      showBio={node.props.showBio as boolean}
+      showJoinDate={node.props.showJoinDate as boolean}
+      pageSize={node.props.pageSize as number}
+      showSearch={node.props.showSearch as boolean}
+      filterByRole={node.props.filterByRole as string}
+      title={node.props.title as string}
+      showPagination={node.props.showPagination as boolean}
+      avatarSize={node.props.avatarSize as 'sm' | 'md' | 'lg'}
+    />
+  ),
+
+  ProtectedContent: (node, children) => (
+    <ProtectedContentRuntime
+      requiredRole={node.props.requiredRole as 'any' | 'admin' | 'moderator' | 'member' | 'vip'}
+      showFallback={node.props.showFallback as boolean}
+      fallbackMessage={node.props.fallbackMessage as string}
+      showLoginButton={node.props.showLoginButton as boolean}
+      loginUrl={node.props.loginUrl as string}
+      loginButtonText={node.props.loginButtonText as string}
+      hideCompletely={node.props.hideCompletely as boolean}
+    >
+      {children}
+    </ProtectedContentRuntime>
+  ),
 
   // Data components (placeholders)
   CollectionList: (node, children) => (
@@ -413,6 +903,521 @@ const COMPONENT_RENDERERS: Record<string, ComponentRenderer> = {
       <span className={mapStyleToClasses(node.style)}>
         {String(value ?? fallback)}
       </span>
+    );
+  },
+
+  // ==========================================================================
+  // BLOG PLUGIN COMPONENTS
+  // ==========================================================================
+
+  PostList: (node, children) => {
+    const layout = (node.props.layout as string) || 'list';
+    const columns = (node.props.columns as number) || 3;
+    const gridClass = layout === 'grid' ? `grid grid-cols-1 md:grid-cols-${columns} gap-6` : 'space-y-6';
+    return (
+      <div className={cn(gridClass, mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {children || <p className="text-muted-foreground">Keine Beiträge vorhanden.</p>}
+      </div>
+    );
+  },
+
+  PostCard: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showExcerpt = node.props.showExcerpt !== false;
+    const showDate = node.props.showDate !== false;
+    const showImage = node.props.showImage !== false;
+    const imagePosition = (node.props.imagePosition as string) || 'top';
+    const isHorizontal = imagePosition === 'left' || imagePosition === 'right';
+
+    return (
+      <article
+        className={cn(
+          'rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden',
+          isHorizontal ? 'flex' : '',
+          imagePosition === 'right' ? 'flex-row-reverse' : '',
+          mapStyleToClasses(node.style),
+        )}
+        style={extractInlineStyles(node.style)}
+      >
+        {showImage && record.featuredImage && (
+          <div className={cn(isHorizontal ? 'w-1/3 flex-shrink-0' : '')}>
+            <img
+              src={String(record.featuredImage)}
+              alt={String(record.title || '')}
+              className="w-full h-48 object-cover"
+            />
+          </div>
+        )}
+        <div className="p-4 flex-1">
+          <h3 className="text-lg font-semibold mb-1">
+            {record.slug ? (
+              <a href={`/blog/${record.slug}`} className="hover:underline">{String(record.title || 'Untitled')}</a>
+            ) : (
+              String(record.title || 'Untitled')
+            )}
+          </h3>
+          {showDate && record.publishedAt && (
+            <time className="text-sm text-muted-foreground" dateTime={String(record.publishedAt)}>
+              {new Date(String(record.publishedAt)).toLocaleDateString('de-DE')}
+            </time>
+          )}
+          {showExcerpt && record.excerpt && (
+            <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{String(record.excerpt)}</p>
+          )}
+        </div>
+      </article>
+    );
+  },
+
+  PostContent: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showTitle = node.props.showTitle !== false;
+    const showDate = node.props.showDate !== false;
+    const showAuthor = node.props.showAuthor === true;
+    const showImage = node.props.showImage !== false;
+
+    return (
+      <article className={cn('prose prose-lg max-w-none', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {showImage && record.featuredImage && (
+          <img src={String(record.featuredImage)} alt={String(record.title || '')} className="w-full rounded-lg mb-6" />
+        )}
+        {showTitle && <h1>{String(record.title || 'Untitled')}</h1>}
+        <div className="flex gap-4 text-sm text-muted-foreground mb-6">
+          {showDate && record.publishedAt && (
+            <time dateTime={String(record.publishedAt)}>
+              {new Date(String(record.publishedAt)).toLocaleDateString('de-DE')}
+            </time>
+          )}
+          {showAuthor && record.author && <span>von {String(record.author)}</span>}
+        </div>
+        {record.content ? (
+          <div dangerouslySetInnerHTML={{ __html: String(record.content) }} />
+        ) : (
+          <p className="text-muted-foreground">Kein Inhalt vorhanden.</p>
+        )}
+      </article>
+    );
+  },
+
+  PostMeta: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showDate = node.props.showDate !== false;
+    const showAuthor = node.props.showAuthor !== false;
+    const showCategory = node.props.showCategory === true;
+    const showReadTime = node.props.showReadTime === true;
+
+    return (
+      <div className={cn('flex flex-wrap gap-3 text-sm text-muted-foreground', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {showDate && record.publishedAt && (
+          <time dateTime={String(record.publishedAt)}>
+            {new Date(String(record.publishedAt)).toLocaleDateString('de-DE')}
+          </time>
+        )}
+        {showAuthor && record.author && <span>von {String(record.author)}</span>}
+        {showCategory && record.category && (
+          <span className="px-2 py-0.5 bg-muted rounded-full text-xs">{String(record.category)}</span>
+        )}
+        {showReadTime && record.content && (
+          <span>{Math.max(1, Math.ceil(String(record.content).split(/\s+/).length / 200))} Min. Lesezeit</span>
+        )}
+      </div>
+    );
+  },
+
+  // ==========================================================================
+  // SHOP PLUGIN COMPONENTS
+  // ==========================================================================
+
+  ProductList: (node, children) => {
+    const layout = (node.props.layout as string) || 'grid';
+    const columns = (node.props.columns as number) || 4;
+    const gridClass = layout === 'grid' ? `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns} gap-6` : 'space-y-4';
+    return (
+      <div className={cn(gridClass, mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {children || <p className="text-muted-foreground">Keine Produkte vorhanden.</p>}
+      </div>
+    );
+  },
+
+  ProductCard: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showPrice = node.props.showPrice !== false;
+    const showAddToCart = node.props.showAddToCart !== false;
+    const showDescription = node.props.showDescription === true;
+    const imageAspect = (node.props.imageAspect as string) || 'square';
+    const aspectClass = imageAspect === '16:9' ? 'aspect-video' : imageAspect === '4:3' ? 'aspect-[4/3]' : 'aspect-square';
+
+    const images = Array.isArray(record.images) ? record.images : [];
+    const firstImage = images[0] as string | undefined;
+
+    return (
+      <div className={cn('group rounded-lg border bg-card shadow-sm overflow-hidden', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <div className={cn(aspectClass, 'overflow-hidden bg-muted')}>
+          {firstImage ? (
+            <img src={firstImage} alt={String(record.name || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+          )}
+        </div>
+        <div className="p-4">
+          <h3 className="font-semibold text-sm mb-1">
+            {record.slug ? (
+              <a href={`/products/${record.slug}`} className="hover:underline">{String(record.name || 'Produkt')}</a>
+            ) : (
+              String(record.name || 'Produkt')
+            )}
+          </h3>
+          {showDescription && record.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{String(record.description)}</p>
+          )}
+          {showPrice && (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-bold">
+                {typeof record.price === 'number' ? `€${record.price.toFixed(2)}` : '—'}
+              </span>
+              {record.compareAtPrice && typeof record.compareAtPrice === 'number' && (
+                <span className="text-sm text-muted-foreground line-through">€{record.compareAtPrice.toFixed(2)}</span>
+              )}
+            </div>
+          )}
+          {showAddToCart && (
+            <button className="w-full px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+              In den Warenkorb
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  },
+
+  ProductDetail: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showGallery = node.props.showGallery !== false;
+    const showDescription = node.props.showDescription !== false;
+    const showSku = node.props.showSku === true;
+    const showInventory = node.props.showInventory === true;
+
+    const images = Array.isArray(record.images) ? record.images : [];
+
+    return (
+      <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-8', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {showGallery && (
+          <div className="space-y-2">
+            {images.length > 0 ? (
+              <>
+                <img src={String(images[0])} alt={String(record.name || '')} className="w-full rounded-lg" />
+                {images.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {images.slice(1, 5).map((img: unknown, i: number) => (
+                      <img key={i} src={String(img)} alt="" className="w-full aspect-square object-cover rounded" />
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="aspect-square bg-muted rounded-lg flex items-center justify-center text-muted-foreground">Kein Bild</div>
+            )}
+          </div>
+        )}
+        <div className="space-y-4">
+          <h1 className="text-2xl font-bold">{String(record.name || 'Produkt')}</h1>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-bold">
+              {typeof record.price === 'number' ? `€${record.price.toFixed(2)}` : '—'}
+            </span>
+            {record.compareAtPrice && typeof record.compareAtPrice === 'number' && (
+              <span className="text-lg text-muted-foreground line-through">€{record.compareAtPrice.toFixed(2)}</span>
+            )}
+          </div>
+          {showDescription && record.description && (
+            <div className="prose prose-sm" dangerouslySetInnerHTML={{ __html: String(record.description) }} />
+          )}
+          {showSku && record.sku && <p className="text-sm text-muted-foreground">SKU: {String(record.sku)}</p>}
+          {showInventory && typeof record.inventory === 'number' && (
+            <p className={cn('text-sm', record.inventory > 0 ? 'text-green-600' : 'text-red-600')}>
+              {record.inventory > 0 ? `${record.inventory} auf Lager` : 'Nicht auf Lager'}
+            </p>
+          )}
+          <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium">
+            In den Warenkorb
+          </button>
+        </div>
+      </div>
+    );
+  },
+
+  AddToCartButton: (node) => {
+    const text = (node.props.text as string) || 'In den Warenkorb';
+    const variant = (node.props.variant as string) || 'primary';
+    const fullWidth = node.props.fullWidth === true;
+
+    const variantClasses: Record<string, string> = {
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    };
+
+    return (
+      <button
+        className={cn(
+          'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors',
+          variantClasses[variant] || variantClasses.primary,
+          fullWidth && 'w-full',
+          mapStyleToClasses(node.style),
+        )}
+        style={extractInlineStyles(node.style)}
+        onClick={buildClickHandler(node)}
+      >
+        {text}
+      </button>
+    );
+  },
+
+  CartSummary: (node) => {
+    const showCheckoutButton = node.props.showCheckoutButton !== false;
+    return (
+      <div className={cn('rounded-lg border bg-card p-6 space-y-4', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <h3 className="font-semibold text-lg">Warenkorb</h3>
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between"><span>Zwischensumme</span><span>€0,00</span></div>
+          {node.props.showTax && <div className="flex justify-between"><span>MwSt.</span><span>€0,00</span></div>}
+          {node.props.showShipping && <div className="flex justify-between"><span>Versand</span><span>€0,00</span></div>}
+          <div className="border-t pt-2 flex justify-between font-bold"><span>Gesamt</span><span>€0,00</span></div>
+        </div>
+        {showCheckoutButton && (
+          <button className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium" onClick={buildClickHandler(node)}>
+            Zur Kasse
+          </button>
+        )}
+      </div>
+    );
+  },
+
+  CartItems: (node) => {
+    return (
+      <div className={cn('space-y-4', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <p className="text-muted-foreground text-center py-8">Dein Warenkorb ist leer.</p>
+      </div>
+    );
+  },
+
+  CheckoutButton: (node) => {
+    const text = (node.props.text as string) || 'Zur Kasse';
+    const variant = (node.props.variant as string) || 'primary';
+    const fullWidth = node.props.fullWidth === true;
+
+    const variantClasses: Record<string, string> = {
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    };
+
+    return (
+      <button
+        className={cn(
+          'inline-flex items-center justify-center rounded-md px-6 py-2 text-sm font-medium transition-colors',
+          variantClasses[variant] || variantClasses.primary,
+          fullWidth && 'w-full',
+          mapStyleToClasses(node.style),
+        )}
+        style={extractInlineStyles(node.style)}
+        onClick={buildClickHandler(node)}
+      >
+        {text}
+      </button>
+    );
+  },
+
+  PriceDisplay: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showCurrency = node.props.showCurrency !== false;
+    const showOriginalPrice = node.props.showOriginalPrice === true;
+    const size = (node.props.size as string) || 'md';
+
+    const sizeClasses: Record<string, string> = {
+      sm: 'text-sm',
+      md: 'text-base',
+      lg: 'text-lg',
+      xl: 'text-2xl',
+    };
+
+    const currency = showCurrency ? '€' : '';
+
+    return (
+      <span className={cn('inline-flex items-center gap-2 font-bold', sizeClasses[size], mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <span>{typeof record.price === 'number' ? `${currency}${record.price.toFixed(2)}` : '—'}</span>
+        {showOriginalPrice && record.compareAtPrice && typeof record.compareAtPrice === 'number' && (
+          <span className="text-muted-foreground line-through font-normal text-sm">
+            {currency}{record.compareAtPrice.toFixed(2)}
+          </span>
+        )}
+      </span>
+    );
+  },
+
+  // ==========================================================================
+  // FORUM PLUGIN COMPONENTS
+  // ==========================================================================
+
+  ForumCategoryList: (node, _children, context) => {
+    const showDescription = node.props.showDescription !== false;
+    const showThreadCount = node.props.showThreadCount !== false;
+    const layout = (node.props.layout as string) || 'list';
+
+    // Placeholder when no data bound
+    return (
+      <div
+        className={cn(
+          layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3',
+          mapStyleToClasses(node.style),
+        )}
+        style={extractInlineStyles(node.style)}
+      >
+        <div className="rounded-lg border bg-card p-4 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold">Allgemein</h3>
+            {showDescription && <p className="text-sm text-muted-foreground">Allgemeine Diskussionen</p>}
+          </div>
+          {showThreadCount && <span className="text-sm text-muted-foreground">0 Themen</span>}
+        </div>
+      </div>
+    );
+  },
+
+  ThreadList: (node, children) => {
+    return (
+      <div className={cn('space-y-2', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        {children || <p className="text-muted-foreground text-center py-8">Keine Themen vorhanden.</p>}
+      </div>
+    );
+  },
+
+  ThreadCard: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showAuthor = node.props.showAuthor !== false;
+    const showDate = node.props.showDate !== false;
+    const showReplyCount = node.props.showReplyCount !== false;
+
+    return (
+      <div className={cn('rounded-lg border bg-card p-4 hover:bg-accent/50 transition-colors', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <div className="flex items-start gap-3">
+          {record.isPinned && (
+            <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-medium">Angepinnt</span>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold truncate">
+              {record.slug ? (
+                <a href={`/forum/${record.slug}`} className="hover:underline">{String(record.title || 'Unbenannt')}</a>
+              ) : (
+                String(record.title || 'Unbenannt')
+              )}
+            </h3>
+            <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+              {showAuthor && record.authorEmail && <span>{String(record.authorEmail)}</span>}
+              {showDate && record.createdAt && (
+                <time dateTime={String(record.createdAt)}>
+                  {new Date(String(record.createdAt)).toLocaleDateString('de-DE')}
+                </time>
+              )}
+              {showReplyCount && <span>{Number(record.replyCount || 0)} Antworten</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  },
+
+  ThreadDetail: (node, children) => {
+    const showReplyForm = node.props.showReplyForm !== false;
+    return (
+      <div className={cn('space-y-6', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <div className="space-y-4">{children}</div>
+        {showReplyForm && (
+          <div className="border-t pt-6">
+            <h3 className="font-semibold mb-3">Antworten</h3>
+            <textarea
+              className="w-full rounded-md border bg-background p-3 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Schreibe eine Antwort..."
+            />
+            <button className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90">
+              Antwort senden
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  },
+
+  ForumPost: (node, _children, context) => {
+    const record = context.currentRecord || {};
+    const showAuthor = node.props.showAuthor !== false;
+    const showDate = node.props.showDate !== false;
+
+    return (
+      <div className={cn('rounded-lg border bg-card p-4', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+            {String(record.authorEmail || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            {showAuthor && <span className="font-medium text-sm">{String(record.authorEmail || 'Anonym')}</span>}
+            {showDate && record.createdAt && (
+              <time className="block text-xs text-muted-foreground" dateTime={String(record.createdAt)}>
+                {new Date(String(record.createdAt)).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </time>
+            )}
+          </div>
+        </div>
+        {record.content ? (
+          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: String(record.content) }} />
+        ) : (
+          <p className="text-muted-foreground text-sm">Kein Inhalt.</p>
+        )}
+      </div>
+    );
+  },
+
+  NewThreadForm: (node) => {
+    return (
+      <form className={cn('space-y-4 rounded-lg border bg-card p-6', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)} onSubmit={(e) => e.preventDefault()}>
+        <h3 className="font-semibold text-lg">Neues Thema erstellen</h3>
+        <div>
+          <label className="block text-sm font-medium mb-1">Titel</label>
+          <input type="text" className="w-full rounded-md border bg-background p-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Titel des Themas" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Inhalt</label>
+          <textarea className="w-full rounded-md border bg-background p-2 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Beschreibe dein Thema..." />
+        </div>
+        <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90">
+          Thema erstellen
+        </button>
+      </form>
+    );
+  },
+
+  ReplyForm: (node) => {
+    const placeholder = (node.props.placeholder as string) || 'Schreibe deine Antwort...';
+    const submitText = (node.props.submitText as string) || 'Antwort senden';
+    return (
+      <form className={cn('space-y-3', mapStyleToClasses(node.style))} style={extractInlineStyles(node.style)} onSubmit={(e) => e.preventDefault()}>
+        <textarea
+          className="w-full rounded-md border bg-background p-3 text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder={placeholder}
+        />
+        <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90">
+          {submitText}
+        </button>
+      </form>
     );
   },
 };
@@ -449,7 +1454,18 @@ function NodeRenderer({ node, context }: NodeRendererProps) {
 
   // If we have a registered renderer, use it
   if (renderer) {
-    return <>{renderer(node, children, context)}</>;
+    const content = renderer(node, children, context);
+    
+    // Wrap with animation if present
+    if (node.animation && node.animation.type !== 'none') {
+      return (
+        <RuntimeAnimationWrapper animation={node.animation}>
+          {content}
+        </RuntimeAnimationWrapper>
+      );
+    }
+    
+    return <>{content}</>;
   }
 
   // Unknown component type - render a placeholder in dev, nothing in prod
@@ -469,3 +1485,31 @@ function NodeRenderer({ node, context }: NodeRendererProps) {
 }
 
 export default SafeRenderer;
+
+// ============================================================================
+// AUTH GATE RUNTIME HELPER
+// ============================================================================
+
+function AuthGateRuntime({ showWhen, children }: { showWhen: 'authenticated' | 'unauthenticated'; children: React.ReactNode }) {
+  // Use a dynamic import pattern to access site auth context
+  // This component checks site visitor auth state
+  const [visible, setVisible] = React.useState(showWhen === 'unauthenticated');
+  const [checked, setChecked] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check for any site_session cookie
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const hasSession = cookies.some(c => c.startsWith('site_session_'));
+    
+    if (showWhen === 'authenticated') {
+      setVisible(hasSession);
+    } else {
+      setVisible(!hasSession);
+    }
+    setChecked(true);
+  }, [showWhen]);
+
+  if (!checked) return null;
+  if (!visible) return null;
+  return <>{children}</>;
+}

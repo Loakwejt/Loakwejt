@@ -6,6 +6,7 @@ import { useEditorStore } from '../store/editor-store';
 import { useDndState } from './DndProvider';
 import { cn } from '@builderly/ui';
 import type { DragData } from './DndProvider';
+import { AnimatedWrapper } from './AnimatedWrapper';
 
 interface CanvasNodeProps {
   node: BuilderNode;
@@ -19,6 +20,7 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
     isPreviewMode,
     selectNode,
     hoverNode,
+    breakpoint,
   } = useEditorStore();
 
   const { activeId, overId } = useDndState();
@@ -77,19 +79,35 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
     <CanvasNode key={child.id} node={child} />
   ));
 
-  // Render based on component type
-  const content = renderComponent(node, children, definition);
+  // Render based on component type (pass breakpoint for responsive styles)
+  const content = renderComponent(node, children, definition, isPreviewMode, breakpoint);
 
   if (isPreviewMode) {
-    return <>{content}</>;
+    // Wrap in AnimatedWrapper for preview mode
+    return (
+      <AnimatedWrapper 
+        animation={node.animation} 
+        isPreviewMode={true}
+      >
+        {content}
+      </AnimatedWrapper>
+    );
   }
+
+  // Determine if this is an inline/non-full-width element
+  // These elements' width should be controlled by their own style, not forced to w-full
+  const isInlineElement = ['Button', 'Badge', 'Link', 'Text', 'Heading', 'Input', 'Textarea', 'Stack', 'Container'].includes(node.type);
+  // Only force w-full if explicitly set to 100% AND no maxWidth is set
+  const hasMaxWidth = !!node.style?.base?.maxWidth;
+  const isFullWidth = (node.props.fullWidth === true || node.style?.base?.width === '100%') && !hasMaxWidth;
 
   return (
     <div
       ref={setRefs}
       className={cn(
         'relative group',
-        !isRoot && 'min-h-[24px]',
+        // Only use w-full for container types and elements with fullWidth
+        (!isInlineElement || isFullWidth) && 'w-full',
         isSelected && 'outline outline-2 outline-primary outline-offset-1',
         isHovered && !isSelected && 'outline outline-2 outline-primary/50 outline-offset-1',
         isDragging && 'opacity-40',
@@ -113,10 +131,10 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
       {/* Drop indicator for empty containers */}
       {canHaveChildren && node.children.length === 0 && !isPreviewMode && (
         <div className={cn(
-          'min-h-[60px] border-2 border-dashed rounded-md flex items-center justify-center text-xs text-muted-foreground',
-          isDropTarget ? 'border-primary bg-primary/10' : 'border-muted-foreground/30'
+          'min-h-[40px] border border-dashed flex items-center justify-center text-xs text-muted-foreground/50',
+          isDropTarget ? 'border-primary bg-primary/10' : 'border-muted-foreground/20'
         )}>
-          {isDropTarget ? 'Drop here' : `Drop components in ${definition?.displayName || node.type}`}
+          {isDropTarget ? 'Drop here' : '+'}
         </div>
       )}
 
@@ -126,13 +144,67 @@ export function CanvasNode({ node, isRoot }: CanvasNodeProps) {
   );
 }
 
+// Execute action based on type
+function executeAction(action: { type: string; [key: string]: unknown }) {
+  switch (action.type) {
+    case 'scrollTo': {
+      const targetId = action.targetId as string;
+      const behavior = (action.behavior as ScrollBehavior) || 'smooth';
+      const element = document.getElementById(targetId) || document.querySelector(`[data-node-id="${targetId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior, block: 'start' });
+      }
+      break;
+    }
+    case 'navigate': {
+      const url = action.to as string;
+      const target = action.target as string || '_self';
+      if (target === '_blank') {
+        window.open(url, '_blank');
+      } else {
+        window.location.href = url;
+      }
+      break;
+    }
+    case 'navigatePage': {
+      const pageSlug = action.pageSlug as string;
+      window.location.href = pageSlug;
+      break;
+    }
+    case 'toggleMobileSidebar': {
+      // Toggle mobile sidebar using the store
+      useEditorStore.getState().toggleMobileSidebar();
+      break;
+    }
+    default:
+      console.log('Action not implemented:', action.type);
+  }
+}
+
+// Create click handler for actions
+function createActionHandler(actions: Array<{ event: string; action: { type: string; [key: string]: unknown } }>, isPreviewMode: boolean) {
+  if (!isPreviewMode || !actions || actions.length === 0) return undefined;
+  
+  const clickActions = actions.filter(a => a.event === 'onClick' || a.event === 'click');
+  if (clickActions.length === 0) return undefined;
+  
+  return (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    clickActions.forEach(a => executeAction(a.action));
+  };
+}
+
 // Render component based on type
 function renderComponent(
   node: BuilderNode,
   children: React.ReactNode,
-  definition: ReturnType<typeof componentRegistry.get>
+  definition: ReturnType<typeof componentRegistry.get>,
+  isPreviewMode: boolean = false,
+  breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ): React.ReactNode {
-  const { classes: styleClasses, inlineStyles } = mapStyles(node.style);
+  const { classes: styleClasses, inlineStyles } = mapStyles(node.style, breakpoint);
+  const actionHandler = createActionHandler(node.actions as Array<{ event: string; action: { type: string; [key: string]: unknown } }>, isPreviewMode);
 
   switch (node.type) {
     case 'Section': {
@@ -166,6 +238,7 @@ function renderComponent(
 
       return (
         <section 
+          id={node.id}
           className={cn(
             'w-full relative flex flex-col',
             minHeightMap[minHeight],
@@ -183,9 +256,7 @@ function renderComponent(
               }}
             />
           )}
-          <div className={cn('relative w-full', backgroundImage && backgroundOverlay && 'z-10')}>
-            {children}
-          </div>
+          {children}
         </section>
       );
     }
@@ -194,6 +265,9 @@ function renderComponent(
       const maxWidth = (node.props.maxWidth as string) || 'lg';
       const centered = (node.props.centered as boolean) ?? true;
       const minHeight = (node.props.minHeight as string) || 'auto';
+      
+      // Check if explicit width is set in styles
+      const hasExplicitWidth = node.style?.base?.width && node.style.base.width !== '100%';
       
       const maxWidthMap: Record<string, string> = {
         xs: 'max-w-xs',
@@ -210,29 +284,97 @@ function renderComponent(
         full: 'min-h-full',
         screen: 'min-h-screen',
       };
+
+      // Check if container has a background color - if so, wrap it in a full-width div
+      const hasBackground = inlineStyles.backgroundColor || styleClasses.includes('bg-');
       
-      return (
+      // Extract only background for wrapper, all other styles go on content
+      const { backgroundColor, ...layoutStyles } = inlineStyles;
+      
+      const innerContent = (
         <div 
           className={cn(
-            'w-full',
-            centered && 'mx-auto',
-            maxWidthMap[maxWidth] || 'max-w-screen-lg',
+            // Only use w-full if no explicit width is set
+            !hasExplicitWidth && 'w-full',
+            centered && !hasExplicitWidth && 'mx-auto',
+            !hasExplicitWidth && (maxWidthMap[maxWidth] || 'max-w-screen-lg'),
             minHeightMap[minHeight],
-            styleClasses
+            styleClasses // Always apply styleClasses here for flex/align to work
           )}
-          style={inlineStyles}
+          style={layoutStyles}
         >
           {children}
         </div>
       );
+
+      // If there's a background, wrap in a full-width container
+      if (hasBackground) {
+        return (
+          <div 
+            className="w-full"
+            style={{ backgroundColor }}
+          >
+            {innerContent}
+          </div>
+        );
+      }
+      
+      return innerContent;
     }
 
     case 'Stack': {
-      const direction = (node.props.direction as string) || 'column';
-      const gap = (node.props.gap as string) || 'md';
-      const justify = (node.props.justify as string) || 'start';
-      const align = (node.props.align as string) || 'stretch';
-      const wrap = (node.props.wrap as boolean) || false;
+      // Read layout from style.base (Style Tab) with fallback to props for backwards compatibility
+      const styleBase = node.style?.base || {};
+      
+      // Map CSS flexDirection values to our direction prop values
+      const cssFlexDirection = styleBase.flexDirection as string;
+      let direction = (node.props.direction as string) || 'column';
+      if (cssFlexDirection) {
+        direction = cssFlexDirection; // Use CSS value directly (row, column, row-reverse, column-reverse)
+      }
+      
+      // Map CSS justifyContent values
+      const cssJustify = styleBase.justifyContent as string;
+      let justify = (node.props.justify as string) || 'start';
+      if (cssJustify) {
+        // Map CSS values to our shorthand
+        const justifyFromCss: Record<string, string> = {
+          'flex-start': 'start',
+          'center': 'center',
+          'flex-end': 'end',
+          'space-between': 'between',
+          'space-around': 'around',
+          'space-evenly': 'evenly',
+        };
+        justify = justifyFromCss[cssJustify] || justify;
+      }
+      
+      // Map CSS alignItems values
+      const cssAlign = styleBase.alignItems as string;
+      let align = (node.props.align as string) || 'stretch';
+      if (cssAlign) {
+        const alignFromCss: Record<string, string> = {
+          'flex-start': 'start',
+          'center': 'center',
+          'flex-end': 'end',
+          'stretch': 'stretch',
+          'baseline': 'baseline',
+        };
+        align = alignFromCss[cssAlign] || align;
+      }
+      
+      // Gap from style or props
+      const cssGap = styleBase.gap as string;
+      let gap = (node.props.gap as string) || 'md';
+      if (cssGap) {
+        // If it's a CSS gap value like '1rem', use it directly in inline styles
+        gap = cssGap;
+      }
+      
+      // Wrap
+      const cssWrap = styleBase.flexWrap as string;
+      const wrapProp = node.props.wrap;
+      const wrap = cssWrap === 'wrap' || cssWrap === 'wrap-reverse' || wrapProp === true || wrapProp === 'wrap';
       
       const directionMap: Record<string, string> = {
         row: 'flex-row',
@@ -256,18 +398,23 @@ function renderComponent(
         baseline: 'items-baseline',
       };
       
+      // Check if gap is a CSS value (contains 'rem', 'px', etc.) or a size token
+      const isCssGap = typeof gap === 'string' && (gap.includes('rem') || gap.includes('px') || gap.includes('em'));
+      const gapStyle = isCssGap ? { gap } : {};
+      const gapClass = isCssGap ? '' : `gap-${mapSpacing(gap)}`;
+      
       return (
         <div 
           className={cn(
             'flex',
             directionMap[direction],
-            `gap-${mapSpacing(gap)}`,
+            gapClass,
             justifyMap[justify],
             alignMap[align],
             wrap && 'flex-wrap',
             styleClasses
           )}
-          style={inlineStyles}
+          style={{ ...inlineStyles, ...gapStyle }}
         >
           {children}
         </div>
@@ -275,9 +422,36 @@ function renderComponent(
     }
 
     case 'Grid': {
+      // Read from style.base with fallback to props for backwards compatibility
+      const styleBase = node.style?.base || {};
+      
+      // Check if gridTemplateColumns is set in styles (responsive)
+      const hasResponsiveColumns = 
+        inlineStyles.gridTemplateColumns || 
+        styleBase.gridTemplateColumns;
+      
+      // Columns from props (Grid-specific, not a general CSS property)
       const columns = (node.props.columns as number) || 3;
-      const gridGap = (node.props.gap as string) || 'md';
-      const alignItems = (node.props.alignItems as string) || 'stretch';
+      
+      // Gap from style or props
+      const cssGap = styleBase.gap as string;
+      let gridGap = (node.props.gap as string) || 'md';
+      if (cssGap) {
+        gridGap = cssGap;
+      }
+      
+      // AlignItems from style or props
+      const cssAlign = styleBase.alignItems as string;
+      let alignItems = (node.props.alignItems as string) || 'stretch';
+      if (cssAlign) {
+        const alignFromCss: Record<string, string> = {
+          'start': 'start',
+          'center': 'center',
+          'end': 'end',
+          'stretch': 'stretch',
+        };
+        alignItems = alignFromCss[cssAlign] || alignItems;
+      }
       
       const alignMap: Record<string, string> = {
         start: 'items-start',
@@ -286,16 +460,25 @@ function renderComponent(
         stretch: 'items-stretch',
       };
       
+      // Check if gap is a CSS value
+      const isCssGap = typeof gridGap === 'string' && (gridGap.includes('rem') || gridGap.includes('px') || gridGap.includes('em'));
+      const gapStyle = isCssGap ? { gap: gridGap } : {};
+      const gapClass = isCssGap ? '' : `gap-${mapSpacing(gridGap)}`;
+      
+      // If responsive gridTemplateColumns is set, use CSS grid directly
+      // Otherwise use Tailwind classes
+      const gridColsClass = hasResponsiveColumns ? '' : `grid-cols-${Math.min(columns, 12)}`;
+      
       return (
         <div 
           className={cn(
             'grid',
-            `grid-cols-${Math.min(columns, 12)}`,
-            `gap-${mapSpacing(gridGap)}`,
+            gridColsClass,
+            gapClass,
             alignMap[alignItems],
             styleClasses
           )}
-          style={inlineStyles}
+          style={{ ...inlineStyles, ...gapStyle }}
         >
           {children}
         </div>
@@ -330,6 +513,11 @@ function renderComponent(
       const btnSize = (node.props.size as string) || 'default';
       const fullWidth = (node.props.fullWidth as boolean) || false;
       
+      // Check if custom colors are defined - if so, skip variant classes
+      const hasCustomBg = inlineStyles.backgroundColor;
+      const hasCustomColor = inlineStyles.color;
+      const hasCustomBorder = inlineStyles.borderColor;
+      
       const variantClasses: Record<string, string> = {
         primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
@@ -343,16 +531,30 @@ function renderComponent(
         lg: 'h-12 px-6 text-lg',
       };
       
+      // Build button classes - skip bg/color variants if custom colors defined
+      let btnClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors';
+      if (!hasCustomBg && !hasCustomColor) {
+        btnClasses = cn(btnClasses, variantClasses[variant]);
+      } else {
+        // Add hover effect even with custom colors
+        btnClasses = cn(btnClasses, 'hover:opacity-90');
+        // Add border for outline variant
+        if (variant === 'outline') {
+          btnClasses = cn(btnClasses, 'border');
+        }
+      }
+      
       return (
         <button 
           className={cn(
-            'inline-flex items-center justify-center rounded-md font-medium transition-colors',
-            variantClasses[variant],
+            btnClasses,
             sizeClasses[btnSize],
             fullWidth && 'w-full',
+            actionHandler && 'cursor-pointer',
             styleClasses
           )}
           style={inlineStyles}
+          onClick={actionHandler}
         >
           {btnText}
         </button>
@@ -420,9 +622,25 @@ function renderComponent(
       const inputLabel = (node.props.label as string) || '';
       const placeholder = (node.props.placeholder as string) || '';
       const inputType = (node.props.type as string) || 'text';
+      
+      // If no label, apply styles directly to input
+      if (!inputLabel) {
+        return (
+          <input
+            type={inputType}
+            placeholder={placeholder}
+            className={cn(
+              'flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              styleClasses
+            )}
+            style={inlineStyles}
+          />
+        );
+      }
+      
       return (
         <div className={cn('space-y-2', styleClasses)} style={inlineStyles}>
-          {inputLabel && <label className="text-sm font-medium">{inputLabel}</label>}
+          <label className="text-sm font-medium">{inputLabel}</label>
           <input
             type={inputType}
             placeholder={placeholder}
@@ -450,7 +668,12 @@ function renderComponent(
       const linkText = (node.props.text as string) || 'Link';
       const linkHref = (node.props.href as string) || '#';
       return (
-        <a href={linkHref} className={cn('text-primary hover:underline cursor-pointer', styleClasses)} style={inlineStyles}>
+        <a 
+          href={actionHandler ? undefined : linkHref} 
+          className={cn('text-primary hover:underline cursor-pointer', styleClasses)} 
+          style={inlineStyles}
+          onClick={actionHandler}
+        >
           {linkText}
         </a>
       );
@@ -507,6 +730,449 @@ function renderComponent(
       );
     }
 
+    // ============================================================================
+    // NEW COMPONENTS
+    // ============================================================================
+
+    case 'Avatar': {
+      const avatarSrc = (node.props.src as string) || 'https://i.pravatar.cc/150';
+      const avatarAlt = (node.props.alt as string) || 'Avatar';
+      const avatarSize = (node.props.size as string) || 'md';
+      const sizeMap: Record<string, string> = { sm: 'w-8 h-8', md: 'w-12 h-12', lg: 'w-16 h-16', xl: 'w-20 h-20' };
+      return (
+        <img 
+          src={avatarSrc} 
+          alt={avatarAlt}
+          className={cn('rounded-full object-cover', sizeMap[avatarSize], styleClasses)}
+          style={inlineStyles}
+        />
+      );
+    }
+
+    case 'Video': {
+      const videoSrc = (node.props.src as string) || '';
+      const videoPoster = (node.props.poster as string) || '';
+      const autoplay = (node.props.autoplay as boolean) || false;
+      const controls = (node.props.controls as boolean) ?? true;
+      
+      // Check if it's a YouTube/Vimeo URL
+      if (videoSrc.includes('youtube.com') || videoSrc.includes('youtu.be')) {
+        const videoId = videoSrc.includes('youtu.be') 
+          ? videoSrc.split('/').pop() 
+          : new URLSearchParams(new URL(videoSrc).search).get('v');
+        return (
+          <div className={cn('aspect-video w-full', styleClasses)} style={inlineStyles}>
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}${autoplay ? '?autoplay=1' : ''}`}
+              className="w-full h-full rounded"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
+      
+      return (
+        <video 
+          src={videoSrc}
+          poster={videoPoster}
+          controls={controls}
+          autoPlay={autoplay}
+          className={cn('w-full rounded', styleClasses)}
+          style={inlineStyles}
+        />
+      );
+    }
+
+    case 'Map': {
+      const lat = (node.props.lat as number) || 51.505;
+      const lng = (node.props.lng as number) || -0.09;
+      const zoom = (node.props.zoom as number) || 13;
+      const mapHeight = (node.props.height as string) || '300px';
+      
+      return (
+        <div 
+          className={cn('w-full rounded overflow-hidden', styleClasses)}
+          style={{ ...inlineStyles, height: mapHeight }}
+        >
+          <iframe
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01}%2C${lat-0.01}%2C${lng+0.01}%2C${lat+0.01}&layer=mapnik&marker=${lat}%2C${lng}`}
+            className="w-full h-full border-0"
+          />
+        </div>
+      );
+    }
+
+    case 'SocialLinks': {
+      const platforms = (node.props.platforms as string[]) || ['facebook', 'twitter', 'instagram'];
+      const socialSize = (node.props.size as string) || 'md';
+      const sizeClasses: Record<string, string> = { sm: 'w-5 h-5', md: 'w-6 h-6', lg: 'w-8 h-8' };
+      
+      const icons: Record<string, string> = {
+        facebook: '📘', twitter: '🐦', instagram: '📸', linkedin: '💼',
+        youtube: '📺', tiktok: '🎵', pinterest: '📌', github: '💻'
+      };
+      
+      return (
+        <div className={cn('flex gap-3', styleClasses)} style={inlineStyles}>
+          {platforms.map((platform) => (
+            <a key={platform} href="#" className={cn('hover:opacity-70 transition-opacity', sizeClasses[socialSize])}>
+              {icons[platform] || '🔗'}
+            </a>
+          ))}
+        </div>
+      );
+    }
+
+    case 'Accordion': {
+      return (
+        <div className={cn('divide-y border rounded-lg', styleClasses)} style={inlineStyles}>
+          {children}
+        </div>
+      );
+    }
+
+    case 'AccordionItem': {
+      const itemTitle = (node.props.title as string) || 'Accordion Item';
+      const isOpen = (node.props.defaultOpen as boolean) || false;
+      return (
+        <details className="group" open={isOpen}>
+          <summary className="flex cursor-pointer items-center justify-between p-4 font-medium hover:bg-muted/50">
+            {itemTitle}
+            <span className="transition-transform group-open:rotate-180">▼</span>
+          </summary>
+          <div className="p-4 pt-0">{children}</div>
+        </details>
+      );
+    }
+
+    case 'Tabs': {
+      return (
+        <div className={cn('w-full', styleClasses)} style={inlineStyles}>
+          {children}
+        </div>
+      );
+    }
+
+    case 'Tab': {
+      const tabLabel = (node.props.label as string) || 'Tab';
+      return (
+        <div className="border rounded-lg p-4">
+          <div className="text-sm font-medium text-muted-foreground mb-2">{tabLabel}</div>
+          {children}
+        </div>
+      );
+    }
+
+    case 'Carousel': {
+      return (
+        <div className={cn('relative w-full overflow-hidden', styleClasses)} style={inlineStyles}>
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4">
+            {children}
+          </div>
+          <div className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 cursor-pointer">←</div>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 cursor-pointer">→</div>
+        </div>
+      );
+    }
+
+    case 'Progress': {
+      const progressValue = (node.props.value as number) || 50;
+      const progressMax = (node.props.max as number) || 100;
+      const showLabel = (node.props.showLabel as boolean) ?? true;
+      const percent = Math.min(100, Math.max(0, (progressValue / progressMax) * 100));
+      
+      return (
+        <div className={cn('w-full', styleClasses)} style={inlineStyles}>
+          {showLabel && <div className="text-sm mb-1">{Math.round(percent)}%</div>}
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full transition-all"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    case 'Rating': {
+      const ratingValue = (node.props.value as number) || 4;
+      const ratingMax = (node.props.max as number) || 5;
+      const ratingSize = (node.props.size as string) || 'md';
+      const sizesMap: Record<string, string> = { sm: 'text-sm', md: 'text-lg', lg: 'text-2xl' };
+      
+      return (
+        <div className={cn('flex gap-0.5', sizesMap[ratingSize], styleClasses)} style={inlineStyles}>
+          {Array.from({ length: ratingMax }).map((_, i) => (
+            <span key={i} className={i < ratingValue ? 'text-yellow-400' : 'text-gray-300'}>★</span>
+          ))}
+        </div>
+      );
+    }
+
+    case 'Counter': {
+      const counterValue = (node.props.value as number) || 100;
+      const counterPrefix = (node.props.prefix as string) || '';
+      const counterSuffix = (node.props.suffix as string) || '';
+      
+      return (
+        <div className={cn('text-4xl font-bold', styleClasses)} style={inlineStyles}>
+          {counterPrefix}{counterValue}{counterSuffix}
+        </div>
+      );
+    }
+
+    case 'Quote': {
+      const quoteText = (node.props.text as string) || 'Quote text here...';
+      const quoteAuthor = (node.props.author as string) || '';
+      
+      return (
+        <blockquote className={cn('border-l-4 border-primary pl-4 italic', styleClasses)} style={inlineStyles}>
+          <p className="text-lg">"{quoteText}"</p>
+          {quoteAuthor && <footer className="mt-2 text-sm text-muted-foreground">— {quoteAuthor}</footer>}
+        </blockquote>
+      );
+    }
+
+    case 'PricingCard': {
+      const planName = (node.props.name as string) || 'Pro';
+      const planPrice = (node.props.price as string) || '29';
+      const planPeriod = (node.props.period as string) || '/month';
+      const planFeatures = (node.props.features as string[]) || ['Feature 1', 'Feature 2', 'Feature 3'];
+      const planHighlighted = (node.props.highlighted as boolean) || false;
+      
+      return (
+        <div className={cn(
+          'rounded-xl border p-6 text-center',
+          planHighlighted && 'border-primary shadow-lg scale-105',
+          styleClasses
+        )} style={inlineStyles}>
+          <h3 className="text-xl font-bold">{planName}</h3>
+          <div className="mt-4">
+            <span className="text-4xl font-bold">${planPrice}</span>
+            <span className="text-muted-foreground">{planPeriod}</span>
+          </div>
+          <ul className="mt-6 space-y-2">
+            {planFeatures.map((feature, i) => (
+              <li key={i} className="flex items-center justify-center gap-2">
+                <span className="text-green-500">✓</span> {feature}
+              </li>
+            ))}
+          </ul>
+          {children}
+        </div>
+      );
+    }
+
+    case 'FeatureCard': {
+      const featureIcon = (node.props.icon as string) || '⭐';
+      const featureTitle = (node.props.title as string) || 'Feature';
+      const featureDesc = (node.props.description as string) || 'Description';
+      
+      return (
+        <div className={cn('text-center p-6', styleClasses)} style={inlineStyles}>
+          <div className="text-4xl mb-4">{featureIcon}</div>
+          <h3 className="text-lg font-semibold mb-2">{featureTitle}</h3>
+          <p className="text-muted-foreground">{featureDesc}</p>
+        </div>
+      );
+    }
+
+    case 'TestimonialCard': {
+      const testimonialText = (node.props.text as string) || 'Great product!';
+      const testimonialAuthor = (node.props.author as string) || 'John Doe';
+      const testimonialRole = (node.props.role as string) || 'Customer';
+      const testimonialImage = (node.props.image as string) || 'https://i.pravatar.cc/100';
+      
+      return (
+        <div className={cn('p-6 rounded-xl border', styleClasses)} style={inlineStyles}>
+          <p className="italic mb-4">"{testimonialText}"</p>
+          <div className="flex items-center gap-3">
+            <img src={testimonialImage} alt={testimonialAuthor} className="w-10 h-10 rounded-full" />
+            <div>
+              <div className="font-medium">{testimonialAuthor}</div>
+              <div className="text-sm text-muted-foreground">{testimonialRole}</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    case 'TeamMember': {
+      const memberName = (node.props.name as string) || 'Team Member';
+      const memberRole = (node.props.role as string) || 'Position';
+      const memberImage = (node.props.image as string) || 'https://i.pravatar.cc/200';
+      
+      return (
+        <div className={cn('text-center', styleClasses)} style={inlineStyles}>
+          <img src={memberImage} alt={memberName} className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" />
+          <h3 className="font-semibold">{memberName}</h3>
+          <p className="text-muted-foreground">{memberRole}</p>
+        </div>
+      );
+    }
+
+    case 'LogoCloud': {
+      const logos = (node.props.logos as string[]) || [
+        'https://placehold.co/120x40?text=Logo1',
+        'https://placehold.co/120x40?text=Logo2',
+        'https://placehold.co/120x40?text=Logo3'
+      ];
+      
+      return (
+        <div className={cn('flex flex-wrap items-center justify-center gap-8', styleClasses)} style={inlineStyles}>
+          {logos.map((logo, i) => (
+            <img key={i} src={logo} alt={`Logo ${i+1}`} className="h-8 opacity-60 hover:opacity-100 transition-opacity" />
+          ))}
+        </div>
+      );
+    }
+
+    case 'CTA': {
+      const ctaTitle = (node.props.title as string) || 'Ready to get started?';
+      const ctaDesc = (node.props.description as string) || 'Join thousands of satisfied customers today.';
+      
+      return (
+        <div className={cn('text-center py-12 px-6', styleClasses)} style={inlineStyles}>
+          <h2 className="text-3xl font-bold mb-4">{ctaTitle}</h2>
+          <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">{ctaDesc}</p>
+          {children}
+        </div>
+      );
+    }
+
+    case 'Breadcrumb': {
+      const items = (node.props.items as string[]) || ['Home', 'Products', 'Current'];
+      
+      return (
+        <nav className={cn('flex text-sm', styleClasses)} style={inlineStyles}>
+          {items.map((item, i) => (
+            <span key={i} className="flex items-center">
+              {i > 0 && <span className="mx-2 text-muted-foreground">/</span>}
+              <a href="#" className={i === items.length - 1 ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}>
+                {item}
+              </a>
+            </span>
+          ))}
+        </nav>
+      );
+    }
+
+    case 'Table': {
+      const headers = (node.props.headers as string[]) || ['Column 1', 'Column 2', 'Column 3'];
+      const rows = (node.props.rows as string[][]) || [
+        ['Cell 1', 'Cell 2', 'Cell 3'],
+        ['Cell 4', 'Cell 5', 'Cell 6']
+      ];
+      
+      return (
+        <div className={cn('overflow-x-auto', styleClasses)} style={inlineStyles}>
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                {headers.map((header, i) => (
+                  <th key={i} className="text-left p-3 font-medium">{header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  {row.map((cell, j) => (
+                    <td key={j} className="p-3">{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    case 'CodeBlock': {
+      const codeContent = (node.props.code as string) || 'console.log("Hello World");';
+      const language = (node.props.language as string) || 'javascript';
+      
+      return (
+        <pre className={cn('bg-zinc-900 text-zinc-100 p-4 rounded-lg overflow-x-auto text-sm', styleClasses)} style={inlineStyles}>
+          <code className={`language-${language}`}>{codeContent}</code>
+        </pre>
+      );
+    }
+
+    case 'Timeline': {
+      return (
+        <div className={cn('space-y-4', styleClasses)} style={inlineStyles}>
+          {children}
+        </div>
+      );
+    }
+
+    case 'TimelineItem': {
+      const itemDate = (node.props.date as string) || '2024';
+      const itemTitle = (node.props.title as string) || 'Event';
+      
+      return (
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <div className="w-3 h-3 bg-primary rounded-full" />
+            <div className="w-0.5 h-full bg-border" />
+          </div>
+          <div className="pb-4">
+            <div className="text-sm text-muted-foreground">{itemDate}</div>
+            <div className="font-medium">{itemTitle}</div>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    case 'Countdown': {
+      const targetDate = (node.props.targetDate as string) || new Date(Date.now() + 86400000).toISOString();
+      
+      return (
+        <div className={cn('flex gap-4 text-center', styleClasses)} style={inlineStyles}>
+          {['Days', 'Hours', 'Min', 'Sec'].map((label) => (
+            <div key={label} className="bg-muted rounded-lg p-4 min-w-[80px]">
+              <div className="text-3xl font-bold">00</div>
+              <div className="text-xs text-muted-foreground">{label}</div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    case 'Marquee': {
+      const marqueeText = (node.props.text as string) || 'Scrolling text here • ';
+      const marqueeSpeed = (node.props.speed as string) || 'normal';
+      
+      return (
+        <div className={cn('overflow-hidden whitespace-nowrap', styleClasses)} style={inlineStyles}>
+          <div className="inline-block animate-marquee">
+            {marqueeText.repeat(10)}
+          </div>
+        </div>
+      );
+    }
+
+    case 'List': {
+      const listItems = (node.props.items as string[]) || ['Item 1', 'Item 2', 'Item 3'];
+      const listType = (node.props.type as string) || 'unordered';
+      const ListTag = listType === 'ordered' ? 'ol' : 'ul';
+      
+      return (
+        <ListTag className={cn(
+          listType === 'ordered' ? 'list-decimal' : 'list-disc',
+          'pl-5 space-y-1',
+          styleClasses
+        )} style={inlineStyles}>
+          {listItems.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ListTag>
+      );
+    }
+
     default:
       // Unknown component - show placeholder
       return (
@@ -533,41 +1199,101 @@ interface StyleResult {
   inlineStyles: React.CSSProperties;
 }
 
-function mapStyleToClasses(style: BuilderStyle): string {
-  return mapStyles(style).classes;
+function mapStyleToClasses(style: BuilderStyle, breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'): string {
+  return mapStyles(style, breakpoint).classes;
 }
 
-function mapStyles(style: BuilderStyle): StyleResult {
-  const props = style.base;
+/**
+ * Maps BuilderStyle to CSS classes and inline styles
+ * Merges base styles with breakpoint-specific overrides
+ */
+function mapStyles(style: BuilderStyle, breakpoint: 'desktop' | 'tablet' | 'mobile' = 'desktop'): StyleResult {
+  // Merge base with breakpoint-specific styles
+  // For mobile: base + mobile
+  // For tablet: base + tablet
+  // For desktop: base + desktop (if exists)
+  let props = { ...style.base };
+  
+  if (breakpoint === 'mobile' && style.mobile) {
+    props = { ...props, ...style.mobile };
+  } else if (breakpoint === 'tablet' && style.tablet) {
+    props = { ...props, ...style.tablet };
+  } else if (breakpoint === 'desktop' && style.desktop) {
+    props = { ...props, ...style.desktop };
+  }
+  
   if (!props) return { classes: '', inlineStyles: {} };
 
   const classes: string[] = [];
   const inlineStyles: React.CSSProperties = {};
 
+  // Helper to handle spacing props - use inline style if CSS value, otherwise Tailwind class
+  const handleSpacing = (prop: string | undefined, classPrefix: string, styleProp: keyof React.CSSProperties) => {
+    if (!prop) return;
+    if (isCSSValue(prop)) {
+      (inlineStyles as Record<string, string>)[styleProp as string] = prop;
+    } else {
+      classes.push(`${classPrefix}-${mapSpacing(prop)}`);
+    }
+  };
+
   // Padding
-  if (props.padding) classes.push(`p-${mapSpacing(props.padding)}`);
-  if (props.paddingX) classes.push(`px-${mapSpacing(props.paddingX)}`);
-  if (props.paddingY) classes.push(`py-${mapSpacing(props.paddingY)}`);
-  if (props.paddingTop) classes.push(`pt-${mapSpacing(props.paddingTop)}`);
-  if (props.paddingBottom) classes.push(`pb-${mapSpacing(props.paddingBottom)}`);
-  if (props.paddingLeft) classes.push(`pl-${mapSpacing(props.paddingLeft)}`);
-  if (props.paddingRight) classes.push(`pr-${mapSpacing(props.paddingRight)}`);
+  handleSpacing(props.padding, 'p', 'padding');
+  handleSpacing(props.paddingX, 'px', 'paddingLeft'); // px maps to both paddingLeft and paddingRight
+  if (props.paddingX && isCSSValue(props.paddingX)) {
+    inlineStyles.paddingRight = props.paddingX;
+  }
+  handleSpacing(props.paddingY, 'py', 'paddingTop'); // py maps to both paddingTop and paddingBottom
+  if (props.paddingY && isCSSValue(props.paddingY)) {
+    inlineStyles.paddingBottom = props.paddingY;
+  }
+  handleSpacing(props.paddingTop, 'pt', 'paddingTop');
+  handleSpacing(props.paddingBottom, 'pb', 'paddingBottom');
+  handleSpacing(props.paddingLeft, 'pl', 'paddingLeft');
+  handleSpacing(props.paddingRight, 'pr', 'paddingRight');
 
   // Margin
-  if (props.margin) classes.push(`m-${mapSpacing(props.margin)}`);
-  if (props.marginX) classes.push(`mx-${mapSpacing(props.marginX)}`);
-  if (props.marginY) classes.push(`my-${mapSpacing(props.marginY)}`);
-  if (props.marginTop) classes.push(`mt-${mapSpacing(props.marginTop)}`);
-  if (props.marginBottom) classes.push(`mb-${mapSpacing(props.marginBottom)}`);
-  if (props.marginLeft) classes.push(`ml-${mapSpacing(props.marginLeft)}`);
-  if (props.marginRight) classes.push(`mr-${mapSpacing(props.marginRight)}`);
+  handleSpacing(props.margin, 'm', 'margin');
+  handleSpacing(props.marginX, 'mx', 'marginLeft');
+  if (props.marginX && isCSSValue(props.marginX)) {
+    inlineStyles.marginRight = props.marginX;
+  }
+  handleSpacing(props.marginY, 'my', 'marginTop');
+  if (props.marginY && isCSSValue(props.marginY)) {
+    inlineStyles.marginBottom = props.marginY;
+  }
+  handleSpacing(props.marginTop, 'mt', 'marginTop');
+  handleSpacing(props.marginBottom, 'mb', 'marginBottom');
+  handleSpacing(props.marginLeft, 'ml', 'marginLeft');
+  handleSpacing(props.marginRight, 'mr', 'marginRight');
 
   // Gap
-  if (props.gap) classes.push(`gap-${mapSpacing(props.gap)}`);
+  if (props.gap) {
+    if (isCSSValue(props.gap)) {
+      inlineStyles.gap = props.gap;
+    } else {
+      classes.push(`gap-${mapSpacing(props.gap)}`);
+    }
+  }
 
   // Theme Colors (Tailwind)
-  if (props.backgroundColor) classes.push(`bg-${props.backgroundColor}`);
-  if (props.color) classes.push(`text-${props.color}`);
+  // Note: 'background' value means "use page background" so we skip it to let the global background show through
+  if (props.backgroundColor && props.backgroundColor !== 'background') {
+    // Check if it's a hex/rgb color value or a Tailwind class name
+    if (props.backgroundColor.startsWith('#') || props.backgroundColor.startsWith('rgb')) {
+      inlineStyles.backgroundColor = props.backgroundColor;
+    } else {
+      classes.push(`bg-${props.backgroundColor}`);
+    }
+  }
+  if (props.color) {
+    // Check if it's a hex/rgb color value or a Tailwind class name
+    if (props.color.startsWith('#') || props.color.startsWith('rgb')) {
+      inlineStyles.color = props.color;
+    } else {
+      classes.push(`text-${props.color}`);
+    }
+  }
 
   // Custom Colors (Inline styles for hex values)
   if (props.bgColor) {
@@ -588,20 +1314,113 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.backgroundRepeat = props.backgroundRepeat || 'no-repeat';
   }
 
-  // Typography
-  if (props.textAlign) classes.push(`text-${props.textAlign}`);
-  if (props.fontSize) classes.push(`text-${props.fontSize}`);
-  if (props.fontWeight) classes.push(`font-${props.fontWeight}`);
-  if (props.lineHeight) classes.push(`leading-${props.lineHeight}`);
-  if (props.letterSpacing) classes.push(`tracking-${props.letterSpacing}`);
-  if (props.textDecoration) {
-    const decoMap: Record<string, string> = {
-      underline: 'underline',
-      'line-through': 'line-through',
-      none: 'no-underline',
+  // Background (for gradients and other CSS background values)
+  if (props.background) {
+    inlineStyles.background = props.background;
+  }
+
+  // Gradient Background (alias for background)
+  if (props.gradient) {
+    inlineStyles.background = props.gradient;
+  }
+
+  // Backdrop Filter (Glassmorphism)
+  if (props.backdropBlur) {
+    const blurMap: Record<string, string> = {
+      sm: '4px',
+      md: '8px',
+      lg: '12px',
+      xl: '16px',
+      '2xl': '24px',
+      '3xl': '40px',
     };
-    const decoClass = decoMap[props.textDecoration];
-    if (decoClass) classes.push(decoClass);
+    const blurValue = blurMap[props.backdropBlur] || props.backdropBlur;
+    inlineStyles.backdropFilter = `blur(${blurValue})`;
+    inlineStyles.WebkitBackdropFilter = `blur(${blurValue})`;
+  }
+
+  // Filter Blur
+  if (props.blur) {
+    const blurMap: Record<string, string> = {
+      sm: '4px',
+      md: '8px',
+      lg: '12px',
+      xl: '16px',
+    };
+    const blurValue = blurMap[props.blur] || props.blur;
+    inlineStyles.filter = `blur(${blurValue})`;
+  }
+
+  // Transform
+  if (props.transform) {
+    inlineStyles.transform = props.transform;
+  }
+
+  // Transition
+  if (props.transition) {
+    const transitionMap: Record<string, string> = {
+      none: 'none',
+      all: 'all 0.3s ease',
+      colors: 'color, background-color, border-color 0.3s ease',
+      transform: 'transform 0.3s ease',
+      opacity: 'opacity 0.3s ease',
+    };
+    inlineStyles.transition = transitionMap[props.transition] || props.transition;
+  }
+
+  // Box Shadow Custom
+  if (props.boxShadow) {
+    inlineStyles.boxShadow = props.boxShadow;
+  }
+
+  // Aspect Ratio
+  if (props.aspectRatio) {
+    inlineStyles.aspectRatio = props.aspectRatio;
+  }
+
+  // Object Fit (for images)
+  if (props.objectFit) {
+    if (props.objectFit === 'contain' || props.objectFit === 'cover' || props.objectFit === 'fill' || props.objectFit === 'none' || props.objectFit === 'scale-down') {
+      inlineStyles.objectFit = props.objectFit as React.CSSProperties['objectFit'];
+    } else {
+      classes.push(`object-${props.objectFit}`);
+    }
+  }
+
+  // Typography - support both tokens and CSS values
+  if (props.textAlign) {
+    inlineStyles.textAlign = props.textAlign as React.CSSProperties['textAlign'];
+  }
+  if (props.fontSize) {
+    if (isCSSValue(props.fontSize)) {
+      inlineStyles.fontSize = props.fontSize;
+    } else {
+      classes.push(`text-${props.fontSize}`);
+    }
+  }
+  if (props.fontWeight) {
+    if (/^\d+$/.test(props.fontWeight)) {
+      inlineStyles.fontWeight = parseInt(props.fontWeight) as React.CSSProperties['fontWeight'];
+    } else {
+      classes.push(`font-${props.fontWeight}`);
+    }
+  }
+  if (props.lineHeight) {
+    if (isCSSValue(props.lineHeight) || /^[\d.]+$/.test(props.lineHeight)) {
+      inlineStyles.lineHeight = props.lineHeight;
+    } else {
+      classes.push(`leading-${props.lineHeight}`);
+    }
+  }
+  if (props.letterSpacing) {
+    if (isCSSValue(props.letterSpacing)) {
+      inlineStyles.letterSpacing = props.letterSpacing;
+    } else {
+      classes.push(`tracking-${props.letterSpacing}`);
+    }
+  }
+  if (props.textDecoration) {
+    inlineStyles.textDecoration = props.textDecoration;
   }
   if (props.textTransform) {
     const transformMap: Record<string, string> = {
@@ -614,9 +1433,30 @@ function mapStyles(style: BuilderStyle): StyleResult {
     if (transformClass) classes.push(transformClass);
   }
 
-  // Border
-  if (props.borderWidth) classes.push(`border-${props.borderWidth}`);
-  if (props.borderRadius) classes.push(`rounded-${props.borderRadius}`);
+  // Border - support both tokens and CSS values
+  if (props.border) {
+    inlineStyles.border = props.border;
+  }
+  if (props.borderBottom) {
+    inlineStyles.borderBottom = props.borderBottom;
+  }
+  if (props.borderTop) {
+    inlineStyles.borderTop = props.borderTop;
+  }
+  if (props.borderWidth) {
+    if (isCSSValue(props.borderWidth)) {
+      inlineStyles.borderWidth = props.borderWidth;
+    } else {
+      classes.push(`border-${props.borderWidth}`);
+    }
+  }
+  if (props.borderRadius) {
+    if (isCSSValue(props.borderRadius)) {
+      inlineStyles.borderRadius = props.borderRadius;
+    } else {
+      classes.push(`rounded-${props.borderRadius}`);
+    }
+  }
   if (props.borderStyle) {
     const styleMap: Record<string, string> = {
       solid: 'border-solid',
@@ -644,31 +1484,29 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.opacity = props.opacity / 100;
   }
 
-  // Display
+  // Display - support both tokens and CSS values
   if (props.display) {
-    const displayMap: Record<string, string> = {
-      flex: 'flex',
-      block: 'block',
-      inline: 'inline',
-      'inline-block': 'inline-block',
-      grid: 'grid',
-      hidden: 'hidden',
-    };
-    const displayClass = displayMap[props.display];
-    if (displayClass) classes.push(displayClass);
+    // Use inline style for all display values for consistency
+    inlineStyles.display = props.display as React.CSSProperties['display'];
   }
 
-  // Position
+  // Position - support both tokens and CSS values
   if (props.position) {
-    const posMap: Record<string, string> = {
-      relative: 'relative',
-      absolute: 'absolute',
-      fixed: 'fixed',
-      sticky: 'sticky',
-      static: 'static',
-    };
-    const posClass = posMap[props.position];
-    if (posClass) classes.push(posClass);
+    inlineStyles.position = props.position as React.CSSProperties['position'];
+  }
+  
+  // Position values (top, left, right, bottom)
+  if (props.top) {
+    inlineStyles.top = props.top;
+  }
+  if (props.left) {
+    inlineStyles.left = props.left;
+  }
+  if (props.right) {
+    inlineStyles.right = props.right;
+  }
+  if (props.bottom) {
+    inlineStyles.bottom = props.bottom;
   }
 
   // Z-Index (inline for arbitrary values)
@@ -709,30 +1547,45 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.maxHeight = props.maxHeight;
   }
 
-  // Flexbox
-  if (props.flexDirection) classes.push(`flex-${props.flexDirection}`);
+  // Flexbox - support both tokens and CSS values
+  if (props.flexDirection) {
+    // Direct CSS values like 'row', 'column'
+    inlineStyles.flexDirection = props.flexDirection as React.CSSProperties['flexDirection'];
+  }
   if (props.alignItems) {
-    const alignMap: Record<string, string> = {
-      start: 'items-start',
-      center: 'items-center',
-      end: 'items-end',
-      stretch: 'items-stretch',
-      baseline: 'items-baseline',
-    };
-    const alignClass = alignMap[props.alignItems];
-    if (alignClass) classes.push(alignClass);
+    // Check for CSS values first
+    const cssAlignValues = ['flex-start', 'flex-end', 'center', 'stretch', 'baseline'];
+    if (cssAlignValues.includes(props.alignItems)) {
+      inlineStyles.alignItems = props.alignItems as React.CSSProperties['alignItems'];
+    } else {
+      const alignMap: Record<string, string> = {
+        start: 'items-start',
+        center: 'items-center',
+        end: 'items-end',
+        stretch: 'items-stretch',
+        baseline: 'items-baseline',
+      };
+      const alignClass = alignMap[props.alignItems];
+      if (alignClass) classes.push(alignClass);
+    }
   }
   if (props.justifyContent) {
-    const justifyMap: Record<string, string> = {
-      start: 'justify-start',
-      center: 'justify-center',
-      end: 'justify-end',
-      between: 'justify-between',
-      around: 'justify-around',
-      evenly: 'justify-evenly',
-    };
-    const justifyClass = justifyMap[props.justifyContent];
-    if (justifyClass) classes.push(justifyClass);
+    // Check for CSS values first
+    const cssJustifyValues = ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'];
+    if (cssJustifyValues.includes(props.justifyContent)) {
+      inlineStyles.justifyContent = props.justifyContent as React.CSSProperties['justifyContent'];
+    } else {
+      const justifyMap: Record<string, string> = {
+        start: 'justify-start',
+        center: 'justify-center',
+        end: 'justify-end',
+        between: 'justify-between',
+        around: 'justify-around',
+        evenly: 'justify-evenly',
+      };
+      const justifyClass = justifyMap[props.justifyContent];
+      if (justifyClass) classes.push(justifyClass);
+    }
   }
   if (props.flexWrap) classes.push(`flex-${props.flexWrap}`);
   if (props.flexGrow !== undefined) {
@@ -742,14 +1595,96 @@ function mapStyles(style: BuilderStyle): StyleResult {
     inlineStyles.flexShrink = props.flexShrink;
   }
 
+  // Align Self (for child in flex/grid)
+  if (props.alignSelf) {
+    const alignSelfMap: Record<string, string> = {
+      start: 'self-start',
+      center: 'self-center',
+      end: 'self-end',
+      stretch: 'self-stretch',
+      auto: 'self-auto',
+    };
+    const alignSelfClass = alignSelfMap[props.alignSelf];
+    if (alignSelfClass) classes.push(alignSelfClass);
+  }
+
+  // Justify Self (for child in grid)
+  if (props.justifySelf) {
+    const justifySelfMap: Record<string, string> = {
+      start: 'justify-self-start',
+      center: 'justify-self-center',
+      end: 'justify-self-end',
+      stretch: 'justify-self-stretch',
+      auto: 'justify-self-auto',
+    };
+    const justifySelfClass = justifySelfMap[props.justifySelf];
+    if (justifySelfClass) classes.push(justifySelfClass);
+  }
+
   // Grid
   if (props.gridColumns) classes.push(`grid-cols-${props.gridColumns}`);
   if (props.gridRows) classes.push(`grid-rows-${props.gridRows}`);
   if (props.gridColumnSpan) classes.push(`col-span-${props.gridColumnSpan}`);
   if (props.gridRowSpan) classes.push(`row-span-${props.gridRowSpan}`);
+  
+  // Grid/Flex place-items (for centering)
+  if (props.placeItems) {
+    inlineStyles.placeItems = props.placeItems;
+  }
+  
+  // Flex item - flex shorthand
+  if (props.flex) {
+    inlineStyles.flex = props.flex;
+  }
 
-  // Cursor
-  if (props.cursor) classes.push(`cursor-${props.cursor}`);
+  // Cursor - use inline style for flexibility
+  if (props.cursor) {
+    inlineStyles.cursor = props.cursor as React.CSSProperties['cursor'];
+  }
+
+  // Transition Duration (for hover effects)
+  if (props.transitionDuration) {
+    inlineStyles.transitionDuration = `${props.transitionDuration}ms`;
+    inlineStyles.transitionProperty = 'all';
+    inlineStyles.transitionTimingFunction = 'ease';
+  }
+
+  // Hover Properties (stored as CSS custom properties for :hover via class)
+  const hoverStyles: Record<string, string> = {};
+  if (props.hoverBackgroundColor) {
+    hoverStyles['--hover-bg'] = props.hoverBackgroundColor;
+    classes.push('hover-bg-custom');
+  }
+  if (props.hoverTextColor) {
+    hoverStyles['--hover-color'] = props.hoverTextColor;
+    classes.push('hover-color-custom');
+  }
+  if (props.hoverBorderColor) {
+    hoverStyles['--hover-border'] = props.hoverBorderColor;
+    classes.push('hover-border-custom');
+  }
+  if (props.hoverScale) {
+    hoverStyles['--hover-scale'] = `${Number(props.hoverScale) / 100}`;
+    classes.push('hover-scale-custom');
+  }
+  if (props.hoverShadow) {
+    const shadowMap: Record<string, string> = {
+      sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+      lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+      xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+      glow: '0 0 20px 5px var(--hover-bg, rgba(255,255,255,0.3))',
+    };
+    hoverStyles['--hover-shadow'] = shadowMap[props.hoverShadow] || props.hoverShadow;
+    classes.push('hover-shadow-custom');
+  }
+  if (props.hoverOpacity !== undefined) {
+    hoverStyles['--hover-opacity'] = `${Number(props.hoverOpacity) / 100}`;
+    classes.push('hover-opacity-custom');
+  }
+
+  // Merge hover styles into inline styles
+  Object.assign(inlineStyles, hoverStyles);
 
   return { classes: classes.join(' '), inlineStyles };
 }
@@ -768,4 +1703,10 @@ function mapSpacing(token: string | undefined): string {
     auto: 'auto',
   };
   return map[token] || '4';
+}
+
+// Check if a value is a CSS value (px, rem, %, etc.) vs a token
+function isCSSValue(value: string | undefined): boolean {
+  if (!value) return false;
+  return value.includes('px') || value.includes('rem') || value.includes('%') || value.includes('em') || value.includes('vh') || value.includes('vw') || /^\d+$/.test(value);
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@builderly/db';
 import { getCurrentUser } from '@/lib/permissions';
 import { CreateWorkspaceSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces - List workspaces for current user
 export async function GET() {
@@ -61,6 +62,14 @@ export async function POST(request: NextRequest) {
         name: validated.name,
         slug: validated.slug,
         description: validated.description,
+        type: (validated as any).type ?? 'WEBSITE',
+        logoUrl: validated.logoUrl || undefined,
+        companyName: validated.companyName || undefined,
+        companyEmail: validated.companyEmail || undefined,
+        companyPhone: validated.companyPhone || undefined,
+        companyAddress: validated.companyAddress || undefined,
+        companyVatId: validated.companyVatId || undefined,
+        companyWebsite: validated.companyWebsite || undefined,
         members: {
           create: {
             userId: user.id,
@@ -68,6 +77,14 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    await createAuditLog({
+      userId: user.id,
+      action: 'WORKSPACE_CREATED',
+      entity: 'Workspace',
+      entityId: workspace.id,
+      details: { name: workspace.name, slug: workspace.slug },
     });
 
     return NextResponse.json(workspace, { status: 201 });

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@builderly/db';
+import { prisma, Prisma } from '@builderly/db';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { UpdatePageSchema } from '@builderly/sdk';
+import { ZodError } from 'zod';
+import { createAuditLog } from '@/lib/audit';
 
 // GET /api/workspaces/[workspaceId]/sites/[siteId]/pages/[pageId]
 export async function GET(
@@ -73,21 +75,38 @@ export async function PATCH(
       });
     }
 
+    // Destructure builderTree to handle separately
+    const { builderTree, ...restValidated } = validated;
+    
     const page = await prisma.page.update({
       where: {
         id: params.pageId,
         siteId: params.siteId,
       },
-      data: validated,
+      data: {
+        ...restValidated,
+        ...(builderTree !== undefined && { builderTree: builderTree as Prisma.InputJsonValue }),
+      },
+    });
+
+    await createAuditLog({
+      action: 'PAGE_UPDATED',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { fields: Object.keys(validated), siteId: params.siteId },
     });
 
     return NextResponse.json(page);
   } catch (error) {
+    if (error instanceof ZodError) {
+      console.error('Validation error updating page:', error.errors);
+      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 });
+    }
     if (error instanceof Error && error.message.includes('Forbidden')) {
       return NextResponse.json({ error: error.message }, { status: 403 });
     }
     console.error('Error updating page:', error);
-    return NextResponse.json({ error: 'Failed to update page' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update page', details: String(error) }, { status: 500 });
   }
 }
 
@@ -128,6 +147,13 @@ export async function DELETE(
         id: params.pageId,
         siteId: params.siteId,
       },
+    });
+
+    await createAuditLog({
+      action: 'PAGE_DELETED',
+      entity: 'Page',
+      entityId: params.pageId,
+      details: { siteId: params.siteId },
     });
 
     return new NextResponse(null, { status: 204 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireWorkspacePermission } from '@/lib/permissions';
 import { createCheckoutSession } from '@/lib/stripe';
 import { CreateCheckoutSchema } from '@builderly/sdk';
+import { createAuditLog } from '@/lib/audit';
 
 // POST /api/workspaces/[workspaceId]/billing/checkout
 export async function POST(
@@ -9,15 +10,18 @@ export async function POST(
   { params }: { params: { workspaceId: string } }
 ) {
   try {
-    await requireWorkspacePermission(params.workspaceId, 'admin');
+    const { userId } = await requireWorkspacePermission(params.workspaceId, 'admin');
 
     const body = await request.json();
     const { plan, successUrl, cancelUrl } = CreateCheckoutSchema.parse(body);
 
     // Map plan to price ID
-    const priceId = plan === 'PRO' 
-      ? process.env.STRIPE_PRICE_PRO 
-      : process.env.STRIPE_PRICE_BUSINESS;
+    const priceIdMap: Record<string, string | undefined> = {
+      PRO: process.env.STRIPE_PRICE_PRO,
+      BUSINESS: process.env.STRIPE_PRICE_BUSINESS,
+      ENTERPRISE: process.env.STRIPE_PRICE_ENTERPRISE,
+    };
+    const priceId = priceIdMap[plan];
 
     if (!priceId) {
       return NextResponse.json(
@@ -32,6 +36,14 @@ export async function POST(
       successUrl,
       cancelUrl
     );
+
+    await createAuditLog({
+      userId,
+      action: 'BILLING_CHECKOUT_STARTED',
+      entity: 'Workspace',
+      entityId: params.workspaceId,
+      details: { plan },
+    });
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

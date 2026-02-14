@@ -3,6 +3,11 @@ const isDev = process.env.NODE_ENV !== 'production';
 // Editor URL for CORS
 const editorUrl = process.env.NEXT_PUBLIC_EDITOR_URL || 'http://localhost:5173';
 
+// Allow Cloudflare tunnels in development
+const allowedOrigins = isDev 
+  ? '*'  // Allow all origins in dev (for Cloudflare tunnels)
+  : (process.env.EDITOR_DOMAIN || editorUrl);
+
 // CSP is more permissive in development for HMR/eval
 const cspValue = isDev
   ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:; font-src 'self' data:; connect-src 'self' https: http: ws:; frame-ancestors 'none';"
@@ -32,7 +37,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: isDev ? editorUrl : (process.env.EDITOR_DOMAIN || editorUrl),
+            value: allowedOrigins,
           },
           {
             key: 'Access-Control-Allow-Methods',

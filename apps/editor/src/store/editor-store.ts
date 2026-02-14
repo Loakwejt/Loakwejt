@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding, SiteSettings } from '@builderly/core';
+import type { BuilderTree, BuilderNode, BuilderStyle, BuilderActionBinding, SiteSettings, BuilderAnimation } from '@builderly/core';
 import {
   findNodeById,
   updateNodeInTree,
@@ -57,8 +57,10 @@ interface EditorState {
   isPaletteOpen: boolean;
   isInspectorOpen: boolean;
   isLayerPanelOpen: boolean;
+  isLeftSidebarOpen: boolean;
   isSiteSettingsOpen: boolean;
   isPreviewMode: boolean;
+  isMobileSidebarOpen: boolean;
   isSaving: boolean;
   isDirty: boolean;
   lastSaved: Date | null;
@@ -66,6 +68,7 @@ interface EditorState {
   // Actions
   setPageContext: (workspaceId: string, siteId: string, pageId: string) => void;
   setTree: (tree: BuilderTree) => void;
+  replaceTree: (tree: BuilderTree) => void;
   setPageName: (name: string) => void;
   
   // Site settings actions
@@ -83,8 +86,11 @@ interface EditorState {
   updateNodeProps: (nodeId: string, props: Record<string, unknown>) => void;
   updateNodeStyle: (nodeId: string, style: BuilderStyle) => void;
   updateNodeActions: (nodeId: string, actions: BuilderActionBinding[]) => void;
+  updateNodeAnimation: (nodeId: string, animation: BuilderAnimation | undefined) => void;
   deleteNode: (nodeId: string) => void;
   duplicateNode: (nodeId: string) => void;
+  insertNodeTree: (parentId: string, node: BuilderNode, index?: number) => void;
+  replaceNodeType: (nodeId: string, newType: string) => void;
   moveNode: (nodeId: string, newParentId: string, newIndex: number) => void;
   
   // Viewport
@@ -95,6 +101,9 @@ interface EditorState {
   togglePalette: () => void;
   toggleInspector: () => void;
   toggleLayerPanel: () => void;
+  toggleLeftSidebar: () => void;
+  toggleMobileSidebar: () => void;
+  setMobileSidebarOpen: (isOpen: boolean) => void;
   setPreviewMode: (isPreview: boolean) => void;
   
   // History
@@ -107,6 +116,10 @@ interface EditorState {
   setSaving: (isSaving: boolean) => void;
   setDirty: (isDirty: boolean) => void;
   setLastSaved: (date: Date) => void;
+  
+  // Page navigation
+  loadPage: (workspaceId: string, siteId: string, pageId: string) => Promise<void>;
+  isLoadingPage: boolean;
 }
 
 // ============================================================================
@@ -178,11 +191,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   isPaletteOpen: true,
   isInspectorOpen: true,
   isLayerPanelOpen: false,
+  isLeftSidebarOpen: true,
   isSiteSettingsOpen: false,
   isPreviewMode: false,
+  isMobileSidebarOpen: false,
   isSaving: false,
   isDirty: false,
   lastSaved: null,
+  isLoadingPage: false,
 
   // Context
   setPageContext: (workspaceId, siteId, pageId) => {
@@ -195,6 +211,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       history: [tree],
       historyIndex: 0,
       isDirty: false,
+    });
+  },
+
+  replaceTree: (tree) => {
+    const { history, historyIndex } = get();
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(tree);
+    
+    set({
+      tree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
     });
   },
 
@@ -263,6 +292,29 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       history: newHistory,
       historyIndex: newHistory.length - 1,
       selectedNodeId: newNode.id,
+      isDirty: true,
+    });
+  },
+
+  insertNodeTree: (parentId, node, index) => {
+    const { tree, history, historyIndex } = get();
+
+    const parent = findNodeById(tree.root, parentId);
+    const insertIndex = index ?? (parent?.children.length ?? 0);
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: insertNodeAt(tree.root, parentId, node, insertIndex),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      selectedNodeId: node.id,
       isDirty: true,
     });
   },
@@ -355,6 +407,28 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  updateNodeAnimation: (nodeId, animation) => {
+    const { tree, history, historyIndex } = get();
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (node) => ({
+        ...node,
+        animation,
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
   deleteNode: (nodeId) => {
     const { tree, history, historyIndex, selectedNodeId } = get();
 
@@ -423,6 +497,66 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
+  replaceNodeType: (nodeId, newType) => {
+    const { tree, history, historyIndex } = get();
+
+    const node = findNodeById(tree.root, nodeId);
+    if (!node || nodeId === 'root') return;
+
+    // Get default props for new type
+    const newDefinition = componentRegistry.get(newType);
+    if (!newDefinition) return;
+
+    // Props that should be carried over if they exist in both old and new component
+    const transferableProps = [
+      'text',       // Text, Heading, Button, Link, Badge, etc.
+      'title',      // Card, Alert, etc.
+      'description',// Card, Alert, etc.
+      'label',      // Form inputs, etc.
+      'placeholder',// Form inputs
+      'href',       // Link, Button with link
+      'src',        // Image, Avatar
+      'alt',        // Image
+      'icon',       // Icon, Button with icon
+      'name',       // Icon, Form inputs
+    ];
+
+    // Build new props: start with defaults, then overlay any transferable props from old node
+    const newProps = { ...newDefinition.defaultProps };
+    
+    for (const prop of transferableProps) {
+      if (node.props?.[prop] !== undefined && prop in newDefinition.defaultProps) {
+        newProps[prop] = node.props[prop];
+      }
+    }
+
+    const newTree: BuilderTree = {
+      ...tree,
+      root: updateNodeInTree(tree.root, nodeId, (existingNode) => ({
+        id: existingNode.id,
+        type: newType,
+        props: newProps,
+        style: existingNode.style, // Keep existing styles
+        actions: [], // Reset actions as they may not be compatible
+        children: newDefinition.canHaveChildren ? existingNode.children : [], // Keep children if new type supports them
+        meta: { 
+          ...existingNode.meta,
+          name: existingNode.meta?.name ? `${existingNode.meta.name} (${newType})` : newType 
+        },
+      })),
+    };
+
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newTree);
+
+    set({
+      tree: newTree,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+      isDirty: true,
+    });
+  },
+
   moveNode: (nodeId, newParentId, newIndex) => {
     const { tree, history, historyIndex } = get();
 
@@ -472,8 +606,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set((state) => ({ isLayerPanelOpen: !state.isLayerPanelOpen }));
   },
 
+  toggleLeftSidebar: () => {
+    set((state) => ({ isLeftSidebarOpen: !state.isLeftSidebarOpen }));
+  },
+
+  toggleMobileSidebar: () => {
+    set((state) => ({ isMobileSidebarOpen: !state.isMobileSidebarOpen }));
+  },
+
+  setMobileSidebarOpen: (isOpen) => {
+    set({ isMobileSidebarOpen: isOpen });
+  },
+
   setPreviewMode: (isPreview) => {
-    set({ isPreviewMode: isPreview, selectedNodeId: null });
+    set({ isPreviewMode: isPreview, selectedNodeId: null, isMobileSidebarOpen: false });
   },
 
   // History
@@ -522,5 +668,55 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setLastSaved: (date) => {
     set({ lastSaved: date, isDirty: false });
+  },
+
+  // Page navigation - smooth page switching without full reload
+  loadPage: async (workspaceId, siteId, pageId) => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    
+    set({ isLoadingPage: true, selectedNodeId: null, hoveredNodeId: null });
+    
+    try {
+      const response = await fetch(
+        `${apiUrl}/api/workspaces/${workspaceId}/sites/${siteId}/pages/${pageId}`,
+        { credentials: 'include' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to load page');
+      }
+
+      const page = await response.json();
+      
+      // Update URL without reload
+      const newUrl = `${window.location.origin}${window.location.pathname}?workspaceId=${workspaceId}&siteId=${siteId}&pageId=${pageId}`;
+      window.history.pushState({ workspaceId, siteId, pageId }, '', newUrl);
+      
+      // Update store state
+      set({
+        workspaceId,
+        siteId,
+        pageId,
+        pageName: page.name,
+        tree: page.builderTree || {
+          builderVersion: 1,
+          root: {
+            id: 'root',
+            type: 'Section',
+            props: {},
+            style: { base: { padding: 'lg' } },
+            actions: [],
+            children: [],
+          },
+        },
+        history: [page.builderTree || { builderVersion: 1, root: { id: 'root', type: 'Section', props: {}, style: { base: { padding: 'lg' } }, actions: [], children: [] } }],
+        historyIndex: 0,
+        isDirty: false,
+        isLoadingPage: false,
+      });
+    } catch (error) {
+      console.error('Error loading page:', error);
+      set({ isLoadingPage: false });
+    }
   },
 }));
